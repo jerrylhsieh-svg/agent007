@@ -1,0 +1,19 @@
+services:
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+
+  agent:
+    build: ./agent
+    depends_on:
+      - ollama
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+    ports:
+      - "8000:8000"
+
+volumes:
+  ollama_data:
