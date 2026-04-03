@@ -1,3 +1,4 @@
 uv*
 .python*
 pyproject*
+__pycache__
