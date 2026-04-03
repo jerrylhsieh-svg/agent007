@@ -1,7 +1,10 @@
 import os
+from fastapi.responses import HTMLResponse
 import requests
 from fastapi import FastAPI
 from pydantic import BaseModel
+
+from agent.front_page import front_page
 
 OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://localhost:11434")
 MODEL = "llama3.1"
@@ -23,6 +26,10 @@ def call_model(prompt: str) -> str:
     )
     r.raise_for_status()
     return r.json()["response"]
+
+@app.get("/", response_class=HTMLResponse)
+def home():
+    return front_page
 
 @app.post("/chat")
 def chat(req: ChatRequest):
