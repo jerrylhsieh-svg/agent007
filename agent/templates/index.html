@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>agent007</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <h1>agent007</h1>
+      <div id="status" class="status">Checking model...</div>
+    </header>
+
+    <main id="chat" class="chat"></main>
+
+    <form id="chat-form" class="composer">
+      <input
+        id="message-input"
+        type="text"
+        placeholder="Type a message..."
+        autocomplete="off"
+      />
+      <button id="send-button" type="submit">Send</button>
+    </form>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

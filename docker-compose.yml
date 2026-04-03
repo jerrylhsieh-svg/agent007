@@ -12,6 +12,7 @@ services:
       - ollama
     environment:
       OLLAMA_HOST: http://ollama:11434
+      MODEL: qwen2.5:1.5b
     ports:
       - "8000:8000"
 
