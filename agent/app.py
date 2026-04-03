@@ -4,6 +4,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi import FastAPI, Request
 from pydantic import BaseModel
 
+from services.save_file import try_handle_file_create
 from services.call_model import call_model
 
 
@@ -26,5 +27,8 @@ def home(request: Request):
 
 @app.post("/chat")
 def chat(req: ChatRequest):
+    file_result = try_handle_file_create(req.message)
+    if file_result:
+        return file_result
     answer = call_model(req.message, req.history)
     return {"reply": answer}
