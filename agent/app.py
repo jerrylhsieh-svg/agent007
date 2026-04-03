@@ -48,7 +48,11 @@ def call_model(message: str, history: list[dict]) -> str:
 
 @app.get("/", response_class=HTMLResponse)
 def home(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+    return templates.TemplateResponse(
+        request=request,
+        name="index.html",
+        context={}
+    )
 
 @app.post("/chat")
 def chat(req: ChatRequest):
