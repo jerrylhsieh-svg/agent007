@@ -1,0 +1,77 @@
+from app.services.save_file import save_text_file
+
+# session_id -> state
+file_sessions: dict[str, dict] = {}
+
+
+TRIGGERS = {
+    "help me write a file",
+    "write a file",
+    "create a file",
+    "save a file",
+    "make a file",
+}
+
+
+def normalize(text: str) -> str:
+    return text.strip().lower()
+
+
+def should_start_file_flow(message: str) -> bool:
+    msg = normalize(message)
+    return any(trigger in msg for trigger in TRIGGERS)
+
+
+def handle_file_flow(session_id: str, message: str):
+    state = file_sessions.get(session_id)
+
+    if state is None:
+        if should_start_file_flow(message):
+            file_sessions[session_id] = {"step": "awaiting_filename"}
+            return {
+                "handled": True,
+                "reply": "What should the file be named?"
+            }
+
+        return {"handled": False}
+
+    step = state["step"]
+
+    if step == "awaiting_filename":
+        filename = message.strip()
+        if not filename:
+            return {
+                "handled": True,
+                "reply": "Please give me a valid file name."
+            }
+
+        file_sessions[session_id] = {
+            "step": "awaiting_content",
+            "filename": filename,
+        }
+        return {
+            "handled": True,
+            "reply": f"What would you like to write in `{filename}`?"
+        }
+
+    if step == "awaiting_content":
+        filename = state["filename"]
+        content = message
+
+        try:
+            path = save_text_file(filename, content)
+        except Exception as e:
+            file_sessions.pop(session_id, None)
+            return {
+                "handled": True,
+                "reply": f"I couldn't save the file: {e}"
+            }
+
+        file_sessions.pop(session_id, None)
+        return {
+            "handled": True,
+            "reply": f"Saved `{filename}` to `{path}`."
+        }
+
+    file_sessions.pop(session_id, None)
+    return {"handled": False}

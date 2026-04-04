@@ -3,6 +3,7 @@ const formEl = document.getElementById("chat-form");
 const inputEl = document.getElementById("message-input");
 const sendButtonEl = document.getElementById("send-button");
 const statusEl = document.getElementById("status");
+const sessionId = crypto.randomUUID();
 
 const history = [];
 
@@ -49,13 +50,12 @@ formEl.addEventListener("submit", async (e) => {
   setLoading(true);
 
   try {
-    const res = await fetch("/chat", {
+    const res =  await fetch("/chat", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        message,
+        session_id: sessionId,
+        message: message,
         history: history.slice(-10)
       })
     });
