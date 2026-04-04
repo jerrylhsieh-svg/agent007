@@ -7,7 +7,9 @@ services:
       - ollama_data:/root/.ollama
 
   agent:
-    build: ./agent
+    build:
+      context: .
+      dockerfile: agent/Dockerfile
     depends_on:
       - ollama
     environment:
