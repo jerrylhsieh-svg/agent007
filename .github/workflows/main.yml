@@ -12,6 +12,5 @@ jobs:
       python-version: "3.12"
       working-directory: "."
       install-command: |
-        pwd
         pip install -r agent/requirements.txt
-      test-command: pytest
+      test-command: python -m pyttest
