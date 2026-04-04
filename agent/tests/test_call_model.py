@@ -1,5 +1,5 @@
 from unittest.mock import Mock, patch
-from services.call_model import call_model
+from agent.services.call_model import call_model
 
 
 @patch("services.call_model.requests.post")
