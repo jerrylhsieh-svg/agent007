@@ -13,4 +13,4 @@ jobs:
       working-directory: "."
       install-command: |
         pip install -r agent/requirements.txt
-      test-command: python -m pyttest
+      test-command: python -m pytest
