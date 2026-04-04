@@ -7,7 +7,7 @@ services:
       - ollama_data:/root/.ollama
 
   agent:
-    build: ./agent
+    build: .
     depends_on:
       - ollama
     environment:

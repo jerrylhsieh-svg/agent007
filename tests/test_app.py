@@ -1,4 +1,3 @@
-from fastapi.testclient import TestClient
 from unittest.mock import patch
 from tests.conftest import client
 
@@ -8,7 +7,7 @@ def test_home_returns_200():
     assert response.status_code == 200
 
 
-@patch("app.call_model")
+@patch("services.call_model")
 def test_chat_returns_model_reply(mock_call_model):
     mock_call_model.return_value = "Hello from mocked model"
 
@@ -34,7 +33,7 @@ def test_chat_requires_message():
     assert response.status_code == 422
 
 
-@patch("app.call_model")
+@patch("services.call_model")
 def test_chat_uses_default_empty_history(mock_call_model):
     mock_call_model.return_value = "ok"
 
