@@ -1,10 +1,9 @@
 from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse
 
-from agent.services.file_flow import handle_file_flow
-from agent.services.save_file import try_handle_file_create
-from agent.services.call_model import call_model
-from agent.models import ChatRequest, ChatResponse
+from services.file_flow import handle_file_flow
+from services.call_model import call_model
+from models import ChatRequest, ChatResponse
 
 
 router = APIRouter()
