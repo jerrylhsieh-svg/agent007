@@ -1,5 +1,4 @@
 from pathlib import Path
-import re
 
 BASE_SAVE_DIR = Path("/tmp")
 BASE_SAVE_DIR.mkdir(parents=True, exist_ok=True)
