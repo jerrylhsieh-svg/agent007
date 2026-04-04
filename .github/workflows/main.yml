@@ -1,0 +1,16 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    uses: jerrylhsieh-svg/git_workflow/.github/workflows/python-pytest.yml@main
+    with:
+      python-version: "3.12"
+      working-directory: "."
+      install-command: |
+        pip install -r agent/requirements.txt
+      test-command: pytest
