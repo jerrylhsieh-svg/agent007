@@ -13,5 +13,4 @@ jobs:
       working-directory: "."
       install-command: |
         pip install -r agent/requirements.txt
-        pip install pytest httpx
       test-command: pytest
