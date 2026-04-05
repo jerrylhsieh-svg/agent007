@@ -3,7 +3,7 @@ from fastapi.responses import HTMLResponse
 
 from agent.services.file_flow import handle_file_flow
 from agent.services.call_model import call_model
-from agent.models import ChatRequest, ChatResponse
+from agent.models.chat import ChatRequest, ChatResponse
 
 
 router = APIRouter()
