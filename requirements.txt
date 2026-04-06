@@ -7,3 +7,4 @@ pdfplumber
 pandas
 openpyxl
 pytest
+httpx

@@ -41,21 +41,43 @@ async function checkHealth() {
 }
 
 
-uploadPdfBtn.addEventListener("submit", async () => {
-  const file = pdfInput.files[0];
-  if (!file) return;
+uploadPdfBtn.addEventListener("click", async (e) => {
+  e.preventDefault();
+
+  const file = pdfInput?.files?.[0];
+  if (!file) {
+    addMessage("assistant", "Please choose a PDF first.");
+    return;
+  }
 
   const formData = new FormData();
   formData.append("file", file);
 
-  const response = await fetch("/pdf/extract", {
-    method: "POST",
-    body: formData,
-  });
+  try {
+    setLoading(true);
+    const response = await fetch("/pdf/extract", {
+      method: "POST",
+      body: formData,
+    });
 
-  const data = await response.json();
-  console.log(data);
+    const data = await response.json();
+
+    if (!response.ok) {
+      addMessage("assistant", `PDF upload failed: ${data.detail || "Unknown error"}`);
+      return;
+    }
+
+    addMessage(
+      "assistant",
+      `Uploaded ${data.filename || file.name} successfully.`
+    );
+  } catch (err) {
+    addMessage("assistant", `PDF upload failed: ${err.message}`);
+  } finally {
+    setLoading(false);
+  }
 });
+
 
 formEl.addEventListener("submit", async (e) => {
   e.preventDefault();
