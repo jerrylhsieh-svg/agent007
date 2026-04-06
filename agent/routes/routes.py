@@ -12,6 +12,10 @@ from agent.services.pdf_extractor import extract_pdf_service
 
 router = APIRouter()
 
+@router.get("/health")
+def health():
+    return {"status": "ok"}
+
 
 @router.get("/", response_class=HTMLResponse)
 async def home(request: Request):

@@ -4,6 +4,8 @@ const inputEl = document.getElementById("message-input");
 const sendButtonEl = document.getElementById("send-button");
 const statusEl = document.getElementById("status");
 const sessionId = crypto.randomUUID();
+const pdfInput = document.getElementById("pdf-file");
+const uploadPdfBtn = document.getElementById("upload-btn");
 
 const history = [];
 
@@ -38,26 +40,25 @@ async function checkHealth() {
   }
 }
 
-async function uploadPdf(file) {
+
+uploadPdfBtn.addEventListener("submit", async () => {
+  const file = pdfInput.files[0];
+  if (!file) return;
+
   const formData = new FormData();
   formData.append("file", file);
 
   const response = await fetch("/pdf/extract", {
     method: "POST",
-    body: formData
+    body: formData,
   });
 
-  return await response.json();
-}
+  const data = await response.json();
+  console.log(data);
+});
 
 formEl.addEventListener("submit", async (e) => {
   e.preventDefault();
-
-  const file = document.getElementById("pdf-file").files[0];
-  if (file) {
-    const pdfResult = await uploadPdf(file);
-    console.log("PDF extracted:", pdfResult);
-  }
 
   const message = inputEl.value.trim();
   const response = await sendMessage(message, history);
