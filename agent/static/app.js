@@ -83,16 +83,13 @@ formEl.addEventListener("submit", async (e) => {
   e.preventDefault();
 
   const message = inputEl.value.trim();
-  const response = await sendMessage(message, history);
-  addMessage("assistant", response.reply);
-
-  
   if (!message) return;
 
   addMessage("user", message);
   history.push({ role: "user", content: message });
   inputEl.value = "";
   setLoading(true);
+
 
   try {
     const res =  await fetch("/chat", {
