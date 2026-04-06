@@ -38,10 +38,32 @@ async function checkHealth() {
   }
 }
 
+async function uploadPdf(file) {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const response = await fetch("/pdf/extract", {
+    method: "POST",
+    body: formData
+  });
+
+  return await response.json();
+}
+
 formEl.addEventListener("submit", async (e) => {
   e.preventDefault();
 
+  const file = document.getElementById("pdf-file").files[0];
+  if (file) {
+    const pdfResult = await uploadPdf(file);
+    console.log("PDF extracted:", pdfResult);
+  }
+
   const message = inputEl.value.trim();
+  const response = await sendMessage(message, history);
+  addMessage("assistant", response.reply);
+
+  
   if (!message) return;
 
   addMessage("user", message);

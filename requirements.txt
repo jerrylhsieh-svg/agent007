@@ -2,5 +2,7 @@ fastapi
 uvicorn
 requests
 jinja2
-pytest
-httpx
+python-multipart
+pdfplumber
+pandas
+openpyxl
