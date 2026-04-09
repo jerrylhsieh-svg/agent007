@@ -55,6 +55,7 @@ uploadPdfBtn.addEventListener("click", async (e) => {
 
   try {
     setLoading(true);
+    uploadPdfBtn.disabled = true;
     const response = await fetch("/pdf/extract", {
       method: "POST",
       body: formData,
