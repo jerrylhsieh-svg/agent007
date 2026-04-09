@@ -75,7 +75,11 @@ uploadPdfBtn.addEventListener("click", async (e) => {
     addMessage("assistant", `PDF upload failed: ${err.message}`);
   } finally {
     setLoading(false);
+    pdfInput.value = "";
+    uploadPdfBtn.disabled = false;
+    uploadPdfBtn.textContent = "Upload PDF";
   }
+  
 });
 
 
