@@ -24,8 +24,14 @@ function addMessage(role, content) {
 
 function setLoading(isLoading) {
   inputEl.disabled = isLoading;
+  uploadPdfBtn.disabled = isLoading;
+  uploadPdfBtn.textContent = isLoading ? "Thinking..." : "Send";
+}
+
+function setUploading(isLoading) {
+  pdfInput.disabled = isLoading;
   sendButtonEl.disabled = isLoading;
-  sendButtonEl.textContent = isLoading ? "Thinking..." : "Send";
+  sendButtonEl.textContent = isLoading ? "Uploading..." : "Upload PDF";
 }
 
 async function checkHealth() {
@@ -55,7 +61,7 @@ uploadPdfBtn.addEventListener("click", async (e) => {
 
   try {
     setLoading(true);
-    uploadPdfBtn.disabled = true;
+    setUploading(true);
     const response = await fetch("/pdf/extract", {
       method: "POST",
       body: formData,
@@ -76,9 +82,7 @@ uploadPdfBtn.addEventListener("click", async (e) => {
     addMessage("assistant", `PDF upload failed: ${err.message}`);
   } finally {
     setLoading(false);
-    pdfInput.value = "";
-    uploadPdfBtn.disabled = false;
-    uploadPdfBtn.textContent = "Upload PDF";
+    setUploading(false);
   }
   
 });
