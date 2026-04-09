@@ -83,13 +83,13 @@ uploadPdfBtn.addEventListener("click", async (e) => {
       "assistant",
       `Uploaded ${data.filename || file.name} successfully.`
     );
+    pdfInput.value = "";
   } catch (err) {
     addMessage("assistant", `PDF upload failed: ${err.message}`);
   } finally {
     setLoading(false);
     setUploading(false);
     pdfInput.value = "";
-    fileNameEl.textContent = "";
   }
   
 });
