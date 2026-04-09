@@ -6,6 +6,7 @@ const statusEl = document.getElementById("status");
 const sessionId = crypto.randomUUID();
 const pdfInput = document.getElementById("pdf-file");
 const uploadPdfBtn = document.getElementById("upload-btn");
+const selectedFileNameEl = document.getElementById("selected-file-name");
 
 const history = [];
 
@@ -83,6 +84,8 @@ uploadPdfBtn.addEventListener("click", async (e) => {
   } finally {
     setLoading(false);
     setUploading(false);
+    pdfInput.value = "";
+    selectedFileNameEl.textContent = "";
   }
   
 });
