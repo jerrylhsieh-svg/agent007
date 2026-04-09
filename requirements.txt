@@ -8,3 +8,5 @@ pandas
 openpyxl
 pytest
 httpx
+pymupdf
+python-dateutil

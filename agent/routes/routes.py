@@ -38,4 +38,8 @@ async def chat(req: ChatRequest):
 
 @router.post("/pdf/extract")
 async def extract_pdf(file: UploadFile = File(...)):
-    return await extract_pdf_service(file)
+    result =  await extract_pdf_service(file)
+    return {
+        "ok": True,
+        **result,
+    }
