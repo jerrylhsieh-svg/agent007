@@ -6,7 +6,7 @@ const statusEl = document.getElementById("status");
 const sessionId = crypto.randomUUID();
 const pdfInput = document.getElementById("pdf-file");
 const uploadPdfBtn = document.getElementById("upload-btn");
-const selectedFileNameEl = document.getElementById("selected-file-name");
+const fileNameEl = document.getElementById("file-name");
 
 const history = [];
 
@@ -47,6 +47,10 @@ async function checkHealth() {
   }
 }
 
+pdfInput.addEventListener("change", () => {
+  const file = pdfInput.files[0];
+  fileNameEl.textContent = file ? file.name : "";
+});
 
 uploadPdfBtn.addEventListener("click", async (e) => {
   e.preventDefault();
@@ -85,7 +89,7 @@ uploadPdfBtn.addEventListener("click", async (e) => {
     setLoading(false);
     setUploading(false);
     pdfInput.value = "";
-    selectedFileNameEl.textContent = "";
+    fileNameEl.textContent = "";
   }
   
 });
