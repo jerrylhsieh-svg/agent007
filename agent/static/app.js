@@ -6,7 +6,7 @@ const statusEl = document.getElementById("status");
 const sessionId = crypto.randomUUID();
 const pdfInput = document.getElementById("pdf-file");
 const uploadPdfBtn = document.getElementById("upload-btn");
-const fileNameEl = document.getElementById("file-name");
+const pdfForm = document.getElementById("pdf-form");
 
 const history = [];
 
@@ -83,13 +83,12 @@ uploadPdfBtn.addEventListener("click", async (e) => {
       "assistant",
       `Uploaded ${data.filename || file.name} successfully.`
     );
-    pdfInput.value = "";
+    pdfForm.reset();
   } catch (err) {
     addMessage("assistant", `PDF upload failed: ${err.message}`);
   } finally {
     setLoading(false);
-    setUploading(false);
-    pdfInput.value = "";
+
   }
   
 });
