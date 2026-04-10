@@ -14,9 +14,9 @@ SCOPES = [
 
 
 def get_gspread_client() -> gspread.Client:
-    creds_path = os.getenv("GOOGLE_SERVICE_ACCOUNT_FILE")
+    creds_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS_FILE")
     if not creds_path:
-        raise RuntimeError("GOOGLE_SERVICE_ACCOUNT_FILE is not set")
+        raise RuntimeError("GOOGLE_APPLICATION_CREDENTIALS_FILE is not set")
 
     creds = Credentials.from_service_account_file(creds_path, scopes=SCOPES)
     return gspread.authorize(creds)

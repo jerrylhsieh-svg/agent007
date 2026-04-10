@@ -10,6 +10,10 @@ services:
     build:
       context: .
       dockerfile: agent/Dockerfile
+    env_file:
+      - agent/.env
+    volumes:
+      - /Users/jerryhsieh/Desktop/spendtracker-492918-dcb0633bc648.json:/run/secrets/gcp-service-account.json:ro
     depends_on:
       - ollama
     environment:

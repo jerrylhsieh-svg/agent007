@@ -13,3 +13,4 @@ pymupdf
 python-dateutil
 gspread
 google-auth
+google-api-python-client

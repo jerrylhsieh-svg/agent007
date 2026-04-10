@@ -3,3 +3,5 @@ uv*
 pyproject*
 __pycache__
 __init__*
+.env
+secrets/
