@@ -10,3 +10,5 @@ pytest
 httpx
 pymupdf
 python-dateutil
+gspread
+google-auth
