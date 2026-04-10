@@ -25,14 +25,14 @@ function addMessage(role, content) {
 
 function setLoading(isLoading) {
   inputEl.disabled = isLoading;
-  uploadPdfBtn.disabled = isLoading;
-  uploadPdfBtn.textContent = isLoading ? "Thinking..." : "Send";
+  sendButtonEl.disabled = isLoading;
+  sendButtonEl.textContent = isLoading ? "Thinking..." : "Send";
 }
 
 function setUploading(isLoading) {
   pdfInput.disabled = isLoading;
-  sendButtonEl.disabled = isLoading;
-  sendButtonEl.textContent = isLoading ? "Uploading..." : "Upload PDF";
+  uploadPdfBtn.disabled = isLoading;
+  uploadPdfBtn.textContent = isLoading ? "Uploading..." : "Upload PDF";
 }
 
 async function checkHealth() {

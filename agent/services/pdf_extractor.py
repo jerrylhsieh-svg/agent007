@@ -47,6 +47,7 @@ async def extract_pdf_service(file: UploadFile = File(...)):
     except Exception as exc:
         gsheet_status = "failed"
         gsheet_error = str(exc)
+        raise HTTPException(status_code=500, detail="Failed to write to Gsheet")
 
     message = (
         "PDF looks scanned; OCR should run before reliable bank statement extraction."
