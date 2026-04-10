@@ -11,8 +11,8 @@ from agent.services.pdf_parser import extract_pdf_content
 
 UPLOAD_DIR = Path("/tmp/agent_uploads")
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
-GSHEET_NAME = "Sheet1"
-GSHEET_TRANSACTIONS_TAB = "transactions"
+GSHEET_NAME = "transactions"
+GSHEET_TRANSACTIONS_TAB = "Sheet1"
 
 
 async def extract_pdf_service(file: UploadFile = File(...)):
