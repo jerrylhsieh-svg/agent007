@@ -7,6 +7,7 @@ pdfplumber
 pandas
 openpyxl
 pytest
+pytest-asyncio
 httpx
 pymupdf
 python-dateutil
