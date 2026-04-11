@@ -192,7 +192,8 @@ async def test_extract_pdf_service_returns_summary_and_saves_json(tmp_path, monk
 
     file = make_upload_file()
 
-    with patch("agent.services.pdf_extractor.extract_pdf_content", return_value=extracted_payload):
+    with patch("agent.services.pdf_extractor.extract_pdf_content", return_value=extracted_payload), \
+        patch("agent.services.pdf_extractor.append_transactions", return_value=None):
         result = await pdf_extractor.extract_pdf_service(file)
 
     assert result["filename"] == "statement.pdf"
@@ -223,7 +224,8 @@ async def test_extract_pdf_service_returns_ocr_message_when_needed(tmp_path, mon
 
     file = make_upload_file()
 
-    with patch("agent.services.pdf_extractor.extract_pdf_content", return_value=extracted_payload):
+    with patch("agent.services.pdf_extractor.extract_pdf_content", return_value=extracted_payload), \
+        patch("agent.services.pdf_extractor.append_transactions", return_value=None):
         result = await pdf_extractor.extract_pdf_service(file)
 
     assert result["message"] == "PDF looks scanned; OCR should run before reliable bank statement extraction."
