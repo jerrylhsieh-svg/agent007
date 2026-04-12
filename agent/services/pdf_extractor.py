@@ -7,12 +7,11 @@ from uuid import uuid4
 from fastapi import File, HTTPException, UploadFile
 
 from agent.services.google_sheets import _build_gsheet_rows, append_transactions
+from agent.services.gsheet_config import GSHEET_NAME, GSHEET_TRANSACTIONS_TAB
 from agent.services.pdf_parser import extract_pdf_content
 
 UPLOAD_DIR = Path("/tmp/agent_uploads")
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
-GSHEET_NAME = "transactions"
-GSHEET_TRANSACTIONS_TAB = "Sheet1"
 
 
 async def extract_pdf_service(file: UploadFile = File(...)):

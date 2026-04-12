@@ -146,6 +146,6 @@ Be concrete and numeric where possible.
 """
 
     augmented_history = list(history)
-    augmented_history.append({"role": "system", "content": context})
+    augmented_history.append({"role": "assistant", "content": context})
 
     return call_model(question, augmented_history)

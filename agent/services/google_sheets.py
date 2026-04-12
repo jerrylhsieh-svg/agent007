@@ -5,6 +5,7 @@ from typing import Any, Iterable
 
 import gspread
 from google.oauth2.service_account import Credentials
+import pandas as pd
 
 
 SCOPES = [
@@ -79,3 +80,32 @@ def _build_gsheet_rows(filename: str, upload_id: str, transactions: list[dict[st
             ]
         )
     return rows
+
+def read_transactions_df(
+    spreadsheet_name: str,
+    worksheet_name: str,
+) -> pd.DataFrame:
+    client = get_gspread_client()
+    spreadsheet = client.open(spreadsheet_name)
+    worksheet = spreadsheet.worksheet(worksheet_name)
+
+    records = worksheet.get_all_records()
+    df = pd.DataFrame(records)
+
+    if df.empty:
+        return df
+
+    if "date" in df.columns:
+        df["date"] = pd.to_datetime(df["date"], errors="coerce")
+
+    for col in ["amount", "balance", "page_number"]:
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors="coerce")
+
+    if "description" in df.columns:
+        df["description"] = df["description"].fillna("").astype(str)
+
+    if "source_file" in df.columns:
+        df["source_file"] = df["source_file"].fillna("").astype(str)
+
+    return df

@@ -4,13 +4,25 @@ from agent.services.save_file import save_text_file
 file_sessions: dict[str, dict] = {}
 
 
-TRIGGERS = {
+SAVE_TRIGGERS = {
     "help me write a file",
     "write a file",
     "create a file",
     "save a file",
     "make a file",
 }
+
+IS_TRANSACTION_TRIGGERS = [
+        "transaction",
+        "transactions",
+        "spending",
+        "spend",
+        "expenses",
+        "expense",
+        "income",
+        "budget",
+        "bank statement",
+    ]
 
 
 def normalize(text: str) -> str:
@@ -19,7 +31,12 @@ def normalize(text: str) -> str:
 
 def should_start_file_flow(message: str) -> bool:
     msg = normalize(message)
-    return any(trigger in msg for trigger in TRIGGERS)
+    return any(trigger in msg for trigger in SAVE_TRIGGERS)
+
+
+def should_start_transaction_flow(message: str) -> bool:
+    msg = normalize(message)
+    return any(trigger in msg for trigger in IS_TRANSACTION_TRIGGERS)
 
 
 def handle_file_flow(session_id: str, message: str):
