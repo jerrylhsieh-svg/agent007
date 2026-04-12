@@ -14,8 +14,6 @@ services:
       - agent/.env
     volumes:
       - /Users/jerryhsieh/Desktop/spendtracker-492918-dcb0633bc648.json:/run/secrets/gcp-service-account.json:ro
-      - ./agent/templates:/app/templates
-      - ./agent/static:/static
     depends_on:
       - ollama
     environment:
