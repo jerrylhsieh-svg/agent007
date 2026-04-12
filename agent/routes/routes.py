@@ -5,8 +5,9 @@ from fastapi.responses import HTMLResponse
 
 from agent.services.file_flow import handle_file_flow
 from agent.services.call_model import call_model
-from agent.models.chat import ChatRequest, ChatResponse
+from agent.models.chat import ChatRequest, ChatResponse, TransactionAnalysisRequest
 from agent.services.pdf_extractor import extract_pdf_service
+from agent.services.transaction_analysis import analyze_transactions_question
 
 
 
@@ -43,3 +44,8 @@ async def extract_pdf(file: UploadFile = File(...)):
         "ok": True,
         **result,
     }
+
+@router.post("/transactions/analyze")
+async def analyze_transactions(req: TransactionAnalysisRequest):
+    answer = analyze_transactions_question(req.question, req.history)
+    return {"reply": answer}

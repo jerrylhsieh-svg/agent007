@@ -9,3 +9,7 @@ class ChatRequest(BaseModel):
 
 class ChatResponse(BaseModel):
     reply: str
+
+class TransactionAnalysisRequest(BaseModel):
+    question: str
+    history: list[dict] = []

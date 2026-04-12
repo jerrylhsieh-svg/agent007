@@ -1,0 +1,2 @@
+GSHEET_NAME = "transactions"
+GSHEET_TRANSACTIONS_TAB = "Sheet1"
