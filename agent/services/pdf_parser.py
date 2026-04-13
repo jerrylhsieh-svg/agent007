@@ -1,4 +1,5 @@
 from dataclasses import asdict
+from datetime import datetime
 from decimal import Decimal, InvalidOperation
 import io
 import re
@@ -78,14 +79,39 @@ def _parse_amount(value: str | None) -> float | None:
         return None
 
 
-def _normalize_date(value: str | None) -> str | None:
-    if not value:
+def _extract_statement_years(statement_period: str | None) -> tuple[int, int] | None:
+    if not statement_period:
         return None
-    try:
-        dt = date_parser.parse(value, fuzzy=False, default=date_parser.parse("2000-01-01"))
-        return dt.date().isoformat()
-    except Exception:
+
+    match = re.search(
+        r"([A-Za-z]+)\s+\d{1,2}\s*-\s*([A-Za-z]+)\s+\d{1,2},\s*(\d{4})",
+        statement_period,
+    )
+    if not match:
         return None
+
+    start_month_name, end_month_name, end_year_str = match.groups()
+    end_year = int(end_year_str)
+
+    start_month = datetime.strptime(start_month_name, "%B").month
+    end_month = datetime.strptime(end_month_name, "%B").month
+
+    start_year = end_year - 1 if start_month > end_month else end_year
+    return start_month, start_year, end_month, end_year
+
+
+def _apply_statement_year(date_value: str | None, statement_period: tuple[int, int, int, int] | None) -> str | None:
+    if not date_value or not statement_period:
+        return date_value
+    dt = date_parser.parse(date_value, fuzzy=False, default=date_parser.parse("2000-01-01"))
+    start_month, start_year, end_month, end_year = statement_period
+
+    if dt.month == start_month:
+        dt = dt.replace(year=start_year)
+    elif dt.month == end_month:
+        dt = dt.replace(year=end_year)
+
+    return dt.date().isoformat()
 
 
 def _line_to_text(line: list[dict]) -> str:
@@ -142,7 +168,7 @@ def _extract_transactions_from_page(page, page_number: int) -> tuple[list[Transa
             rows.append(
                 TransactionRow(
                     page_number=page_number,
-                    date=_normalize_date(date_token),
+                    date=date_token,
                     description=description,
                     amount=amount,
                     balance=balance,
@@ -212,6 +238,9 @@ def extract_pdf_content(file_bytes: bytes) -> dict[str, Any]:
                 )
 
     result["full_text"] = "\n".join(full_text_parts)
+    statement_period = _extract_statement_years(result["full_text"])
+    for row in all_rows:
+        row.date = _apply_statement_year(row.date, statement_period)
     result["transactions"] = [asdict(r) for r in all_rows]
 
     valid_dates = sum(1 for r in all_rows if r.date)
