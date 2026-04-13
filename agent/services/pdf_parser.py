@@ -1,6 +1,6 @@
 from dataclasses import asdict
 from datetime import datetime
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 import io
 import re
 from typing import Any
@@ -23,9 +23,7 @@ def _looks_scanned(file_bytes: bytes) -> bool:
         doc.close()
 
 
-def _parse_amount(value: str | None) -> float | None:
-    if not value:
-        return None
+def _parse_amount(value: str) -> float | None:
     raw = value.strip().replace("$", "").replace(",", "")
     negative = False
 
@@ -36,11 +34,9 @@ def _parse_amount(value: str | None) -> float | None:
         negative = True
         raw = raw[1:]
 
-    try:
-        amt = Decimal(raw)
-        return float(-amt if negative else amt)
-    except (InvalidOperation, ValueError):
-        return None
+    amt = Decimal(raw)
+    return float(-amt if negative else amt)
+
 
 
 def _extract_statement_years(statement_period: str | None) -> tuple[int, int] | None:

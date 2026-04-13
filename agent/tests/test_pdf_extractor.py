@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import decimal
 import io
 import json
 from types import SimpleNamespace
@@ -24,8 +25,10 @@ def test_parse_amount_handles_positive_negative_and_invalid():
     assert pdf_parser._parse_amount("$1,234.56") == 1234.56
     assert pdf_parser._parse_amount("(123.45)") == -123.45
     assert pdf_parser._parse_amount("-99.01") == -99.01
-    assert pdf_parser._parse_amount(None) is None
-    assert pdf_parser._parse_amount("not-a-number") is None
+    with pytest.raises(AttributeError):
+        pdf_parser._parse_amount(None) is None
+    with pytest.raises(decimal.InvalidOperation):
+        pdf_parser._parse_amount("not-a-number") is None
 
 
 def test_extract_pdf_content_builds_expected_result_shape():
