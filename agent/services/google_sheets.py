@@ -7,11 +7,8 @@ import gspread
 from google.oauth2.service_account import Credentials
 import pandas as pd
 
+from agent.services.gsheet_config import SCOPES, STATEMENT_HEADERS, TRANSACTION_HEADERS
 
-SCOPES = [
-    "https://www.googleapis.com/auth/spreadsheets",
-    "https://www.googleapis.com/auth/drive",
-]
 
 
 def get_gspread_client() -> gspread.Client:
@@ -42,44 +39,56 @@ def ensure_headers(worksheet, headers: list[str]) -> None:
             worksheet.update("A1", [headers])
 
 
-def append_transactions(
+def append_data(
     spreadsheet_name: str,
     worksheet_name: str,
     rows: Iterable[list],
+    data_type: str,
 ) -> None:
     worksheet = get_or_create_worksheet(spreadsheet_name, worksheet_name)
-
-    headers = [
-        "upload_id",
-        "source_file",
-        "page_number",
-        "date",
-        "description",
-        "amount",
-        "balance",
-        "raw_line",
-    ]
+    if data_type == "transaction":
+        headers = TRANSACTION_HEADERS
+    elif data_type == "statement":
+        headers = STATEMENT_HEADERS
+    else:
+        raise ValueError("data type has to be either transaction or statement")
+    
     ensure_headers(worksheet, headers)
     rows = list(rows)
     if rows:
         worksheet.append_rows(rows, value_input_option="USER_ENTERED")
 
-def _build_gsheet_rows(filename: str, upload_id: str, transactions: list[dict[str, Any]]) -> list[list]:
-    rows: list[list] = []
+
+def _build_gsheet_rows(filename: str, upload_id: str, transactions: list[dict[str, Any]], statements: list[dict[str, Any]]) -> list[list]:
+    transactions_rows: list[list] = []
+    statements_rows: list[list] = []
     for tx in transactions:
-        rows.append(
+        transactions_rows.append(
             [
                 upload_id,
                 filename,
-                tx.get("page_number"),
-                tx.get("date"),
+                tx.get("transaction_date"),
+                tx.get("posting_date"),
                 tx.get("description"),
+                tx.get("reference_number"),
                 tx.get("amount"),
-                tx.get("balance"),
                 tx.get("raw_line"),
             ]
         )
-    return rows
+
+    for st in statements:
+        statements_rows.append(
+            [
+                upload_id,
+                filename,
+                st.get("date"),
+                st.get("description"),
+                st.get("statement_type"),
+                st.get("amount"),
+                st.get("raw_line"),
+            ]
+        )
+    return transactions_rows, statements_rows
 
 def read_transactions_df(
     spreadsheet_name: str,

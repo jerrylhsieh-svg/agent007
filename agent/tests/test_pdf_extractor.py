@@ -127,6 +127,7 @@ async def test_extract_pdf_service_returns_summary_and_saves_json(tmp_path, monk
         "pages": [{"page_number": 1, "text": "hello", "diagnostics": {}}],
         "tables": [{"page_number": 1, "table_index": 1, "rows": [["a"]]}],
         "transactions": [{"date": "2025-01-15", "amount": 4.5}],
+        "statements": [],
         "needs_ocr": False,
         "is_scanned": False,
         "document_type": "bank_statement_candidate",
@@ -137,7 +138,7 @@ async def test_extract_pdf_service_returns_summary_and_saves_json(tmp_path, monk
     file = make_upload_file()
 
     with patch("agent.services.pdf_extractor.extract_pdf_content", return_value=extracted_payload), \
-        patch("agent.services.pdf_extractor.append_transactions", return_value=None):
+        patch("agent.services.pdf_extractor.append_data", return_value=(None, None)):
         result = await pdf_extractor.extract_pdf_service(file)
 
     assert result["filename"] == "statement.pdf"
@@ -159,6 +160,7 @@ async def test_extract_pdf_service_returns_ocr_message_when_needed(tmp_path, mon
         "pages": [],
         "tables": [],
         "transactions": [],
+        "statements": [],
         "needs_ocr": True,
         "is_scanned": True,
         "document_type": "bank_statement_candidate",
@@ -169,7 +171,7 @@ async def test_extract_pdf_service_returns_ocr_message_when_needed(tmp_path, mon
     file = make_upload_file()
 
     with patch("agent.services.pdf_extractor.extract_pdf_content", return_value=extracted_payload), \
-        patch("agent.services.pdf_extractor.append_transactions", return_value=None):
+        patch("agent.services.pdf_extractor.append_data", return_value=(None, None)):
         result = await pdf_extractor.extract_pdf_service(file)
 
     assert result["message"] == "PDF looks scanned; OCR should run before reliable bank statement extraction."

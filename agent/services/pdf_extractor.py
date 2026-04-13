@@ -6,8 +6,8 @@ from uuid import uuid4
 
 from fastapi import File, HTTPException, UploadFile
 
-from agent.services.google_sheets import _build_gsheet_rows, append_transactions
-from agent.services.gsheet_config import GSHEET_NAME, GSHEET_TRANSACTIONS_TAB
+from agent.services.google_sheets import _build_gsheet_rows, append_data
+from agent.services.gsheet_config import GSHEET_NAME, GSHEET_STATEMENT_TAB, GSHEET_TRANSACTIONS_TAB
 from agent.services.pdf_parser import extract_pdf_content
 
 UPLOAD_DIR = Path("/tmp/agent_uploads")
@@ -28,20 +28,30 @@ async def extract_pdf_service(file: UploadFile = File(...)):
     saved_path.write_text(json.dumps(extracted, ensure_ascii=False, indent=2))
 
     upload_id = uuid4().hex[:12]
-    gsheet_rows = _build_gsheet_rows(
+    transaction_rows, statement_row = _build_gsheet_rows(
         filename=file.filename,
         upload_id=upload_id,
         transactions=extracted["transactions"],
+        statements=extracted["statements"],
     )
 
     gsheet_status = "skipped"
     gsheet_error = None
     try:
-        append_transactions(
-            spreadsheet_name=GSHEET_NAME,
-            worksheet_name=GSHEET_TRANSACTIONS_TAB,
-            rows=gsheet_rows,
-        )
+        if transaction_rows:
+            append_data(
+                spreadsheet_name=GSHEET_NAME,
+                worksheet_name=GSHEET_TRANSACTIONS_TAB,
+                rows=transaction_rows,
+                data_type="transaction"
+            )
+        if statement_row:
+            append_data(
+                spreadsheet_name=GSHEET_NAME,
+                worksheet_name=GSHEET_STATEMENT_TAB,
+                rows=statement_row,
+                data_type="statement"
+            )
         gsheet_status = "uploaded"
     except Exception as exc:
         gsheet_status = "failed"
