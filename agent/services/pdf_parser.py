@@ -149,7 +149,6 @@ def _extract_transactions_from_page(page, page_number: int) -> tuple[list[Transa
         # Right-most numeric tokens are usually amount / balance
         numeric_tokens = [w for w in line if AMOUNT_RE.match(w["text"])]
         amount = None
-        balance = None
         description = line_text
 
         if date_token:
@@ -157,11 +156,7 @@ def _extract_transactions_from_page(page, page_number: int) -> tuple[list[Transa
             remaining = [w for w in line[1:]]
 
             # Pick last numeric as balance, second last as amount when present
-            if len(numeric_tokens) >= 2:
-                amount = _parse_amount(numeric_tokens[-2]["text"])
-                balance = _parse_amount(numeric_tokens[-1]["text"])
-            elif len(numeric_tokens) == 1:
-                amount = _parse_amount(numeric_tokens[-1]["text"])
+            amount = _parse_amount(numeric_tokens[-1]["text"])
 
             numeric_texts = {w["text"] for w in numeric_tokens}
             desc_tokens = [w["text"] for w in remaining if w["text"] not in numeric_texts]
@@ -175,7 +170,6 @@ def _extract_transactions_from_page(page, page_number: int) -> tuple[list[Transa
                     date=date_token,
                     description=description,
                     amount=amount,
-                    balance=balance,
                     raw_line=line_text,
                 )
             )

@@ -6,5 +6,4 @@ class TransactionRow:
     date: str | None
     description: str
     amount: float | None
-    balance: float | None
     raw_line: str
