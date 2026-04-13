@@ -8,3 +8,10 @@ class TransactionRow:
     reference_number: int
     amount: float | None
     raw_line: str
+
+@dataclass
+class DepositRow:
+    date: str | None
+    description: str
+    amount: float | None
+    raw_line: str

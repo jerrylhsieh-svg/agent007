@@ -8,16 +8,8 @@ import fitz
 from dateutil import parser as date_parser
 import pdfplumber
 
-from agent.models.pdf_models import TransactionRow
+from agent.models.pdf_models import DepositRow, TransactionRow
 
-
-DATE_RE = re.compile(
-    r"^(?P<date>\d{1,2}/\d{1,2}(?:/\d{2,4})?|\d{4}-\d{2}-\d{2}|[A-Z][a-z]{2}\s+\d{1,2})$"
-)
-
-AMOUNT_RE = re.compile(
-    r"^[\-\(]?\$?\d{1,3}(?:,\d{3})*(?:\.\d{2})?\)?$"
-)
 
 def _looks_scanned(file_bytes: bytes) -> bool:
     doc = fitz.open(stream=file_bytes, filetype="pdf")
@@ -29,6 +21,26 @@ def _looks_scanned(file_bytes: bytes) -> bool:
         return text_chars < 40
     finally:
         doc.close()
+
+
+def _parse_amount(value: str | None) -> float | None:
+    if not value:
+        return None
+    raw = value.strip().replace("$", "").replace(",", "")
+    negative = False
+
+    if raw.startswith("(") and raw.endswith(")"):
+        negative = True
+        raw = raw[1:-1]
+    if raw.startswith("-"):
+        negative = True
+        raw = raw[1:]
+
+    try:
+        amt = Decimal(raw)
+        return float(-amt if negative else amt)
+    except (InvalidOperation, ValueError):
+        return None
 
 
 def _extract_statement_years(statement_period: str | None) -> tuple[int, int] | None:
@@ -63,32 +75,50 @@ def _normalize_date(record: TransactionRow | None, statement_period: tuple[int, 
 
 
 
-def _extract_transactions_from_page(page) -> tuple[list[TransactionRow], dict[str, Any]]:
+def _extract_transactions_from_page(page) -> tuple[list[TransactionRow], list[DepositRow]]:
     credit_card_transaction = False
-    bank_account = False
-    rows: list[TransactionRow] = []
+    deposits_and_other_additions = False
+    transactions: list[TransactionRow] = []
+    deposits: list[DepositRow] = []
     for line in page.split("\n"):
         if line == "Purchases and Adjustments":
             credit_card_transaction = True
             continue
         elif line.startswith("TOTAL PURCHASES AND ADJUSTMENTS FOR THIS PERIOD"):
             credit_card_transaction = False
-
+        elif line == "Deposits and other additions":
+            deposits_and_other_additions = True
+            continue
+        elif line.startswith("Total deposits and other additions"):
+            deposits_and_other_additions = False
+        
+        line_split = line.split(" ")
         if credit_card_transaction:
-            line_split = line.split(" ")
-            rows.append(
+            transactions.append(
                 TransactionRow(
                     transaction_date=line_split[0],
                     posting_date=line_split[1],
                     description=" ".join(line_split[2:-2]),
-                    reference_number=int(line_split[-2]),
-                    amount=float(line_split[-1]),
+                    reference_number=line_split[-2],
+                    amount=line_split[-1],
+                    raw_line=line,
+                )
+            )
+        elif deposits_and_other_additions:
+            if line_split[0] == "Date":
+                continue
+            deposits.append(
+                DepositRow(
+                    date=line_split[0],
+                    description=" ".join(line_split[1:-1]),
+                    amount=_parse_amount(line_split[-1]),
                     raw_line=line,
                 )
             )
 
 
-    return rows
+
+    return transactions, deposits
 
 def extract_pdf_content(file_bytes: bytes) -> dict[str, Any]:
     scanned = _looks_scanned(file_bytes)
@@ -105,15 +135,17 @@ def extract_pdf_content(file_bytes: bytes) -> dict[str, Any]:
     }
 
     full_text_parts: list[str] = []
-    all_rows: list[TransactionRow] = []
+    all_transactions: list[TransactionRow] = []
+    all_deposits: list[DepositRow] = []
 
     with pdfplumber.open(io.BytesIO(file_bytes)) as pdf:
         for page_number, page in enumerate(pdf.pages, start=1):
             page_text = page.extract_text() or ""
             full_text_parts.append(f"\n--- Page {page_number} ---\n{page_text}")
 
-            rows = _extract_transactions_from_page(page_text)
-            all_rows.extend(rows)
+            transactions, deposits = _extract_transactions_from_page(page_text)
+            all_transactions.extend(transactions)
+            all_deposits.extend(deposits)
 
             result["pages"].append(
                 {
@@ -134,15 +166,15 @@ def extract_pdf_content(file_bytes: bytes) -> dict[str, Any]:
 
     result["full_text"] = "\n".join(full_text_parts)
     statement_period = _extract_statement_years(result["full_text"])
-    for row in all_rows:
+    for row in all_transactions:
         _normalize_date(row, statement_period)
-    result["transactions"] = [asdict(r) for r in all_rows]
+    result["transactions"] = [asdict(r) for r in all_transactions]
 
-    valid_amounts = sum(1 for r in all_rows if r.amount is not None)
+    valid_amounts = sum(1 for r in all_transactions if r.amount is not None)
 
     result["quality"] = {
-        "transaction_count": len(all_rows),
-        "valid_amount_ratio": round(valid_amounts / len(all_rows), 3) if all_rows else 0.0,
+        "transaction_count": len(all_transactions),
+        "valid_amount_ratio": round(valid_amounts / len(all_transactions), 3) if all_transactions else 0.0,
         "parser": "pdfplumber_layout_v2",
     }
 

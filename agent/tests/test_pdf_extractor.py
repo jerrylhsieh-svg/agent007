@@ -20,6 +20,14 @@ def make_upload_file(
     return UploadFile(filename=filename, file=file_obj, headers={"content-type": content_type})
 
 
+def test_parse_amount_handles_positive_negative_and_invalid():
+    assert pdf_parser._parse_amount("$1,234.56") == 1234.56
+    assert pdf_parser._parse_amount("(123.45)") == -123.45
+    assert pdf_parser._parse_amount("-99.01") == -99.01
+    assert pdf_parser._parse_amount(None) is None
+    assert pdf_parser._parse_amount("not-a-number") is None
+
+
 def test_extract_pdf_content_builds_expected_result_shape():
     fake_page = Mock()
     fake_page.extract_text.return_value = "page one text"
@@ -45,7 +53,7 @@ def test_extract_pdf_content_builds_expected_result_shape():
 
     with patch("agent.services.pdf_parser._looks_scanned", return_value=False), \
          patch("agent.services.pdf_parser.pdfplumber.open", return_value=FakePdfContext()), \
-         patch("agent.services.pdf_parser._extract_transactions_from_page", return_value=([fake_row])), \
+         patch("agent.services.pdf_parser._extract_transactions_from_page", return_value=([fake_row], [])), \
          patch("agent.services.pdf_parser._extract_statement_years", return_value=(1,2025,2,2025)):
 
         result = pdf_parser.extract_pdf_content(b"fake-pdf-bytes")
