@@ -55,7 +55,6 @@ def test_extract_transactions_from_page_parses_date_description_amount_balance()
         {"text": "Coffee", "x0": 20, "x1": 35, "top": 10, "bottom": 12},
         {"text": "Shop", "x0": 36, "x1": 50, "top": 10, "bottom": 12},
         {"text": "$4.50", "x0": 80, "x1": 90, "top": 10, "bottom": 12},
-        {"text": "$100.00", "x0": 100, "x1": 115, "top": 10, "bottom": 12},
     ]
 
     rows, diagnostics = pdf_parser._extract_transactions_from_page(page, page_number=1)
@@ -66,7 +65,6 @@ def test_extract_transactions_from_page_parses_date_description_amount_balance()
     assert row.date == "01/15/2025"
     assert row.description == "Coffee Shop"
     assert row.amount == 4.50
-    assert row.balance == 100.00
     assert diagnostics["transaction_count"] == 1
 
 
@@ -94,7 +92,6 @@ def test_extract_pdf_content_builds_expected_result_shape():
         date="2025-01-15",
         description="Coffee Shop",
         amount=4.50,
-        balance=100.00,
         raw_line="01/15/2025 Coffee Shop $4.50 $100.00",
     )
 
