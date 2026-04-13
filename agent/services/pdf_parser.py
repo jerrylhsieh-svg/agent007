@@ -31,54 +31,6 @@ def _looks_scanned(file_bytes: bytes) -> bool:
         doc.close()
 
 
-def _group_words_into_lines(words: list[dict], y_tolerance: float = 3.0) -> list[list[dict]]:
-    if not words:
-        return []
-
-    words = sorted(words, key=lambda w: (round(w["top"], 1), w["x0"]))
-    lines: list[list[dict]] = []
-    current: list[dict] = []
-    current_top = None
-
-    for w in words:
-        if current_top is None:
-            current = [w]
-            current_top = w["top"]
-            continue
-
-        if abs(w["top"] - current_top) <= y_tolerance:
-            current.append(w)
-        else:
-            lines.append(sorted(current, key=lambda x: x["x0"]))
-            current = [w]
-            current_top = w["top"]
-
-    if current:
-        lines.append(sorted(current, key=lambda x: x["x0"]))
-
-    return lines
-
-
-def _parse_amount(value: str | None) -> float | None:
-    if not value:
-        return None
-    raw = value.strip().replace("$", "").replace(",", "")
-    negative = False
-
-    if raw.startswith("(") and raw.endswith(")"):
-        negative = True
-        raw = raw[1:-1]
-    if raw.startswith("-"):
-        negative = True
-        raw = raw[1:]
-
-    try:
-        amt = Decimal(raw)
-        return float(-amt if negative else amt)
-    except (InvalidOperation, ValueError):
-        return None
-
-
 def _extract_statement_years(statement_period: str | None) -> tuple[int, int] | None:
     if not statement_period:
         return None
@@ -100,97 +52,43 @@ def _extract_statement_years(statement_period: str | None) -> tuple[int, int] | 
     return start_month, start_year, end_month, end_year
 
 
-def _normalize_date(date_value: str | None, statement_period: tuple[int, int, int, int] | None = None) -> str | None:
-    dt = date_parser.parse(date_value, fuzzy=False, default=date_parser.parse("2000-01-01"))
-
-    if not statement_period:
-        return dt.date().isoformat()
-    
+def _normalize_date(record: TransactionRow | None, statement_period: tuple[int, int, int, int] | None = None) -> str | None:
+    td = date_parser.parse(record.transaction_date, fuzzy=False, default=date_parser.parse("2000-01-01"))
+    pd = date_parser.parse(record.posting_date, fuzzy=False, default=date_parser.parse("2000-01-01"))
     start_month, start_year, end_month, end_year = statement_period
-
-    if dt.month == start_month:
-        dt = dt.replace(year=start_year)
-    elif dt.month == end_month:
-        dt = dt.replace(year=end_year)
-
-    return dt.date().isoformat()
+    td = td.replace(year=start_year)  if td.month == start_month else td.replace(year=end_year)
+    pd = pd.replace(year=start_year)  if pd.month == start_month else pd.replace(year=end_year)
+    record.transaction_date = td.date().isoformat()
+    record.posting_date = pd.date().isoformat()
 
 
-def _line_to_text(line: list[dict]) -> str:
-    return " ".join(w["text"] for w in line).strip()
 
-
-def _extract_transactions_from_page(page, page_number: int) -> tuple[list[TransactionRow], dict[str, Any]]:
-    words_raw = page.extract_words(
-        keep_blank_chars=False,
-        use_text_flow=True,
-        extra_attrs=[]
-    )
-
-    words = [
-        {"text": w["text"], "x0": w["x0"], "x1": w["x1"], "top": w["top"], "bottom": w["bottom"]}
-        for w in words_raw
-    ]
-
-    lines = _group_words_into_lines(words)
-
+def _extract_transactions_from_page(page) -> tuple[list[TransactionRow], dict[str, Any]]:
+    credit_card_transaction = False
+    bank_account = False
     rows: list[TransactionRow] = []
-    non_transaction_lines: list[str] = []
-
-    for line in lines:
-        line_text = _line_to_text(line)
-        if not line_text:
+    for line in page.split("\n"):
+        if line == "Purchases and Adjustments":
+            credit_card_transaction = True
             continue
+        elif line.startswith("TOTAL PURCHASES AND ADJUSTMENTS FOR THIS PERIOD"):
+            credit_card_transaction = False
 
-        # Heuristic: first token is often date
-        first = line[0]["text"]
-        date_token = first if DATE_RE.match(first) else None
-
-        # Right-most numeric tokens are usually amount / balance
-        numeric_tokens = [w for w in line if AMOUNT_RE.match(w["text"])]
-        amount = None
-        description = line_text
-
-        if date_token:
-            # Remove date token from description
-            remaining = [w for w in line[1:]]
-
-            # Pick last numeric as balance, second last as amount when present
-            amount = _parse_amount(numeric_tokens[-1]["text"])
-
-            numeric_texts = {w["text"] for w in numeric_tokens}
-            desc_tokens = [w["text"] for w in remaining if w["text"] not in numeric_texts]
-            description = " ".join(desc_tokens).strip()
-            if "PAYMENT - THANK YOU" in description:
-                continue
-
+        if credit_card_transaction:
+            line_split = line.split(" ")
             rows.append(
                 TransactionRow(
-                    page_number=page_number,
-                    date=date_token,
-                    description=description,
-                    amount=amount,
-                    raw_line=line_text,
+                    transaction_date=line_split[0],
+                    posting_date=line_split[1],
+                    description=" ".join(line_split[2:-2]),
+                    reference_number=int(line_split[-2]),
+                    amount=float(line_split[-1]),
+                    raw_line=line,
                 )
             )
-        else:
-            non_transaction_lines.append(line_text)
 
-    # Merge wrapped description lines into previous transaction
-    merged_rows: list[TransactionRow] = []
-    for row in rows:
-        if merged_rows and (not row.date) and row.description:
-            merged_rows[-1].description += " " + row.description
-            merged_rows[-1].raw_line += " " + row.raw_line
-        else:
-            merged_rows.append(row)
 
-    diagnostics = {
-        "line_count": len(lines),
-        "transaction_count": len(merged_rows),
-        "non_transaction_lines_sample": non_transaction_lines[:15],
-    }
-    return merged_rows, diagnostics
+    return rows
 
 def extract_pdf_content(file_bytes: bytes) -> dict[str, Any]:
     scanned = _looks_scanned(file_bytes)
@@ -214,14 +112,13 @@ def extract_pdf_content(file_bytes: bytes) -> dict[str, Any]:
             page_text = page.extract_text() or ""
             full_text_parts.append(f"\n--- Page {page_number} ---\n{page_text}")
 
-            rows, diagnostics = _extract_transactions_from_page(page, page_number)
+            rows = _extract_transactions_from_page(page_text)
             all_rows.extend(rows)
 
             result["pages"].append(
                 {
                     "page_number": page_number,
                     "text": page_text,
-                    "diagnostics": diagnostics,
                 }
             )
 
@@ -238,15 +135,13 @@ def extract_pdf_content(file_bytes: bytes) -> dict[str, Any]:
     result["full_text"] = "\n".join(full_text_parts)
     statement_period = _extract_statement_years(result["full_text"])
     for row in all_rows:
-        row.date = _normalize_date(row.date, statement_period)
+        _normalize_date(row, statement_period)
     result["transactions"] = [asdict(r) for r in all_rows]
 
-    valid_dates = sum(1 for r in all_rows if r.date)
     valid_amounts = sum(1 for r in all_rows if r.amount is not None)
 
     result["quality"] = {
         "transaction_count": len(all_rows),
-        "valid_date_ratio": round(valid_dates / len(all_rows), 3) if all_rows else 0.0,
         "valid_amount_ratio": round(valid_amounts / len(all_rows), 3) if all_rows else 0.0,
         "parser": "pdfplumber_layout_v2",
     }

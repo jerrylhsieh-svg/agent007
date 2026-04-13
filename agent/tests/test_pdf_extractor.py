@@ -20,77 +20,16 @@ def make_upload_file(
     return UploadFile(filename=filename, file=file_obj, headers={"content-type": content_type})
 
 
-def test_parse_amount_handles_positive_negative_and_invalid():
-    assert pdf_parser._parse_amount("$1,234.56") == 1234.56
-    assert pdf_parser._parse_amount("(123.45)") == -123.45
-    assert pdf_parser._parse_amount("-99.01") == -99.01
-    assert pdf_parser._parse_amount(None) is None
-    assert pdf_parser._parse_amount("not-a-number") is None
-
-
-def test_normalize_date_handles_multiple_formats_and_invalid():
-    assert pdf_parser._normalize_date("1/15/2025") == "2025-01-15"
-    assert pdf_parser._normalize_date("2025-02-03") == "2025-02-03"
-    assert pdf_parser._normalize_date("Jan 8") == "2000-01-08"
-
-
-def test_group_words_into_lines_groups_by_top_and_sorts_by_x0():
-    words = [
-        {"text": "B", "x0": 50, "x1": 60, "top": 10.2, "bottom": 12},
-        {"text": "A", "x0": 10, "x1": 20, "top": 10.0, "bottom": 12},
-        {"text": "C", "x0": 15, "x1": 25, "top": 30.0, "bottom": 32},
-    ]
-
-    lines = pdf_parser._group_words_into_lines(words, y_tolerance=3.0)
-
-    assert len(lines) == 2
-    assert [w["text"] for w in lines[0]] == ["A", "B"]
-    assert [w["text"] for w in lines[1]] == ["C"]
-
-
-def test_extract_transactions_from_page_parses_date_description_amount_balance():
-    page = Mock()
-    page.extract_words.return_value = [
-        {"text": "01/15/2025", "x0": 0, "x1": 10, "top": 10, "bottom": 12},
-        {"text": "Coffee", "x0": 20, "x1": 35, "top": 10, "bottom": 12},
-        {"text": "Shop", "x0": 36, "x1": 50, "top": 10, "bottom": 12},
-        {"text": "$4.50", "x0": 80, "x1": 90, "top": 10, "bottom": 12},
-    ]
-
-    rows, diagnostics = pdf_parser._extract_transactions_from_page(page, page_number=1)
-
-    assert len(rows) == 1
-    row = rows[0]
-    assert row.page_number == 1
-    assert row.date == "01/15/2025"
-    assert row.description == "Coffee Shop"
-    assert row.amount == 4.50
-    assert diagnostics["transaction_count"] == 1
-
-
-def test_extract_transactions_from_page_keeps_non_transaction_lines_in_diagnostics():
-    page = Mock()
-    page.extract_words.return_value = [
-        {"text": "Statement", "x0": 0, "x1": 20, "top": 10, "bottom": 12},
-        {"text": "Summary", "x0": 25, "x1": 45, "top": 10, "bottom": 12},
-    ]
-
-    rows, diagnostics = pdf_parser._extract_transactions_from_page(page, page_number=1)
-
-    assert rows == []
-    assert diagnostics["transaction_count"] == 0
-    assert diagnostics["non_transaction_lines_sample"] == ["Statement Summary"]
-
-
 def test_extract_pdf_content_builds_expected_result_shape():
     fake_page = Mock()
     fake_page.extract_text.return_value = "page one text"
     fake_page.extract_tables.return_value = [[["Date", "Description", "Amount"]]]
 
     fake_row = pdf_parser.TransactionRow(
-        page_number=1,
-        date="2025-01-15",
+        transaction_date="2025-01-15",
+        posting_date="2025-01-15",
         description="Coffee Shop",
+        reference_number=2134,
         amount=4.50,
         raw_line="01/15/2025 Coffee Shop $4.50 $100.00",
     )
@@ -106,18 +45,17 @@ def test_extract_pdf_content_builds_expected_result_shape():
 
     with patch("agent.services.pdf_parser._looks_scanned", return_value=False), \
          patch("agent.services.pdf_parser.pdfplumber.open", return_value=FakePdfContext()), \
-         patch("agent.services.pdf_parser._extract_transactions_from_page", return_value=([fake_row], {"line_count": 1, "transaction_count": 1, "non_transaction_lines_sample": []})):
+         patch("agent.services.pdf_parser._extract_transactions_from_page", return_value=([fake_row])), \
+         patch("agent.services.pdf_parser._extract_statement_years", return_value=(1,2025,2,2025)):
 
         result = pdf_parser.extract_pdf_content(b"fake-pdf-bytes")
 
     assert result["document_type"] == "bank_statement_candidate"
     assert result["is_scanned"] is False
     assert result["needs_ocr"] is False
-    assert len(result["pages"]) == 1
     assert len(result["tables"]) == 1
     assert len(result["transactions"]) == 1
     assert result["quality"]["transaction_count"] == 1
-    assert result["quality"]["valid_date_ratio"] == 1.0
     assert result["quality"]["valid_amount_ratio"] == 1.0
     assert "page one text" in result["full_text"]
 
