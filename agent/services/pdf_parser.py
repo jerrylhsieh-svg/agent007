@@ -100,10 +100,12 @@ def _extract_statement_years(statement_period: str | None) -> tuple[int, int] | 
     return start_month, start_year, end_month, end_year
 
 
-def _apply_statement_year(date_value: str | None, statement_period: tuple[int, int, int, int] | None) -> str | None:
-    if not date_value or not statement_period:
-        return date_value
+def _normalize_date(date_value: str | None, statement_period: tuple[int, int, int, int] | None = None) -> str | None:
     dt = date_parser.parse(date_value, fuzzy=False, default=date_parser.parse("2000-01-01"))
+
+    if not statement_period:
+        return dt.date().isoformat()
+    
     start_month, start_year, end_month, end_year = statement_period
 
     if dt.month == start_month:
@@ -240,7 +242,7 @@ def extract_pdf_content(file_bytes: bytes) -> dict[str, Any]:
     result["full_text"] = "\n".join(full_text_parts)
     statement_period = _extract_statement_years(result["full_text"])
     for row in all_rows:
-        row.date = _apply_statement_year(row.date, statement_period)
+        row.date = _normalize_date(row.date, statement_period)
     result["transactions"] = [asdict(r) for r in all_rows]
 
     valid_dates = sum(1 for r in all_rows if r.date)
