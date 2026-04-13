@@ -26,9 +26,9 @@ def test_parse_amount_handles_positive_negative_and_invalid():
     assert pdf_parser._parse_amount("(123.45)") == -123.45
     assert pdf_parser._parse_amount("-99.01") == -99.01
     with pytest.raises(AttributeError):
-        pdf_parser._parse_amount(None) is None
+        pdf_parser._parse_amount(None)
     with pytest.raises(decimal.InvalidOperation):
-        pdf_parser._parse_amount("not-a-number") is None
+        pdf_parser._parse_amount("not-a-number")
 
 
 def test_extract_pdf_content_builds_expected_result_shape():
