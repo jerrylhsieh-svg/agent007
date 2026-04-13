@@ -186,6 +186,7 @@ def extract_pdf_content(file_bytes: bytes) -> dict[str, Any]:
     for row in all_statements:
         _normalize_date(row, statement_period)
     result["transactions"] = [asdict(r) for r in all_transactions]
+    result["statements"] = [asdict(r) for r in all_statements]
 
     valid_amounts = sum(1 for r in all_transactions if r.amount is not None)
 
