@@ -10,8 +10,9 @@ class TransactionRow:
     raw_line: str
 
 @dataclass
-class DepositRow:
+class BankStatementRow:
     date: str | None
     description: str
+    statement_type: str | None
     amount: float | None
     raw_line: str

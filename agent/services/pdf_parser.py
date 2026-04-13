@@ -8,7 +8,7 @@ import fitz
 from dateutil import parser as date_parser
 import pdfplumber
 
-from agent.models.pdf_models import DepositRow, TransactionRow
+from agent.models.pdf_models import BankStatementRow, TransactionRow
 
 
 def _looks_scanned(file_bytes: bytes) -> bool:
@@ -71,11 +71,12 @@ def _normalize_date(record: TransactionRow | None, statement_period: tuple[int, 
 
 
 
-def _extract_transactions_from_page(page) -> tuple[list[TransactionRow], list[DepositRow]]:
+def _extract_transactions_from_page(page) -> tuple[list[TransactionRow], list[BankStatementRow]]:
     credit_card_transaction = False
     deposits_and_other_additions = False
+    withdraws_and_other_subtractions = False
     transactions: list[TransactionRow] = []
-    deposits: list[DepositRow] = []
+    statements: list[BankStatementRow] = []
     for line in page.split("\n"):
         if line == "Purchases and Adjustments":
             credit_card_transaction = True
@@ -87,6 +88,11 @@ def _extract_transactions_from_page(page) -> tuple[list[TransactionRow], list[De
             continue
         elif line.startswith("Total deposits and other additions"):
             deposits_and_other_additions = False
+        elif line == "Withdrawals and other subtractions":
+            withdraws_and_other_subtractions = True
+            continue
+        elif line.startswith("Total withdrawals and other subtractions"):
+            withdraws_and_other_subtractions = False
         
         line_split = line.split(" ")
         if credit_card_transaction:
@@ -103,10 +109,23 @@ def _extract_transactions_from_page(page) -> tuple[list[TransactionRow], list[De
         elif deposits_and_other_additions:
             if line_split[0] == "Date":
                 continue
-            deposits.append(
-                DepositRow(
+            statements.append(
+                BankStatementRow(
                     date=line_split[0],
                     description=" ".join(line_split[1:-1]),
+                    statement_type="deposit",
+                    amount=_parse_amount(line_split[-1]),
+                    raw_line=line,
+                )
+            )
+        elif withdraws_and_other_subtractions:
+            if line_split[0] == "Date":
+                continue
+            statements.append(
+                BankStatementRow(
+                    date=line_split[0],
+                    description=" ".join(line_split[1:-1]),
+                    statement_type="withdraw",
                     amount=_parse_amount(line_split[-1]),
                     raw_line=line,
                 )
@@ -114,7 +133,7 @@ def _extract_transactions_from_page(page) -> tuple[list[TransactionRow], list[De
 
 
 
-    return transactions, deposits
+    return transactions, statements
 
 def extract_pdf_content(file_bytes: bytes) -> dict[str, Any]:
     scanned = _looks_scanned(file_bytes)
@@ -132,16 +151,16 @@ def extract_pdf_content(file_bytes: bytes) -> dict[str, Any]:
 
     full_text_parts: list[str] = []
     all_transactions: list[TransactionRow] = []
-    all_deposits: list[DepositRow] = []
+    all_statements: list[BankStatementRow] = []
 
     with pdfplumber.open(io.BytesIO(file_bytes)) as pdf:
         for page_number, page in enumerate(pdf.pages, start=1):
             page_text = page.extract_text() or ""
             full_text_parts.append(f"\n--- Page {page_number} ---\n{page_text}")
 
-            transactions, deposits = _extract_transactions_from_page(page_text)
+            transactions, statements = _extract_transactions_from_page(page_text)
             all_transactions.extend(transactions)
-            all_deposits.extend(deposits)
+            all_statements.extend(statements)
 
             result["pages"].append(
                 {
@@ -163,6 +182,8 @@ def extract_pdf_content(file_bytes: bytes) -> dict[str, Any]:
     result["full_text"] = "\n".join(full_text_parts)
     statement_period = _extract_statement_years(result["full_text"])
     for row in all_transactions:
+        _normalize_date(row, statement_period)
+    for row in all_statements:
         _normalize_date(row, statement_period)
     result["transactions"] = [asdict(r) for r in all_transactions]
 
