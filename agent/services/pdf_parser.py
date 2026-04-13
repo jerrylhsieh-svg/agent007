@@ -166,6 +166,8 @@ def _extract_transactions_from_page(page, page_number: int) -> tuple[list[Transa
             numeric_texts = {w["text"] for w in numeric_tokens}
             desc_tokens = [w["text"] for w in remaining if w["text"] not in numeric_texts]
             description = " ".join(desc_tokens).strip()
+            if "PAYMENT - THANK YOU" in description:
+                continue
 
             rows.append(
                 TransactionRow(
