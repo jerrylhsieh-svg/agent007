@@ -111,7 +111,7 @@ def _extract_transactions_from_page(page) -> tuple[list[TransactionRow], list[Ba
                 )
             )
         elif deposits_and_other_additions:
-            if not DATE_RE.match(line_split[0]) == "Date":
+            if not DATE_RE.match(line_split[0]):
                 continue
             statements.append(
                 BankStatementRow(
@@ -123,7 +123,7 @@ def _extract_transactions_from_page(page) -> tuple[list[TransactionRow], list[Ba
                 )
             )
         elif withdraws_and_other_subtractions:
-            if not DATE_RE.match(line_split[0]) == "Date":
+            if not DATE_RE.match(line_split[0]):
                 continue
             statements.append(
                 BankStatementRow(
