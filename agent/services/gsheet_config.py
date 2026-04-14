@@ -1,6 +1,6 @@
 GSHEET_NAME = "transactions"
 GSHEET_TRANSACTIONS_TAB = "card_transactions"
-GSHEET_STATEMENT_TAB = "bank_statement"
+GSHEET_STATEMENT_TAB = "bank_statements"
 SCOPES = [
     "https://www.googleapis.com/auth/spreadsheets",
     "https://www.googleapis.com/auth/drive",

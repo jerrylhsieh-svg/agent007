@@ -11,6 +11,10 @@ import pdfplumber
 from agent.models.pdf_models import BankStatementRow, TransactionRow
 
 
+DATE_RE = re.compile(
+    r"^(?P<date>\d{1,2}/\d{1,2}(?:/\d{2,4})?|\d{4}-\d{2}-\d{2}|[A-Z][a-z]{2}\s+\d{1,2})$"
+)
+
 def _looks_scanned(file_bytes: bytes) -> bool:
     doc = fitz.open(stream=file_bytes, filetype="pdf")
     try:
@@ -107,7 +111,7 @@ def _extract_transactions_from_page(page) -> tuple[list[TransactionRow], list[Ba
                 )
             )
         elif deposits_and_other_additions:
-            if line_split[0] == "Date":
+            if not DATE_RE.match(line_split[0]) == "Date":
                 continue
             statements.append(
                 BankStatementRow(
@@ -119,7 +123,7 @@ def _extract_transactions_from_page(page) -> tuple[list[TransactionRow], list[Ba
                 )
             )
         elif withdraws_and_other_subtractions:
-            if line_split[0] == "Date":
+            if not DATE_RE.match(line_split[0]) == "Date":
                 continue
             statements.append(
                 BankStatementRow(
@@ -145,6 +149,7 @@ def extract_pdf_content(file_bytes: bytes) -> dict[str, Any]:
         "pages": [],
         "tables": [],
         "transactions": [],
+        "statements": [],
         "full_text": "",
         "quality": {},
     }
