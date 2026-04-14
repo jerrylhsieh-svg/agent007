@@ -64,14 +64,19 @@ def _extract_statement_years(statement_period: str | None) -> tuple[int, int] | 
     return start_month, start_year, end_month, end_year
 
 
-def _normalize_date(record: TransactionRow | None, statement_period: tuple[int, int, int, int] | None = None) -> str | None:
-    td = date_parser.parse(record.transaction_date, fuzzy=False, default=date_parser.parse("2000-01-01"))
-    pd = date_parser.parse(record.posting_date, fuzzy=False, default=date_parser.parse("2000-01-01"))
-    start_month, start_year, end_month, end_year = statement_period
-    td = td.replace(year=start_year)  if td.month == start_month else td.replace(year=end_year)
-    pd = pd.replace(year=start_year)  if pd.month == start_month else pd.replace(year=end_year)
-    record.transaction_date = td.date().isoformat()
-    record.posting_date = pd.date().isoformat()
+def _normalize_date(transaction_record: TransactionRow | None = None, bank_record: BankStatementRow | None = None, statement_period: tuple[int, int, int, int] | None = None) -> str | None:
+   start_month, start_year, end_month, end_year = statement_period
+   if bank_record:
+        dt = date_parser.parse(bank_record.date, fuzzy=False, default=date_parser.parse("2000-01-01"))
+        dt = dt.replace(year=start_year)  if dt.month == start_month else dt.replace(year=end_year)
+        bank_record.date = dt.date().isoformat()
+   else:
+        td = date_parser.parse(transaction_record.transaction_date, fuzzy=False, default=date_parser.parse("2000-01-01"))
+        pd = date_parser.parse(transaction_record.posting_date, fuzzy=False, default=date_parser.parse("2000-01-01"))
+        td = td.replace(year=start_year)  if td.month == start_month else td.replace(year=end_year)
+        pd = pd.replace(year=start_year)  if pd.month == start_month else pd.replace(year=end_year)
+        transaction_record.transaction_date = td.date().isoformat()
+        transaction_record.posting_date = pd.date().isoformat()
 
 
 
@@ -187,9 +192,9 @@ def extract_pdf_content(file_bytes: bytes) -> dict[str, Any]:
     result["full_text"] = "\n".join(full_text_parts)
     statement_period = _extract_statement_years(result["full_text"])
     for row in all_transactions:
-        _normalize_date(row, statement_period)
+        _normalize_date(transaction_record=row, statement_period=statement_period)
     for row in all_statements:
-        _normalize_date(row, statement_period)
+        _normalize_date(bank_record=row, statement_period=statement_period)
     result["transactions"] = [asdict(r) for r in all_transactions]
     result["statements"] = [asdict(r) for r in all_statements]
 
