@@ -48,13 +48,13 @@ def _extract_statement_years(statement_period: str | None) -> tuple[int, int] | 
         return None
 
     match = re.search(
-        r"([A-Za-z]+)\s+\d{1,2}\s*-\s*([A-Za-z]+)\s+\d{1,2},\s*(\d{4})",
+        r"([A-Za-z]+)\s+(\d{1,2})(?:,\s*(\d{4}))?\s*(?:to|-)\s*([A-Za-z]+)\s+(\d{1,2}),\s*(\d{4})",
         statement_period,
     )
     if not match:
         return None
 
-    start_month_name, end_month_name, end_year_str = match.groups()
+    start_month_name, _, _, end_month_name, _, end_year_str = match.groups()
     end_year = int(end_year_str)
 
     start_month = datetime.strptime(start_month_name, "%B").month
