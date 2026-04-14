@@ -13,16 +13,11 @@ SAVE_TRIGGERS = {
 }
 
 IS_TRANSACTION_TRIGGERS = [
-        "transaction",
-        "transactions",
-        "spending",
-        "spend",
-        "expenses",
-        "expense",
-        "income",
-        "budget",
-        "bank statement",
-    ]
+    "spending",
+    "spend",
+    "expenses",
+    "expense",
+]
 
 
 def normalize(text: str) -> str:
