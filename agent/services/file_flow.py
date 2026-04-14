@@ -13,10 +13,11 @@ SAVE_TRIGGERS = {
 }
 
 IS_TRANSACTION_TRIGGERS = [
-    "spending",
-    "spend",
-    "expenses",
-    "expense",
+    "credit card spending",
+]
+
+IS_STATEMENT_TRIGGERS = [
+    "bank statement",
 ]
 
 
@@ -32,6 +33,10 @@ def should_start_file_flow(message: str) -> bool:
 def should_start_transaction_flow(message: str) -> bool:
     msg = normalize(message)
     return any(trigger in msg for trigger in IS_TRANSACTION_TRIGGERS)
+
+def should_start_statement_flow(message: str) -> bool:
+    msg = normalize(message)
+    return any(trigger in msg for trigger in IS_STATEMENT_TRIGGERS)
 
 
 def handle_file_flow(session_id: str, message: str):

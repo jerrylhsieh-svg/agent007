@@ -3,7 +3,8 @@ from __future__ import annotations
 from fastapi import APIRouter, Request, UploadFile, File
 from fastapi.responses import HTMLResponse
 
-from agent.services.file_flow import handle_file_flow, should_start_transaction_flow
+from agent.services.bank_statement_report import generate_bank_statement_report
+from agent.services.file_flow import handle_file_flow, should_start_statement_flow, should_start_transaction_flow
 from agent.services.call_model import call_model
 from agent.models.chat import ChatRequest, ChatResponse
 from agent.services.pdf_extractor import extract_pdf_service
@@ -36,6 +37,10 @@ async def chat(req: ChatRequest):
     
     if should_start_transaction_flow(req.message):
         answer = analyze_transactions_question(req.message, req.history)
+        return {"reply": answer}
+    
+    if should_start_statement_flow(req.message):
+        answer = generate_bank_statement_report(req.message, req.history)
         return {"reply": answer}
     
     answer = call_model(req.message, req.history)
