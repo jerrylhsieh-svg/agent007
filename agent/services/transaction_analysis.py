@@ -8,16 +8,7 @@ import pandas as pd
 from agent.services.call_model import call_model
 from agent.services.google_sheets import read_transactions_df
 from agent.services.gsheet_config import GSHEET_NAME, GSHEET_TRANSACTIONS_TAB
-
-
-
-def _safe_float(value) -> float:
-    try:
-        if value is None or (isinstance(value, float) and math.isnan(value)):
-            return 0.0
-        return float(value)
-    except Exception:
-        return 0.0
+from agent.services.helper import _safe_float
 
 
 def _summarize_transactions(df: pd.DataFrame) -> dict:
