@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Literal
 
 @dataclass
 class TransactionRow:
@@ -13,6 +14,6 @@ class TransactionRow:
 class BankStatementRow:
     date: str | None
     description: str
-    statement_type: str | None
+    statement_type: Literal["deposit", "withdraw"]
     amount: float | None
     raw_line: str

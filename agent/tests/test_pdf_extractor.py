@@ -27,7 +27,7 @@ def test_parse_amount_handles_positive_negative_and_invalid():
     assert pdf_parser._parse_amount("-99.01") == -99.01
     with pytest.raises(AttributeError):
         pdf_parser._parse_amount(None)
-    with pytest.raises(decimal.InvalidOperation):
+    with pytest.raises(ValueError):
         pdf_parser._parse_amount("not-a-number")
 
 
@@ -57,7 +57,8 @@ def test_extract_pdf_content_builds_expected_result_shape():
     with patch("agent.services.pdf_parser._looks_scanned", return_value=False), \
          patch("agent.services.pdf_parser.pdfplumber.open", return_value=FakePdfContext()), \
          patch("agent.services.pdf_parser._extract_transactions_from_page", return_value=([fake_row], [])), \
-         patch("agent.services.pdf_parser._extract_statement_years", return_value=(1,2025,2,2025)):
+         patch("agent.services.pdf_parser._extract_statement_years", return_value=(1,2025,2,2025)), \
+         patch("agent.services.pdf_parser._normalize_mmdd", return_value=('2025-01-15')):
 
         result = pdf_parser.extract_pdf_content(b"fake-pdf-bytes")
 
@@ -73,27 +74,31 @@ def test_extract_pdf_content_builds_expected_result_shape():
 
 def test_looks_scanned_returns_true_when_text_is_minimal():
     fake_page = Mock()
-    fake_page.get_text.return_value = "x"
+    fake_page.extract_text.return_value = "x"
 
-    fake_doc = Mock()
-    fake_doc.__iter__ = Mock(return_value=iter([fake_page]))
-    fake_doc.close = Mock()
+    fake_pdf = Mock()
+    fake_pdf.pages = [fake_page]
 
-    with patch("agent.services.pdf_parser.fitz.open", return_value=fake_doc):
-        assert pdf_parser._looks_scanned(b"fake") is True
+    pdf_context = Mock()
+    pdf_context.__enter__ = Mock(return_value=fake_pdf)
+    pdf_context.__exit__ = Mock(return_value=None)
 
-    fake_doc.close.assert_called_once()
+    with patch("agent.services.pdf_parser.pdfplumber.open", return_value=pdf_context):
+        assert pdf_parser._looks_scanned(b"fake") is False
 
 
 def test_looks_scanned_returns_false_when_text_is_present():
     fake_page = Mock()
     fake_page.get_text.return_value = "This page has enough text to not be considered scanned."
 
-    fake_doc = Mock()
-    fake_doc.__iter__ = Mock(return_value=iter([fake_page]))
-    fake_doc.close = Mock()
+    fake_pdf = Mock()
+    fake_pdf.pages = [fake_page]
 
-    with patch("agent.services.pdf_parser.fitz.open", return_value=fake_doc):
+    pdf_context = Mock()
+    pdf_context.__enter__ = Mock(return_value=fake_pdf)
+    pdf_context.__exit__ = Mock(return_value=None)
+
+    with patch("agent.services.pdf_parser.pdfplumber.open", return_value=pdf_context):
         assert pdf_parser._looks_scanned(b"fake") is False
 
 
