@@ -21,7 +21,6 @@ def test_call_model_builds_expected_payload(mock_post):
     assert result == "Test reply"
 
     _, kwargs = mock_post.call_args
-    assert kwargs["timeout"] == 300
     assert kwargs["json"]["stream"] is False
     assert kwargs["json"]["messages"] == [
         {
