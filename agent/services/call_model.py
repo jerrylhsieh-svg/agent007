@@ -27,7 +27,7 @@ def call_model(message: str, history: list[dict]) -> str:
             "messages": messages,
             "stream": False
         },
-        timeout=300
+        timeout=600
     )
     r.raise_for_status()
     data = r.json()
