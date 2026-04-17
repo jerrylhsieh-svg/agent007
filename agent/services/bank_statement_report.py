@@ -10,17 +10,21 @@ from agent.services.gsheet_config import GSHEET_NAME, GSHEET_STATEMENT_TAB
 from agent.services.helper import _safe_float
 
 class BankStatementAnalyzer:
-    def __init__(self, df: pd.DataFrame):
-        self.df = self._normalize_statement_df(df)
+    def __init__(self):
+        self.df = self._retrieve_statement()
         self._debits = None
         self._credits = None
         self._monthly_summary = None
+    
+
+    def _retrieve_statement(self) -> pd.DataFrame:
+
+        return read_transactions_df(
+            spreadsheet_name=GSHEET_NAME,
+            worksheet_name=GSHEET_STATEMENT_TAB,
+        )
 
     def _normalize_statement_df(self) -> pd.DataFrame:
-        """
-        Normalizes likely bank-statement columns into a consistent shape:
-        date, description, amount, statement_type, source_file
-        """
         if self.df.empty:
             return self.df.copy()
 
@@ -144,56 +148,55 @@ class BankStatementAnalyzer:
         }
 
 
-def generate_bank_statement_report(
-    question: str = "Generate a bank statement report.",
-    history: list[dict] | None = None,
-) -> str:
-    history = history or []
+    def generate_bank_statement_summary(
+        self,
+        question: str = "Generate a bank statement report.",
+        history: list[dict] | None = None,
+    ) -> str:
+        history = history or []
 
-    df = read_transactions_df(
-        spreadsheet_name=GSHEET_NAME,
-        worksheet_name=GSHEET_STATEMENT_TAB,
-    )
+        summary = self._summarize_statement_data()
 
-    analyzer = BankStatementAnalyzer(df)
+        if summary["row_count"] == 0:
+            return "I couldn't find any bank statement rows in Google Sheets yet."
 
-    summary = analyzer._summarize_statement_data()
+        context = f"""
+    You are generating a bank statement report from Google Sheets data.
 
-    if summary["row_count"] == 0:
-        return "I couldn't find any bank statement rows in Google Sheets yet."
+    Dataset summary:
+    - Row count: {summary["row_count"]}
+    - Date range: {summary["date_range"]}
+    - Total withdraw: {summary["total_withdraw"]}
+    - Total deposit: {summary["total_deposit"]}
+    - Net change: {summary["net_change"]}
 
-    context = f"""
-You are generating a bank statement report from Google Sheets data.
+    Statement types:
+    {summary["statement_types"]}
 
-Dataset summary:
-- Row count: {summary["row_count"]}
-- Date range: {summary["date_range"]}
-- Total withdraw: {summary["total_withdraw"]}
-- Total deposit: {summary["total_deposit"]}
-- Net change: {summary["net_change"]}
+    Largest withdraw:
+    {summary["largest_withdraw"]}
 
-Statement types:
-{summary["statement_types"]}
+    Largest deposit:
+    {summary["largest_deposit"]}
 
-Largest withdraw:
-{summary["largest_withdraw"]}
+    Recent entries:
+    {summary["recent_entries"]}
 
-Largest deposit:
-{summary["largest_deposit"]}
+    Write a concise bank statement style report with:
+    1. Overall activity summary
+    2. Cash flow / debit-credit summary
+    3. Notable large transactions
+    4. Recent activity
+    5. Any data-quality caveats if fields are missing or sparse
 
-Recent entries:
-{summary["recent_entries"]}
+    Use only the provided data. Be concrete and numeric.
+    """
 
-Write a concise bank statement style report with:
-1. Overall activity summary
-2. Cash flow / debit-credit summary
-3. Notable large transactions
-4. Recent activity
-5. Any data-quality caveats if fields are missing or sparse
+        augmented_history = list(history)
+        augmented_history.append({"role": "assistant", "content": context})
+        return call_model(question, augmented_history)
+    
 
-Use only the provided data. Be concrete and numeric.
-"""
-
-    augmented_history = list(history)
-    augmented_history.append({"role": "assistant", "content": context})
-    return call_model(question, augmented_history)
+def generate_summary(question: str, history: list[dict] | None = None) -> str:
+    analyzer = BankStatementAnalyzer()
+    return analyzer.generate_bank_statement_summary(question, history or [])
