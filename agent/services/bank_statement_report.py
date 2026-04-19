@@ -57,10 +57,6 @@ class BankStatementAnalyzer:
                 "total_debits": 0.0,
                 "total_credits": 0.0,
                 "net_change": 0.0,
-                "largest_debits": [],
-                "largest_credits": [],
-                "statement_types": [],
-                "recent_entries": [],
             }
 
         withdraw = working[working["statement_type"] == "withdraw"].copy()
