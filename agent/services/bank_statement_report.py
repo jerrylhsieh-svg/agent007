@@ -69,64 +69,6 @@ class BankStatementAnalyzer:
         min_date = working["date"].min() if "date" in working.columns else None
         max_date = working["date"].max() if "date" in working.columns else None
 
-        statement_types = []
-        if "statement_type" in working.columns:
-            counts = (
-                working["statement_type"]
-                .fillna("unknown")
-                .astype(str)
-                .value_counts()
-                .reset_index()
-            )
-            counts.columns = ["statement_type", "count"]
-            statement_types = counts.to_dict(orient="records")
-
-        largest_withdraw = []
-        if not withdraw.empty:
-            top_withdraw = withdraw.nsmallest(10, "amount")
-            for _, row in top_withdraw.iterrows():
-                largest_withdraw.append(
-                    {
-                        "date": None if pd.isna(row.get("date")) else str(row["date"].date()),
-                        "description": row.get("description"),
-                        "amount": _safe_float(row.get("amount")),
-                        "statement_type": row.get("statement_type"),
-                        "source_file": row.get("source_file"),
-                    }
-                )
-
-        largest_deposit = []
-        if not deposit.empty:
-            top_deposit = deposit.nlargest(10, "amount")
-            for _, row in top_deposit.iterrows():
-                largest_deposit.append(
-                    {
-                        "date": None if pd.isna(row.get("date")) else str(row["date"].date()),
-                        "description": row.get("description"),
-                        "amount": _safe_float(row.get("amount")),
-                        "statement_type": row.get("statement_type"),
-                        "source_file": row.get("source_file"),
-                    }
-                )
-
-        recent_entries = []
-        sort_cols = [c for c in ("date",) if c in working.columns]
-        latest = (
-            working.sort_values(sort_cols, ascending=False).head(20)
-            if sort_cols
-            else working.head(20)
-        )
-        for _, row in latest.iterrows():
-            recent_entries.append(
-                {
-                    "date": None if pd.isna(row.get("date")) else str(row["date"].date()),
-                    "description": row.get("description"),
-                    "amount": _safe_float(row.get("amount")),
-                    "statement_type": row.get("statement_type"),
-                    "source_file": row.get("source_file"),
-                }
-            )
-
         return {
             "row_count": int(len(working)),
             "date_range": {
@@ -136,10 +78,6 @@ class BankStatementAnalyzer:
             "total_withdraw": round(abs(withdraw["amount"].sum()), 2) if not withdraw.empty else 0.0,
             "total_deposit": round(deposit["amount"].sum(), 2) if not deposit.empty else 0.0,
             "net_change": round(working["amount"].sum(), 2),
-            "largest_withdraw": largest_withdraw,
-            "largest_deposit": largest_deposit,
-            "statement_types": statement_types,
-            "recent_entries": recent_entries,
         }
 
 
@@ -163,18 +101,6 @@ Dataset summary:
 - Total withdraw: {summary["total_withdraw"]}
 - Total deposit: {summary["total_deposit"]}
 - Net change: {summary["net_change"]}
-
-Statement types:
-{summary["statement_types"]}
-
-Largest withdraw:
-{summary["largest_withdraw"]}
-
-Largest deposit:
-{summary["largest_deposit"]}
-
-Recent entries:
-{summary["recent_entries"]}
 
 Write a concise bank statement style report with:
 1. Overall activity summary
