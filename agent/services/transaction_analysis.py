@@ -37,7 +37,6 @@ class CreditCardTransactionAnalyzer:
         expenses = working[working["amount"] >= 0].copy()
 
         total_spend = round(abs(expenses["amount"].sum()), 2) if not expenses.empty else 0.0
-        net_amount = round(working["amount"].sum(), 2)
 
         min_date = working["date"].min() if "date" in working.columns else None
         max_date = working["date"].max() if "date" in working.columns else None
@@ -58,7 +57,6 @@ class CreditCardTransactionAnalyzer:
             },
             "total_spend": total_spend,
             "30 days spend avg": thirty_days_avg(total_spend, total_date),
-            "net_amount": net_amount,
         }
 
 
@@ -78,7 +76,6 @@ Dataset summary:
 - Date range: {summary["date_range"]}
 - Total spend: {summary["total_spend"]}
 - 30 days withdraw avgerage: {summary["30 days spend avg"]}
-- Net amount: {summary["net_amount"]}
 
 Answer the user's question using only this transaction context.
 If the data is insufficient, say what is missing.
