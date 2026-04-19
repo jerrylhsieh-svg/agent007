@@ -14,5 +14,3 @@ python-dateutil
 gspread
 google-auth
 google-api-python-client
-types-requests
-pandas-stubs
