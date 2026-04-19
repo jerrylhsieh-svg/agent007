@@ -66,7 +66,7 @@ class CreditCardTransactionAnalyzer:
         }
 
 
-def analyze_transactions_question(question: str, history: list[dict] | None = None) -> str:
+def generate_credit_card_summary(question: str, history: list[dict] | None = None) -> str:
     history = history or []
     credit_analyzer = CreditCardTransactionAnalyzer()
     summary = credit_analyzer.summarize_transactions()
