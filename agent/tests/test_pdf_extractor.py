@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import decimal
 import io
 import json
 from types import SimpleNamespace
@@ -8,6 +7,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 from fastapi import HTTPException, UploadFile
+from starlette.datastructures import Headers
 
 from agent.services import pdf_extractor, pdf_parser
 
@@ -18,7 +18,7 @@ def make_upload_file(
     content_type: str = "application/pdf",
 ) -> UploadFile:
     file_obj = io.BytesIO(content)
-    return UploadFile(filename=filename, file=file_obj, headers={"content-type": content_type})
+    return UploadFile(filename=filename, file=file_obj, headers=Headers({"content-type": content_type}))
 
 
 def test_parse_amount_handles_positive_negative_and_invalid():

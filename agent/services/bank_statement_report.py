@@ -53,8 +53,8 @@ class BankStatementAnalyzer:
         withdraw = summary[summary["statement_type"] == "withdraw"].copy()
         deposit = summary[summary["statement_type"] == "deposit"].copy()
 
-        min_date = summary["date"].min() if "date" in summary.columns else None
-        max_date = summary["date"].max() if "date" in summary.columns else None
+        min_date = summary["date"].min() 
+        max_date = summary["date"].max()
 
         total_date = (max_date-min_date).days
         total_withdraw = round(abs(withdraw["amount"].sum()), 2) if not withdraw.empty else 0.0
@@ -63,8 +63,8 @@ class BankStatementAnalyzer:
         return {
             "row_count": int(len(summary)),
             "date_range": {
-                "start": None if pd.isna(min_date) else str(min_date.date()),
-                "end": None if pd.isna(max_date) else str(max_date.date()),
+                "start": None if not min_date else str(min_date.date()),
+                "end": None if not max_date else str(max_date.date()),
             },
             "total_withdraw": total_withdraw,
             "30 days withdraw avg": thirty_days_avg(total_withdraw, total_date),

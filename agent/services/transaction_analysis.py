@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections import Counter
 from functools import cached_property
-from http.client import HTTPException
+from fastapi import HTTPException
 
 import pandas as pd
 
@@ -38,11 +38,11 @@ class CreditCardTransactionAnalyzer:
 
         total_spend = round(abs(expenses["amount"].sum()), 2) if not expenses.empty else 0.0
 
-        min_date = working["date"].min() if "date" in working.columns else None
-        max_date = working["date"].max() if "date" in working.columns else None
+        min_date = working["date"].min() 
+        max_date = working["date"].max() 
         total_date = (max_date-min_date).days
 
-        merchant_counter = Counter()
+        merchant_counter: Counter[str] = Counter()
         if "description" in expenses.columns:
             for desc in expenses["description"].fillna(""):
                 normalized = " ".join(str(desc).strip().split())

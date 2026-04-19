@@ -59,7 +59,7 @@ def append_data(
         worksheet.append_rows(rows, value_input_option="USER_ENTERED")
 
 
-def _build_gsheet_rows(filename: str, upload_id: str, transactions: list[dict[str, Any]], statements: list[dict[str, Any]]) -> list[list]:
+def _build_gsheet_rows(filename: str | None, upload_id: str, transactions: list[dict[str, Any]], statements: list[dict[str, Any]]) -> tuple[list[list[Any]], list[list[Any]]]:
     transactions_rows: list[list] = []
     statements_rows: list[list] = []
     for tx in transactions:

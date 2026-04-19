@@ -81,7 +81,7 @@ def _normalize_mmdd(value: str, statement_period: tuple[int, int, int, int]) -> 
     return f"{year:04d}-{month:02d}-{day:02d}"
 
 
-def _normalize_date_value(value: str, statement_period: tuple[int, int, int, int] | None) -> str:
+def _normalize_date_value(value: str | None, statement_period: tuple[int, int, int, int] | None) -> str | None:
     if not value or statement_period is None:
         return value
     return _normalize_mmdd(value, statement_period)
@@ -152,8 +152,8 @@ def _parse_credit_card_transaction(line: str) -> TransactionRow | None:
         transaction_date=parts[0],
         posting_date=parts[1],
         description=" ".join(parts[2:-2]),
-        reference_number=parts[-2],
-        amount=parts[-1],
+        reference_number=int(parts[-2]),
+        amount=float(parts[-1]),
         raw_line=line,
     )
 
@@ -256,8 +256,8 @@ def _normalize_records(
     for row in transactions:
         _normalize_date(transaction_record=row, statement_period=statement_period)
 
-    for row in statements:
-        _normalize_date(bank_record=row, statement_period=statement_period)
+    for statement_row in statements:
+        _normalize_date(bank_record=statement_row, statement_period=statement_period)
 
 
 def _build_quality_metrics(transactions: list[TransactionRow]) -> dict[str, Any]:
