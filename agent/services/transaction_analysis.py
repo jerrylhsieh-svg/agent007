@@ -58,50 +58,12 @@ class CreditCardTransactionAnalyzer:
                 if normalized:
                     merchant_counter[normalized[:80]] += 1
 
-        top_merchants = [
-            {"merchant": name, "count": count}
-            for name, count in merchant_counter.most_common(10)
-        ]
-
-        monthly_spend = []
-        if "date" in expenses.columns and not expenses.empty:
-            monthly = (
-                expenses.dropna(subset=["date"])
-                .assign(month=lambda x: x["date"].dt.to_period("M").astype(str))
-                .groupby("month", as_index=False)["amount"]
-                .sum()
-            )
-            monthly["amount"] = monthly["amount"].abs().round(2)
-            monthly_spend = monthly.sort_values("month").to_dict(orient="records")
-
-        latest_transactions = []
-        sort_cols = [c for c in ["date", "page_number"] if c in working.columns]
-        latest = (
-            working.sort_values(sort_cols, ascending=False)
-            if sort_cols
-            else working
-        ).head(15)
-
-        for _, row in latest.iterrows():
-            latest_transactions.append(
-                {
-                    "date": None if pd.isna(row.get("date")) else str(row["date"].date()),
-                    "description": row.get("description"),
-                    "amount": _safe_float(row.get("amount")),
-                    "balance": _safe_float(row.get("balance")),
-                    "source_file": row.get("source_file"),
-                }
-            )
-
         return {
             "row_count": int(len(working)),
             "date_range": date_range,
             "total_spend": total_spend,
             "total_income": total_income,
             "net_amount": net_amount,
-            "top_merchants": top_merchants,
-            "monthly_spend": monthly_spend,
-            "latest_transactions": latest_transactions,
         }
 
 
@@ -122,15 +84,6 @@ Dataset summary:
 - Total spend: {summary["total_spend"]}
 - Total income: {summary["total_income"]}
 - Net amount: {summary["net_amount"]}
-
-Top merchants:
-{summary["top_merchants"]}
-
-Monthly spend:
-{summary["monthly_spend"]}
-
-Latest transactions:
-{summary["latest_transactions"]}
 
 Answer the user's question using only this transaction context.
 If the data is insufficient, say what is missing.
