@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections import Counter
+from functools import cached_property
 from http.client import HTTPException
 
 import pandas as pd
@@ -10,17 +11,9 @@ from agent.services.google_sheets import read_transactions_df
 from agent.services.gsheet_config import GSHEET_NAME, GSHEET_TRANSACTIONS_TAB
 from agent.services.helper import _safe_float
 
-class CreditCardTransactionAnalyzer:
-
-    def __init__(self):
-        self.df = self._retrieve_transaction()
-        self._debits = None
-        self._credits = None
-        self._monthly_summary = None
-
-    
-    def _retrieve_transaction(self) -> pd.DataFrame:
-
+class CreditCardTransactionAnalyzer:        
+    @cached_property
+    def df(self) -> pd.DataFrame:
         return read_transactions_df(
             spreadsheet_name=GSHEET_NAME,
             worksheet_name=GSHEET_TRANSACTIONS_TAB,
