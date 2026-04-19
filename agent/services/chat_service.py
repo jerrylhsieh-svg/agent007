@@ -1,5 +1,5 @@
 from agent.models.chat import ChatRequest
-from agent.services.bank_statement_report import generate_summary
+from agent.services.bank_statement_report import generate_bank_statement_summary
 from agent.services.call_model import call_model
 from agent.services.file_flow import handle_file_flow, should_start_statement_flow, should_start_transaction_flow
 from agent.services.transaction_analysis import analyze_transactions_question
@@ -14,6 +14,6 @@ def get_reply(req: ChatRequest) -> str:
         return analyze_transactions_question(req.message, req.history)
 
     if should_start_statement_flow(req.message):
-        return generate_summary(req.message, req.history)
+        return generate_bank_statement_summary(req.message, req.history)
 
     return call_model(req.message, req.history)

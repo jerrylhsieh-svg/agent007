@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from functools import cached_property
 from typing import Any
 
 import pandas as pd
@@ -10,19 +11,13 @@ from agent.services.gsheet_config import GSHEET_NAME, GSHEET_STATEMENT_TAB
 from agent.services.helper import _safe_float
 
 class BankStatementAnalyzer:
-    def __init__(self):
-        self.df = self._retrieve_statement()
-        self._debits = None
-        self._credits = None
-        self._monthly_summary = None
-    
-
-    def _retrieve_statement(self) -> pd.DataFrame:
-
+    @cached_property
+    def df(self) -> pd.DataFrame:
         return read_transactions_df(
             spreadsheet_name=GSHEET_NAME,
             worksheet_name=GSHEET_STATEMENT_TAB,
         )
+    
 
     def _normalize_statement_df(self) -> pd.DataFrame:
         if self.df.empty:
@@ -52,7 +47,7 @@ class BankStatementAnalyzer:
         return working
 
 
-    def _summarize_statement_data(self) -> dict[str, Any]:
+    def summarize_statement_data(self) -> dict[str, Any]:
         working = self.df
 
         if working.empty or "amount" not in working.columns:
@@ -148,55 +143,49 @@ class BankStatementAnalyzer:
         }
 
 
-    def generate_bank_statement_summary(
-        self,
-        question: str = "Generate a bank statement report.",
-        history: list[dict] | None = None,
-    ) -> str:
-        history = history or []
+def generate_bank_statement_summary(
+    question: str = "Generate a bank statement report.",
+    history: list[dict] | None = None,
+) -> str:
+    history = history or []
+    bank_analyer = BankStatementAnalyzer()
+    summary = bank_analyer.summarize_statement_data()
 
-        summary = self._summarize_statement_data()
+    if summary["row_count"] == 0:
+        return "I couldn't find any bank statement rows in Google Sheets yet."
 
-        if summary["row_count"] == 0:
-            return "I couldn't find any bank statement rows in Google Sheets yet."
+    context = f"""
+You are generating a bank statement report from Google Sheets data.
 
-        context = f"""
-    You are generating a bank statement report from Google Sheets data.
+Dataset summary:
+- Row count: {summary["row_count"]}
+- Date range: {summary["date_range"]}
+- Total withdraw: {summary["total_withdraw"]}
+- Total deposit: {summary["total_deposit"]}
+- Net change: {summary["net_change"]}
 
-    Dataset summary:
-    - Row count: {summary["row_count"]}
-    - Date range: {summary["date_range"]}
-    - Total withdraw: {summary["total_withdraw"]}
-    - Total deposit: {summary["total_deposit"]}
-    - Net change: {summary["net_change"]}
+Statement types:
+{summary["statement_types"]}
 
-    Statement types:
-    {summary["statement_types"]}
+Largest withdraw:
+{summary["largest_withdraw"]}
 
-    Largest withdraw:
-    {summary["largest_withdraw"]}
+Largest deposit:
+{summary["largest_deposit"]}
 
-    Largest deposit:
-    {summary["largest_deposit"]}
+Recent entries:
+{summary["recent_entries"]}
 
-    Recent entries:
-    {summary["recent_entries"]}
+Write a concise bank statement style report with:
+1. Overall activity summary
+2. Cash flow / debit-credit summary
+3. Notable large transactions
+4. Recent activity
+5. Any data-quality caveats if fields are missing or sparse
 
-    Write a concise bank statement style report with:
-    1. Overall activity summary
-    2. Cash flow / debit-credit summary
-    3. Notable large transactions
-    4. Recent activity
-    5. Any data-quality caveats if fields are missing or sparse
+Use only the provided data. Be concrete and numeric.
+"""
 
-    Use only the provided data. Be concrete and numeric.
-    """
-
-        augmented_history = list(history)
-        augmented_history.append({"role": "assistant", "content": context})
-        return call_model(question, augmented_history)
-    
-
-def generate_summary(question: str, history: list[dict] | None = None) -> str:
-    analyzer = BankStatementAnalyzer()
-    return analyzer.generate_bank_statement_summary(question, history or [])
+    augmented_history = list(history)
+    augmented_history.append({"role": "assistant", "content": context})
+    return call_model(question, augmented_history)
