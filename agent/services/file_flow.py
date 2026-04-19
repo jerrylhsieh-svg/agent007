@@ -13,11 +13,11 @@ SAVE_TRIGGERS = {
 }
 
 IS_TRANSACTION_TRIGGERS = [
-    "credit card spending",
+    "credit card spending summary",
 ]
 
 IS_STATEMENT_TRIGGERS = [
-    "bank statement",
+    "bank statement summary",
 ]
 
 
