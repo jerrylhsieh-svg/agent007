@@ -11,6 +11,8 @@ jobs:
     with:
       python-version: "3.12"
       working-directory: "."
-      install-command: |
-        pip install -r requirements.txt
-      test-command: python -m pytest
+  typecheck:
+    uses: jerrylhsieh-svg/git_workflow/.github/workflows/python-typecheck.yml@main
+    with:
+      python-version: "3.12"
+      app-directory: "agnet"
