@@ -8,6 +8,7 @@ import pandas as pd
 from agent.services.call_model import call_model
 from agent.services.google_sheets import read_transactions_df
 from agent.services.gsheet_config import GSHEET_NAME, GSHEET_STATEMENT_TAB
+from agent.services.helper import thirty_days_avg
 
 class BankStatementAnalyzer:
     @cached_property
@@ -47,33 +48,31 @@ class BankStatementAnalyzer:
 
 
     def summarize_statement_data(self) -> dict[str, Any]:
-        working = self.df
+        summary = self.df
 
-        if working.empty or "amount" not in working.columns:
-            return {
-                "row_count": 0,
-                "date_range": None,
-                "total_debits": 0.0,
-                "total_credits": 0.0,
-                "net_change": 0.0,
-            }
+        withdraw = summary[summary["statement_type"] == "withdraw"].copy()
+        deposit = summary[summary["statement_type"] == "deposit"].copy()
 
-        withdraw = working[working["statement_type"] == "withdraw"].copy()
-        deposit = working[working["statement_type"] == "deposit"].copy()
+        min_date = summary["date"].min() if "date" in summary.columns else None
+        max_date = summary["date"].max() if "date" in summary.columns else None
 
-        min_date = working["date"].min() if "date" in working.columns else None
-        max_date = working["date"].max() if "date" in working.columns else None
+        total_date = (max_date-min_date).days
+        total_withdraw = round(abs(withdraw["amount"].sum()), 2) if not withdraw.empty else 0.0
+        total_deposit = round(deposit["amount"].sum(), 2) if not deposit.empty else 0.0
 
         return {
-            "row_count": int(len(working)),
+            "row_count": int(len(summary)),
             "date_range": {
                 "start": None if pd.isna(min_date) else str(min_date.date()),
                 "end": None if pd.isna(max_date) else str(max_date.date()),
             },
-            "total_withdraw": round(abs(withdraw["amount"].sum()), 2) if not withdraw.empty else 0.0,
-            "total_deposit": round(deposit["amount"].sum(), 2) if not deposit.empty else 0.0,
-            "net_change": round(working["amount"].sum(), 2),
+            "total_withdraw": total_withdraw,
+            "30 days withdraw avg": thirty_days_avg(total_withdraw, total_date),
+            "total_deposit": total_deposit,
+            "30 days deposit avg": thirty_days_avg(total_deposit, total_date),
+            "net_change": round(summary["amount"].sum(), 2),
         }
+    
 
 
 def generate_bank_statement_summary(
@@ -94,7 +93,9 @@ Dataset summary:
 - Row count: {summary["row_count"]}
 - Date range: {summary["date_range"]}
 - Total withdraw: {summary["total_withdraw"]}
+- 30 days withdraw avgerage: {summary["30 days withdraw avg"]}
 - Total deposit: {summary["total_deposit"]}
+- 30 days withdraw avgerage: {summary["30 days deposit avg"]}
 - Net change: {summary["net_change"]}
 
 Write a concise bank statement style report with:

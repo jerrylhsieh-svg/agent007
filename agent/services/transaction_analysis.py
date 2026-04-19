@@ -9,6 +9,7 @@ import pandas as pd
 from agent.services.call_model import call_model
 from agent.services.google_sheets import read_transactions_df
 from agent.services.gsheet_config import GSHEET_NAME, GSHEET_TRANSACTIONS_TAB
+from agent.services.helper import thirty_days_avg
 
 class CreditCardTransactionAnalyzer:        
     @cached_property
@@ -33,22 +34,14 @@ class CreditCardTransactionAnalyzer:
     
     def summarize_transactions(self) -> dict:
         working = self._normalize_transaction_df()
-        expenses = working[working["amount"] < 0].copy()
-        income = working[working["amount"] > 0].copy()
+        expenses = working[working["amount"] >= 0].copy()
 
         total_spend = round(abs(expenses["amount"].sum()), 2) if not expenses.empty else 0.0
-        total_income = round(income["amount"].sum(), 2) if not income.empty else 0.0
         net_amount = round(working["amount"].sum(), 2)
 
-        if "date" in working.columns:
-            min_date = working["date"].min()
-            max_date = working["date"].max()
-            date_range = {
-                "start": None if pd.isna(min_date) else str(min_date.date()),
-                "end": None if pd.isna(max_date) else str(max_date.date()),
-            }
-        else:
-            date_range = None
+        min_date = working["date"].min() if "date" in working.columns else None
+        max_date = working["date"].max() if "date" in working.columns else None
+        total_date = (max_date-min_date).days
 
         merchant_counter = Counter()
         if "description" in expenses.columns:
@@ -59,9 +52,12 @@ class CreditCardTransactionAnalyzer:
 
         return {
             "row_count": int(len(working)),
-            "date_range": date_range,
+            "date_range": {
+                "start": None if pd.isna(min_date) else str(min_date.date()),
+                "end": None if pd.isna(max_date) else str(max_date.date()),
+            },
             "total_spend": total_spend,
-            "total_income": total_income,
+            "30 days spend avg": thirty_days_avg(total_spend, total_date),
             "net_amount": net_amount,
         }
 
@@ -81,7 +77,7 @@ Dataset summary:
 - Row count: {summary["row_count"]}
 - Date range: {summary["date_range"]}
 - Total spend: {summary["total_spend"]}
-- Total income: {summary["total_income"]}
+- 30 days withdraw avgerage: {summary["30 days spend avg"]}
 - Net amount: {summary["net_amount"]}
 
 Answer the user's question using only this transaction context.
