@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from agent.services.base_financial_analyzer import BaseFinancialAnalyzer
+from agent.services.analyzer.base_financial_analyzer import BaseFinancialAnalyzer
 from agent.services.gsheet_config import GSHEET_STATEMENT_TAB
 from agent.services.helper import thirty_days_avg
 
