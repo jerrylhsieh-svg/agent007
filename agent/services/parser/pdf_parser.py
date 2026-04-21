@@ -102,7 +102,6 @@ def _normalize_date(
 
 def _build_base_result() -> dict[str, Any]:
     return {
-        "document_type": "bank_statement_candidate",
         "pages": [],
         "tables": [],
         "transactions": [],

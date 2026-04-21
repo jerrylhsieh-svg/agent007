@@ -9,7 +9,8 @@ import pytest
 from fastapi import HTTPException, UploadFile
 from starlette.datastructures import Headers
 
-from agent.services import pdf_extractor, pdf_parser
+from agent.services import pdf_extractor
+from agent.services.parser import pdf_parser
 
 
 def make_upload_file(
@@ -54,10 +55,10 @@ def test_extract_pdf_content_builds_expected_result_shape():
         def __exit__(self, exc_type, exc, tb):
             return False
 
-    with patch("agent.services.pdf_parser.pdfplumber.open", return_value=FakePdfContext()), \
-         patch("agent.services.pdf_parser._extract_transactions_from_page", return_value=([fake_row], [])), \
-         patch("agent.services.pdf_parser._extract_statement_years", return_value=(1,2025,2,2025)), \
-         patch("agent.services.pdf_parser._normalize_mmdd", return_value=('2025-01-15')):
+    with patch("agent.services.parser.pdf_parser.pdfplumber.open", return_value=FakePdfContext()), \
+         patch("agent.services.parser.pdf_parser._extract_transactions_from_page", return_value=([fake_row], [])), \
+         patch("agent.services.parser.pdf_parser._extract_statement_years", return_value=(1,2025,2,2025)), \
+         patch("agent.services.parser.pdf_parser._normalize_mmdd", return_value=('2025-01-15')):
 
         result = pdf_parser.extract_pdf_content(b"fake-pdf-bytes")
 
