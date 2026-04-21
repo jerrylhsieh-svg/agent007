@@ -26,6 +26,10 @@ def train(csv_path: str) -> None:
         raise ValueError(f"Missing required CSV columns: {sorted(missing)}")
 
     df = df.dropna(subset=["description", "label"]).copy()
+    label_counts = df["label"].value_counts()
+    rare_labels = label_counts[label_counts < 2].index
+
+    df["label"] = df["label"].replace(rare_labels, "other")
     df["text"] = df["description"].map(normalize_description)
 
     X_train, X_test, y_train, y_test = train_test_split(

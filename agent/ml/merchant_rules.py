@@ -2,14 +2,26 @@ import re
 from typing import Optional
 
 RULES: list[tuple[re.Pattern[str], str]] = [
-    (re.compile(r"\b(robinhood|etrade|fidelity|vanguard)\b", re.I), "investment"),
-    (re.compile(r"\b(zelle|venmo|cash app|cashapp)\b", re.I), "transfer"),
-    (re.compile(r"\b(atm|cash withdrawal|withdraw)\b", re.I), "cash_withdrawal"),
-    (re.compile(r"\b(uber|lyft)\b", re.I), "transportation"),
+    # transportation
+    (re.compile(r"\b(uber trip|uber\*? ?trip|lyft)\b", re.I), "transportation"),
+
+    # gas
+    (re.compile(r"\b(shell|exxon|mobil|chevron|bp|sunoco)\b", re.I), "gas"),
+
+    # groceries
     (re.compile(r"\b(whole ?foods|wholefds|trader joe'?s|costco|aldi|kroger)\b", re.I), "groceries"),
-    (re.compile(r"\b(starbucks|mcdonald'?s|chipotle|doordash|ubereats)\b", re.I), "restaurant"),
-    (re.compile(r"\b(netflix|spotify|apple\.com\/bill)\b", re.I), "subscription"),
-    (re.compile(r"\b(amazon|amzn|paypal|square|sq)\b", re.I), "shopping"),
+
+    # food delivery first, before generic restaurant
+    (re.compile(r"\b(doordash|ubereats|uber eats|grubhub|seamless)\b", re.I), "restaurant"),
+
+    # restaurants / coffee
+    (re.compile(r"\b(starbucks|mcdonald'?s|chipotle|sweetgreen|coffee|tst\*?)\b", re.I), "restaurant"),
+
+    # subscriptions / digital services
+    (re.compile(r"\b(netflix|spotify|youtube ?premium|apple\.com/bill|apple\.com\/bill|uber ?one)\b", re.I), "subscription"),
+
+    # shopping / retail / marketplaces
+    (re.compile(r"\b(amazon|amzn|paypal|square)\b", re.I), "shopping"),
 ]
 
 
