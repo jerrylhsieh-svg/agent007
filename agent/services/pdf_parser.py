@@ -12,13 +12,6 @@ DATE_RE = re.compile(
     r"^(?P<date>\d{1,2}/\d{1,2}(?:/\d{2,4})?|\d{4}-\d{2}-\d{2}|[A-Z][a-z]{2}\s+\d{1,2})$"
 )
 
-def _looks_scanned(file_bytes: bytes) -> bool:
-    with pdfplumber.open(io.BytesIO(file_bytes)) as pdf:
-        for page in pdf.pages:
-            if (page.extract_text() or "").strip():
-                return False
-    return True
-
 
 def _is_date_token(value: str) -> bool:
     return bool(DATE_RE.match(value.strip()))
@@ -107,11 +100,9 @@ def _normalize_date(
         bank_record.date = _normalize_date_value(bank_record.date, statement_period)
 
 
-def _build_base_result(scanned: bool) -> dict[str, Any]:
+def _build_base_result() -> dict[str, Any]:
     return {
         "document_type": "bank_statement_candidate",
-        "is_scanned": scanned,
-        "needs_ocr": scanned,
         "pages": [],
         "tables": [],
         "transactions": [],
@@ -271,8 +262,7 @@ def _build_quality_metrics(transactions: list[TransactionRow]) -> dict[str, Any]
 
 
 def extract_pdf_content(file_bytes: bytes) -> dict[str, Any]:
-    scanned = _looks_scanned(file_bytes)
-    result = _build_base_result(scanned)
+    result = _build_base_result()
 
     full_text_parts: list[str] = []
     all_transactions: list[TransactionRow] = []

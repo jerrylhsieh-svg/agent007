@@ -54,8 +54,7 @@ def test_extract_pdf_content_builds_expected_result_shape():
         def __exit__(self, exc_type, exc, tb):
             return False
 
-    with patch("agent.services.pdf_parser._looks_scanned", return_value=False), \
-         patch("agent.services.pdf_parser.pdfplumber.open", return_value=FakePdfContext()), \
+    with patch("agent.services.pdf_parser.pdfplumber.open", return_value=FakePdfContext()), \
          patch("agent.services.pdf_parser._extract_transactions_from_page", return_value=([fake_row], [])), \
          patch("agent.services.pdf_parser._extract_statement_years", return_value=(1,2025,2,2025)), \
          patch("agent.services.pdf_parser._normalize_mmdd", return_value=('2025-01-15')):
@@ -63,43 +62,12 @@ def test_extract_pdf_content_builds_expected_result_shape():
         result = pdf_parser.extract_pdf_content(b"fake-pdf-bytes")
 
     assert result["document_type"] == "bank_statement_candidate"
-    assert result["is_scanned"] is False
-    assert result["needs_ocr"] is False
     assert len(result["tables"]) == 1
     assert len(result["transactions"]) == 1
     assert result["quality"]["transaction_count"] == 1
     assert result["quality"]["valid_amount_ratio"] == 1.0
     assert "page one text" in result["full_text"]
 
-
-def test_looks_scanned_returns_true_when_text_is_minimal():
-    fake_page = Mock()
-    fake_page.extract_text.return_value = "x"
-
-    fake_pdf = Mock()
-    fake_pdf.pages = [fake_page]
-
-    pdf_context = Mock()
-    pdf_context.__enter__ = Mock(return_value=fake_pdf)
-    pdf_context.__exit__ = Mock(return_value=None)
-
-    with patch("agent.services.pdf_parser.pdfplumber.open", return_value=pdf_context):
-        assert pdf_parser._looks_scanned(b"fake") is False
-
-
-def test_looks_scanned_returns_false_when_text_is_present():
-    fake_page = Mock()
-    fake_page.get_text.return_value = "This page has enough text to not be considered scanned."
-
-    fake_pdf = Mock()
-    fake_pdf.pages = [fake_page]
-
-    pdf_context = Mock()
-    pdf_context.__enter__ = Mock(return_value=fake_pdf)
-    pdf_context.__exit__ = Mock(return_value=None)
-
-    with patch("agent.services.pdf_parser.pdfplumber.open", return_value=pdf_context):
-        assert pdf_parser._looks_scanned(b"fake") is False
 
 
 @pytest.mark.asyncio
@@ -133,8 +101,6 @@ async def test_extract_pdf_service_returns_summary_and_saves_json(tmp_path, monk
         "tables": [{"page_number": 1, "table_index": 1, "rows": [["a"]]}],
         "transactions": [{"date": "2025-01-15", "amount": 4.5}],
         "statements": [],
-        "needs_ocr": False,
-        "is_scanned": False,
         "document_type": "bank_statement_candidate",
         "full_text": "hello",
         "quality": {"transaction_count": 1},
@@ -155,28 +121,3 @@ async def test_extract_pdf_service_returns_summary_and_saves_json(tmp_path, monk
     saved_file = tmp_path / "statement.pdf.json"
     assert saved_file.exists()
     assert json.loads(saved_file.read_text()) == extracted_payload
-
-
-@pytest.mark.asyncio
-async def test_extract_pdf_service_returns_ocr_message_when_needed(tmp_path, monkeypatch):
-    monkeypatch.setattr(pdf_extractor, "UPLOAD_DIR", tmp_path)
-
-    extracted_payload = {
-        "pages": [],
-        "tables": [],
-        "transactions": [],
-        "statements": [],
-        "needs_ocr": True,
-        "is_scanned": True,
-        "document_type": "bank_statement_candidate",
-        "full_text": "",
-        "quality": {"transaction_count": 0},
-    }
-
-    file = make_upload_file()
-
-    with patch("agent.services.pdf_extractor.extract_pdf_content", return_value=extracted_payload), \
-        patch("agent.services.pdf_extractor.append_data", return_value=(None, None)):
-        result = await pdf_extractor.extract_pdf_service(file)
-
-    assert result["message"] == "PDF looks scanned; OCR should run before reliable bank statement extraction."
