@@ -13,17 +13,26 @@ from agent.services.helper import thirty_days_avg
 class BankStatementAnalyzer:
     @cached_property
     def df(self) -> pd.DataFrame:
-        return read_transactions_df(
+        raw =  read_transactions_df(
             spreadsheet_name=GSHEET_NAME,
             worksheet_name=GSHEET_STATEMENT_TAB,
         )
+        return self._normalize_statement_df(raw)
     
 
-    def _normalize_statement_df(self) -> pd.DataFrame:
-        if self.df.empty:
-            return self.df.copy()
+    @cached_property
+    def total_days(self) -> pd.DataFrame:
+        min_date = self.df["date"].min() 
+        max_date = self.df["date"].max()
 
-        working = self.df.copy()
+        return max((max_date - min_date).days, 1)
+    
+
+    def _normalize_statement_df(self, df) -> pd.DataFrame:
+        if df.empty:
+            return df.copy()
+
+        working = df.copy()
 
         # tolerate a couple of possible date column names
         if "date" not in working.columns:
@@ -56,7 +65,6 @@ class BankStatementAnalyzer:
         min_date = summary["date"].min() 
         max_date = summary["date"].max()
 
-        total_date = (max_date-min_date).days
         total_withdraw = round(abs(withdraw["amount"].sum()), 2) if not withdraw.empty else 0.0
         total_deposit = round(deposit["amount"].sum(), 2) if not deposit.empty else 0.0
 
@@ -67,10 +75,35 @@ class BankStatementAnalyzer:
                 "end": None if not max_date else str(max_date.date()),
             },
             "total_withdraw": total_withdraw,
-            "30 days withdraw avg": thirty_days_avg(total_withdraw, total_date),
+            "30 days withdraw avg": thirty_days_avg(total_withdraw, self.total_days),
             "total_deposit": total_deposit,
-            "30 days deposit avg": thirty_days_avg(total_deposit, total_date),
+            "30 days deposit avg": thirty_days_avg(total_deposit, self.total_days),
             "net_change": round(summary["amount"].sum(), 2),
+        }
+    
+
+    def sumamarize_withdraw(self) -> dict[str, Any]:
+        withdraw = self.df[self.df["statement_type"] == "withdraw"].copy()
+        desc = withdraw["description"].fillna("").str.lower()
+        card_payment = withdraw[desc.str.contains("card", na=False)]
+        total_card_payment = float(card_payment["amount"].sum())
+        investment = withdraw[desc.str.contains("robinhood", na=False)]
+        total_investment = float(investment["amount"].sum())
+
+        other_withdraw = withdraw[
+            ~desc.str.contains("card", na=False)
+            & ~desc.str.contains("robinhood", na=False)
+        ]
+
+        return {
+            "card_payment_count": len(card_payment),
+            "card_payment_amount": total_card_payment,
+            "30 days card_payment avg": thirty_days_avg(total_card_payment, self.total_days),
+            "investment_count": len(investment),
+            "investment_amount": total_investment,
+            "30 days investment avg": thirty_days_avg(total_investment, self.total_days),
+            "other_withdraw_count": len(other_withdraw),
+            "other_withdraw_amount": float(other_withdraw["amount"].sum()),
         }
     
 
