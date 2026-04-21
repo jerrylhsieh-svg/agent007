@@ -21,7 +21,7 @@ class BankStatementAnalyzer:
     
 
     @cached_property
-    def total_days(self) -> pd.DataFrame:
+    def total_days(self) -> int:
         min_date = self.df["date"].min() 
         max_date = self.df["date"].max()
 
