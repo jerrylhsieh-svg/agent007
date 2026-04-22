@@ -62,7 +62,6 @@ def test_extract_pdf_content_builds_expected_result_shape():
 
         result = pdf_parser.extract_pdf_content(b"fake-pdf-bytes")
 
-    assert result["document_type"] == "bank_statement_candidate"
     assert len(result["tables"]) == 1
     assert len(result["transactions"]) == 1
     assert result["quality"]["transaction_count"] == 1
@@ -102,7 +101,6 @@ async def test_extract_pdf_service_returns_summary_and_saves_json(tmp_path, monk
         "tables": [{"page_number": 1, "table_index": 1, "rows": [["a"]]}],
         "transactions": [{"date": "2025-01-15", "amount": 4.5}],
         "statements": [],
-        "document_type": "bank_statement_candidate",
         "full_text": "hello",
         "quality": {"transaction_count": 1},
     }

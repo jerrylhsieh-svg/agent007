@@ -1,3 +1,4 @@
+from datetime import datetime
 import io
 import re
 from typing import Any
@@ -17,10 +18,8 @@ class BasePdfParser(ABC):
         return {
             "pages": [],
             "tables": [],
-            "transactions": [],
-            "statements": [],
+            "data": [],
             "full_text": "",
-            "quality": {},
         }
 
     def parse(self, file_bytes: bytes) -> dict[str, Any]:
@@ -71,18 +70,99 @@ class BasePdfParser(ABC):
             return value
         return self._normalize_mmdd(value, statement_period)
     
+    def _extract_statement_years(self, text: str | None) -> tuple[int, int, int, int] | None:
+        if not text:
+            return None
+
+        match = re.search(
+            r"([A-Za-z]+)\s+(\d{1,2})(?:,\s*(\d{4}))?\s*(?:to|-)\s*([A-Za-z]+)\s+(\d{1,2}),\s*(\d{4})",
+            text,
+        )
+        if not match:
+            return None
+
+        start_month_name, _start_day, start_year_str, end_month_name, _end_day, end_year_str = match.groups()
+        end_year = int(end_year_str)
+
+        start_month = datetime.strptime(start_month_name, "%B").month
+        end_month = datetime.strptime(end_month_name, "%B").month
+
+        if start_year_str:
+            start_year = int(start_year_str)
+        else:
+            start_year = end_year - 1 if start_month > end_month else end_year
+
+        return start_month, start_year, end_month, end_year
+    
+    def _extract_from_page(self, page_text: str) -> list:
+        current_section: str | None = None
+        data = []
+
+        for raw_line in page_text.splitlines():
+            line = raw_line.strip()
+            if not line:
+                continue
+
+            current_section = self._update_section(current_section, line)
+            parsed = self._process_line(line, current_section)
+
+            if parsed is None:
+                continue
+
+            data.append(parsed)
+
+        return data
+    
+    def _extract_tables(self, page: pdfplumber.page.Page, page_number: int) -> list[dict[str, Any]]:
+        tables: list[dict[str, Any]] = []
+
+        for table_index, table in enumerate(page.extract_tables(), start=1):
+            tables.append(
+                {
+                    "page_number": page_number,
+                    "table_index": table_index,
+                    "rows": table,
+                }
+            )
+
+        return tables
+    
+    def _process_page(self, page_number: int, page: pdfplumber.page.Page) -> dict[str, Any]:
+        page_text = page.extract_text() or ""
+        data = self._extract_from_page(page_text)
+
+        return {
+            "full_text": page_text,
+            "page": {
+                "page_number": page_number,
+                "text": page_text,
+            },
+            "tables": self._extract_tables(page, page_number),
+            "data": data,
+        }
+    
+    def _normalize_records(
+        self,
+        data: list,
+        full_text: str,
+    ) -> None:
+        statement_period = self._extract_statement_years(full_text)
+
+        for row in data:
+            self._normalize_date(record=row, statement_period=statement_period)
+    
     @abstractmethod
     def process_page(self, result: dict[str, Any], page_number: int, page, page_text: str) -> None:
         raise NotImplementedError
     
     @abstractmethod
-    def _extract_statement_years(self, text: str | None) -> tuple[int, int, int, int] | None:
+    def _process_line(self, line: str, current_section: str | None,) -> TransactionRow | BankStatementRow | None:
         raise NotImplementedError
     
     @abstractmethod
     def _normalize_date(
         self,
-        record: TransactionRow | BankStatementRow = None,
+        record: TransactionRow | BankStatementRow | None = None,
         statement_period: tuple[int, int, int, int] | None = None,
     ) -> None:
         raise NotImplementedError
