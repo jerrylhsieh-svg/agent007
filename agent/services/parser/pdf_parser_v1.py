@@ -7,48 +7,76 @@ import pdfplumber
 from agent.services.parser.boa_bank_parser import BOABankPdfParser
 from agent.services.parser.boa_credit_parser import BOACreditPdfParser
 
-def determin_pdf_type(line, pdf_info):
-        if "Bank of America" in line and pdf_info["bank"] is None:
-            pdf_info["bank"] = "BOA"
-    
-        if "your statement" in line and pdf_info["credit"] is None:
+def determine_pdf_type(line: str, pdf_info: dict[str, Any]) -> None:
+    if pdf_info["bank"] is None and "Bank of America" in line:
+        pdf_info["bank"] = "BOA"
+
+    if pdf_info["credit"] is None:
+        if "your statement" in line:
             pdf_info["credit"] = False
-        elif "Minimum payment due" in line and pdf_info["credit"] is None:
+        elif "Minimum payment due" in line:
             pdf_info["credit"] = True
-        
-        return pdf_info
+
+
+def detect_pdf_info(pdf: pdfplumber.PDF) -> dict[str, Any]:
+    pdf_info: dict[str, Any] = {"bank": None, "credit": None}
+
+    for page in pdf.pages:
+        if pdf_info["bank"] is not None and pdf_info["credit"] is not None:
+            break
+
+        page_text = page.extract_text() or ""
+        for raw_line in page_text.splitlines():
+            line = raw_line.strip()
+            if not line:
+                continue
+
+            determine_pdf_type(line, pdf_info)
+
+            if pdf_info["bank"] is not None and pdf_info["credit"] is not None:
+                break
+
+    return pdf_info
+
+
+def build_parser(pdf_info: dict[str, Any]) -> BOACreditPdfParser | BOABankPdfParser:
+    if pdf_info["bank"] != "BOA":
+        raise ValueError("Unsupported bank")
+
+    if pdf_info["credit"] is None:
+        raise ValueError("Could not determine statement type")
+
+    if pdf_info["credit"]:
+        return BOACreditPdfParser()
+    return BOABankPdfParser()
+
+
+def parse_pages(
+    pdf: pdfplumber.PDF,
+    pdf_parser: BOACreditPdfParser | BOABankPdfParser,
+) -> tuple[str, list[Any]]:
+    full_text_parts: list[str] = []
+    data: list[Any] = []
+
+    for page_number, page in enumerate(pdf.pages, start=1):
+        page_result = pdf_parser.process_page(page_number, page)
+        full_text_parts.append(
+            f"\n--- Page {page_number} ---\n{page_result['page_text']}"
+        )
+        data.extend(page_result["data"])
+
+    return "\n".join(full_text_parts), data
+
 
 def extract_pdf_content(file_bytes: bytes) -> dict[str, Any]:
-    pdf_info: dict[str, Any] = {"bank":None, "credit":None}
-    full_text_parts: list[str] = []
-    data = []
-    result: dict[str, Any] = {}
-    pdf_parser: BOACreditPdfParser | BOABankPdfParser
     with pdfplumber.open(io.BytesIO(file_bytes)) as pdf:
-        for page_number, page in enumerate(pdf.pages, start=1):
-            if pdf_info["bank"] is None or pdf_info["credit"] is None:
-                page_text = page.extract_text() or ""
-                for raw_line in page_text.splitlines():
-                    line = raw_line.strip()
-                    if not line:
-                        continue
+        pdf_info = detect_pdf_info(pdf)
+        pdf_parser = build_parser(pdf_info)
+        full_text, data = parse_pages(pdf, pdf_parser)
 
-                    pdf_info = determin_pdf_type(line, pdf_info)
-            else:
-                if pdf_info["credit"] is True:
-                    pdf_parser = BOACreditPdfParser()
-                else:
-                    pdf_parser = BOABankPdfParser()
-                
-                page_result = pdf_parser.process_page(page_number, page)
+    pdf_parser.normalize_records(data, full_text)
 
-                full_text_parts.append(f"\n--- Page {page_number} ---\n{page_result['page_text']}")
-                data.extend(page_result["data"])
-
-    result["full_text"] = "\n".join(full_text_parts)
-    pdf_parser.normalize_records(data, result["full_text"])
-    result["data"] = [asdict(row) for row in data]
-
-    return result
-                
-            
+    return {
+        "full_text": full_text,
+        "data": [asdict(row) for row in data],
+    }
