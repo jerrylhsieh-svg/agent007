@@ -14,7 +14,7 @@ class BasePdfParser(ABC):
     r"^(?P<date>\d{1,2}/\d{1,2}(?:/\d{2,4})?|\d{4}-\d{2}-\d{2}|[A-Z][a-z]{2}\s+\d{1,2})$"
 )
 
-    def _build_base_result(self) -> dict[str, Any]:
+    def build_base_result(self) -> dict[str, Any]:
         return {
             "pages": [],
             "tables": [],
@@ -23,7 +23,7 @@ class BasePdfParser(ABC):
         }
 
     def parse(self, file_bytes: bytes) -> dict[str, Any]:
-        result = self._build_base_result()
+        result = self.build_base_result()
 
         with pdfplumber.open(io.BytesIO(file_bytes)) as pdf:
             for page_number, page in enumerate(pdf.pages, start=1):
@@ -127,7 +127,7 @@ class BasePdfParser(ABC):
 
         return tables
     
-    def _process_page(self, page_number: int, page: pdfplumber.page.Page) -> dict[str, Any]:
+    def process_page(self, page_number: int, page: pdfplumber.page.Page) -> dict[str, Any]:
         page_text = page.extract_text() or ""
         data = self._extract_from_page(page_text)
 

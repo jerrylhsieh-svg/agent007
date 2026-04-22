@@ -1,6 +1,9 @@
 
 
+import io
 from typing import Any, Literal
+
+import pdfplumber
 
 from agent.models.pdf_models import BankStatementRow, TransactionRow
 from agent.services.parser.base_pdf_parser import BasePdfParser
@@ -55,4 +58,3 @@ class BOABankPdfParser(BasePdfParser):
         if current_section == "withdraw":
             return self._parse_bank_statement_line(line, "withdraw")
         return None
-    
