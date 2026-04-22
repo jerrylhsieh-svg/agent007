@@ -1,24 +1,17 @@
-
-
-import io
-from typing import Any, Literal
-
-import pdfplumber
+from typing import Literal
 
 from agent.models.pdf_models import BankStatementRow, TransactionRow
 from agent.services.parser.base_pdf_parser import BasePdfParser
 
 
 class BOABankPdfParser(BasePdfParser):
-    document_type = "bank_statement"
-
     def _normalize_date(
         self,
-        bank_record: TransactionRow | BankStatementRow | None = None,
+        record: TransactionRow | BankStatementRow | None = None,
         statement_period: tuple[int, int, int, int] | None = None,
     ) -> None:
-        if isinstance(bank_record, BankStatementRow):
-            bank_record.date = self._normalize_date_value(bank_record.date, statement_period)
+        if isinstance(record, BankStatementRow):
+            record.date = self._normalize_date_value(record.date, statement_period)
 
     def _update_section(self, current_section: str | None, line: str) -> str | None:
         if line == "Deposits and other additions":
@@ -33,7 +26,8 @@ class BOABankPdfParser(BasePdfParser):
 
         return current_section
     
-    def _parse_bank_statement_line(self,
+    def _parse_bank_statement_line(
+        self,
         line: str,
         statement_type: Literal["deposit", "withdraw"],
     ) -> BankStatementRow | None:

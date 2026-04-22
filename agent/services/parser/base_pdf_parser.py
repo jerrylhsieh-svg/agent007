@@ -9,7 +9,6 @@ from agent.models.pdf_models import BankStatementRow, TransactionRow
 
 
 class BasePdfParser(ABC):
-    document_type = "unknown"
     date_re = re.compile(
     r"^(?P<date>\d{1,2}/\d{1,2}(?:/\d{2,4})?|\d{4}-\d{2}-\d{2}|[A-Z][a-z]{2}\s+\d{1,2})$"
 )
@@ -28,7 +27,7 @@ class BasePdfParser(ABC):
         with pdfplumber.open(io.BytesIO(file_bytes)) as pdf:
             for page_number, page in enumerate(pdf.pages, start=1):
                 page_text = page.extract_text() or ""
-                self.process_page(result, page_number, page, page_text)
+                self.process_page(page_number, page)
 
         return result
     
@@ -150,10 +149,6 @@ class BasePdfParser(ABC):
 
         for row in data:
             self._normalize_date(record=row, statement_period=statement_period)
-    
-    @abstractmethod
-    def process_page(self, result: dict[str, Any], page_number: int, page, page_text: str) -> None:
-        raise NotImplementedError
     
     @abstractmethod
     def _process_line(self, line: str, current_section: str | None,) -> TransactionRow | BankStatementRow | None:
