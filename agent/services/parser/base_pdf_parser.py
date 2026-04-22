@@ -21,15 +21,19 @@ class BasePdfParser(ABC):
             "full_text": "",
         }
 
-    def parse(self, file_bytes: bytes) -> dict[str, Any]:
-        result = self.build_base_result()
+    def process_page(self, page_number: int, page: pdfplumber.page.Page) -> dict[str, Any]:
+        page_text = page.extract_text() or ""
+        data = self._extract_from_page(page_text)
 
-        with pdfplumber.open(io.BytesIO(file_bytes)) as pdf:
-            for page_number, page in enumerate(pdf.pages, start=1):
-                page_text = page.extract_text() or ""
-                self.process_page(page_number, page)
-
-        return result
+        return {
+            "full_text": page_text,
+            "page": {
+                "page_number": page_number,
+                "text": page_text,
+            },
+            "tables": self._extract_tables(page, page_number),
+            "data": data,
+        }
     
     def _is_date_token(self, value: str) -> bool:
         return bool(self.date_re.match(value.strip()))
@@ -125,20 +129,6 @@ class BasePdfParser(ABC):
             )
 
         return tables
-    
-    def process_page(self, page_number: int, page: pdfplumber.page.Page) -> dict[str, Any]:
-        page_text = page.extract_text() or ""
-        data = self._extract_from_page(page_text)
-
-        return {
-            "full_text": page_text,
-            "page": {
-                "page_number": page_number,
-                "text": page_text,
-            },
-            "tables": self._extract_tables(page, page_number),
-            "data": data,
-        }
     
     def _normalize_records(
         self,
