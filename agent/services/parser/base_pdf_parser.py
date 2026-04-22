@@ -130,7 +130,7 @@ class BasePdfParser(ABC):
 
         return tables
     
-    def _normalize_records(
+    def normalize_records(
         self,
         data: list,
         full_text: str,
