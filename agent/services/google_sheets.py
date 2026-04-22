@@ -59,36 +59,35 @@ def append_data(
         worksheet.append_rows(rows, value_input_option="USER_ENTERED")
 
 
-def _build_gsheet_rows(filename: str | None, upload_id: str, transactions: list[dict[str, Any]], statements: list[dict[str, Any]]) -> tuple[list[list[Any]], list[list[Any]]]:
-    transactions_rows: list[list] = []
-    statements_rows: list[list] = []
-    for tx in transactions:
-        transactions_rows.append(
-            [
-                upload_id,
-                filename,
-                tx.get("transaction_date"),
-                tx.get("posting_date"),
-                tx.get("description"),
-                tx.get("reference_number"),
-                tx.get("amount"),
-                tx.get("raw_line"),
-            ]
-        )
-
-    for st in statements:
-        statements_rows.append(
-            [
-                upload_id,
-                filename,
-                st.get("date"),
-                st.get("description"),
-                st.get("statement_type"),
-                st.get("amount"),
-                st.get("raw_line"),
-            ]
-        )
-    return transactions_rows, statements_rows
+def _build_gsheet_rows(filename: str | None, upload_id: str, data: list[dict[str, Any]], doc_tpye: str) -> list[list[Any]]:
+    rows: list[list] = []
+    for row in data:
+        if doc_tpye == "BOA_credit":
+            rows.append(
+                [
+                    upload_id,
+                    filename,
+                    row.get("transaction_date"),
+                    row.get("posting_date"),
+                    row.get("description"),
+                    row.get("reference_number"),
+                    row.get("amount"),
+                    row.get("raw_line"),
+                ]
+            )
+        elif doc_tpye == "BOA_BOA_bankcredit":
+            rows.append(
+                [
+                    upload_id,
+                    filename,
+                    row.get("date"),
+                    row.get("description"),
+                    row.get("statement_type"),
+                    row.get("amount"),
+                    row.get("raw_line"),
+                ]
+            )
+    return rows
 
 def read_transactions_df(
     spreadsheet_name: str,

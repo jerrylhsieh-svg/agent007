@@ -18,7 +18,7 @@ def determine_pdf_type(line: str, pdf_info: dict[str, Any]) -> None:
             pdf_info["credit"] = True
 
 
-def detect_pdf_info(pdf: pdfplumber.PDF) -> dict[str, Any]:
+def detect_pdf_info(pdf: pdfplumber.PDF) -> str:
     pdf_info: dict[str, Any] = {"bank": None, "credit": None}
 
     for page in pdf.pages:
@@ -34,19 +34,19 @@ def detect_pdf_info(pdf: pdfplumber.PDF) -> dict[str, Any]:
             determine_pdf_type(line, pdf_info)
 
             if pdf_info["bank"] is not None and pdf_info["credit"] is not None:
+                if pdf_info["bank"] == "BOA":
+                    if pdf_info["credit"] is True:
+                        return "BOA_credit"
+                    else:
+                        return "BOA_bank"
                 break
 
-    return pdf_info
+    raise ValueError("pdf info not found")
 
 
-def build_parser(pdf_info: dict[str, Any]) -> BOACreditPdfParser | BOABankPdfParser:
-    if pdf_info["bank"] != "BOA":
-        raise ValueError("Unsupported bank")
+def build_parser(doc_tpye: str) -> BOACreditPdfParser | BOABankPdfParser:
 
-    if pdf_info["credit"] is None:
-        raise ValueError("Could not determine statement type")
-
-    if pdf_info["credit"]:
+    if doc_tpye == "BOA_credit":
         return BOACreditPdfParser()
     return BOABankPdfParser()
 
@@ -68,15 +68,13 @@ def parse_pages(
     return "\n".join(full_text_parts), data
 
 
-def extract_pdf_content(file_bytes: bytes) -> dict[str, Any]:
+def extract_pdf_content(file_bytes: bytes) -> tuple[dict[str, Any], str]:
     with pdfplumber.open(io.BytesIO(file_bytes)) as pdf:
-        pdf_info = detect_pdf_info(pdf)
-        pdf_parser = build_parser(pdf_info)
+        doc_tpye = detect_pdf_info(pdf)
+        pdf_parser = build_parser(doc_tpye)
         full_text, data = parse_pages(pdf, pdf_parser)
 
     pdf_parser.normalize_records(data, full_text)
 
-    return {
-        "full_text": full_text,
-        "data": [asdict(row) for row in data],
-    }
+    return {"full_text": full_text,"data": [asdict(row) for row in data]}, doc_tpye
+    

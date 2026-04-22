@@ -1,17 +1,12 @@
 from __future__ import annotations
 
-import json
-from pathlib import Path
 from uuid import uuid4
 
 from fastapi import File, HTTPException, UploadFile
 
 from agent.services.google_sheets import _build_gsheet_rows, append_data
 from agent.services.gsheet_config import GSHEET_NAME, GSHEET_STATEMENT_TAB, GSHEET_TRANSACTIONS_TAB
-from agent.services.parser.pdf_parser import extract_pdf_content
-
-UPLOAD_DIR = Path("/tmp/agent_uploads")
-UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+from agent.services.parser.pdf_parser_v1 import extract_pdf_content
 
 
 async def extract_pdf_service(file: UploadFile = File(...)):
@@ -22,34 +17,31 @@ async def extract_pdf_service(file: UploadFile = File(...)):
     if not file_bytes:
         raise HTTPException(status_code=400, detail="Uploaded file is empty.")
 
-    extracted = extract_pdf_content(file_bytes)
-
-    saved_path = UPLOAD_DIR / f"{file.filename}.json"
-    saved_path.write_text(json.dumps(extracted, ensure_ascii=False, indent=2))
+    extracted, doc_tpye = extract_pdf_content(file_bytes)
 
     upload_id = uuid4().hex[:12]
-    transaction_rows, statement_row = _build_gsheet_rows(
+    rows = _build_gsheet_rows(
         filename=file.filename,
         upload_id=upload_id,
-        transactions=extracted["transactions"],
-        statements=extracted["statements"],
+        data=extracted["data"],
+        doc_tpye=doc_tpye,
     )
 
     gsheet_status = "skipped"
     gsheet_error = None
     try:
-        if transaction_rows:
+        if doc_tpye == "BOA_credit":
             append_data(
                 spreadsheet_name=GSHEET_NAME,
                 worksheet_name=GSHEET_TRANSACTIONS_TAB,
-                rows=transaction_rows,
+                rows=rows,
                 data_type="transaction"
             )
-        if statement_row:
+        elif doc_tpye == "BOA_BOA_bankcredit":
             append_data(
                 spreadsheet_name=GSHEET_NAME,
                 worksheet_name=GSHEET_STATEMENT_TAB,
-                rows=statement_row,
+                rows=rows,
                 data_type="statement"
             )
         gsheet_status = "uploaded"
@@ -62,12 +54,9 @@ async def extract_pdf_service(file: UploadFile = File(...)):
 
     return {
         "filename": file.filename,
-        "page_count": len(extracted["pages"]),
-        "table_count": len(extracted["tables"]),
-        "transaction_count": len(extracted["transactions"]),
+        "row_count": len(extracted["data"]),
         "message": message,
         "data": extracted,
-        "saved_to": str(saved_path),
         "gsheet_status": gsheet_status,
         "gsheet_error": gsheet_error,
     }

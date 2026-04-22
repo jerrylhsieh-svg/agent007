@@ -93,17 +93,15 @@ async def test_extract_pdf_service_rejects_empty_pdf():
 
 
 @pytest.mark.asyncio
-async def test_extract_pdf_service_returns_summary_and_saves_json(tmp_path, monkeypatch):
-    monkeypatch.setattr(pdf_extractor, "UPLOAD_DIR", tmp_path)
+async def test_extract_pdf_service_returns_summary_and_saves_json():
 
-    extracted_payload = {
-        "pages": [{"page_number": 1, "text": "hello", "diagnostics": {}}],
-        "tables": [{"page_number": 1, "table_index": 1, "rows": [["a"]]}],
-        "transactions": [{"date": "2025-01-15", "amount": 4.5}],
-        "statements": [],
-        "full_text": "hello",
-        "quality": {"transaction_count": 1},
-    }
+    extracted_payload = (
+        {
+            "data": [{"date": "2025-01-15", "amount": 4.5}],
+            "full_text": "hello",
+        },
+        "BOA_bank"
+    )
 
     file = make_upload_file()
 
@@ -112,11 +110,5 @@ async def test_extract_pdf_service_returns_summary_and_saves_json(tmp_path, monk
         result = await pdf_extractor.extract_pdf_service(file)
 
     assert result["filename"] == "statement.pdf"
-    assert result["page_count"] == 1
-    assert result["table_count"] == 1
-    assert result["transaction_count"] == 1
+    assert result["row_count"] == 1
     assert result["message"] == "PDF parsed with layout-based bank statement heuristics."
-
-    saved_file = tmp_path / "statement.pdf.json"
-    assert saved_file.exists()
-    assert json.loads(saved_file.read_text()) == extracted_payload
