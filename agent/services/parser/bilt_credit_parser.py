@@ -67,5 +67,13 @@ class BiltCreditPdfParser(BasePdfParser):
             else:
                 if self.current is not None:
                     self.current.description += " " + line
+                    continue
+                
+                self.current = BiltTransactionRow(
+                        date=match.group("date"),
+                        description=match.group("description"),
+                        amount=self._parse_amount(match.group("amount")),
+                    )
+                
 
         return data

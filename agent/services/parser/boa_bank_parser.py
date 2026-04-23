@@ -39,7 +39,6 @@ class BOABankPdfParser(BasePdfParser):
                         description=" ".join(parts[1:-1]),
                         statement_type=self.statement_type,
                         amount=self._parse_amount(parts[-1]),
-                        raw_line=line,
                     )
                 elif line.startswith("Total deposits and other additions") \
                     or line.startswith("Total withdrawals and other subtractions"):
@@ -48,4 +47,11 @@ class BOABankPdfParser(BasePdfParser):
                 else:
                     if self.current is not None:
                         self.current.description += " " + line
+                        continue
+                    self.current = BankStatementRow(
+                        date=parts[0],
+                        description=" ".join(parts[1:-1]),
+                        statement_type=self.statement_type,
+                        amount=self._parse_amount(parts[-1]),
+                    )
         return data

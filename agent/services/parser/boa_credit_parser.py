@@ -41,7 +41,6 @@ class BOACreditPdfParser(BasePdfParser):
                         description=" ".join(parts[2:-2]),
                         reference_number=int(parts[-2]),
                         amount=self._parse_amount(parts[-1]),
-                        raw_line=line,
                     )
                 elif line.startswith("TOTAL PURCHASES AND ADJUSTMENTS FOR THIS PERIOD"):
                     data.append(self.current)
@@ -49,4 +48,12 @@ class BOACreditPdfParser(BasePdfParser):
                 else:
                     if self.current is not None:
                         self.current.description += " " + line
+                        continue
+                    self.current = TransactionRow(
+                        transaction_date=parts[0],
+                        posting_date=parts[1],
+                        description=" ".join(parts[2:-2]),
+                        reference_number=int(parts[-2]),
+                        amount=self._parse_amount(parts[-1]),
+                    )
         return data

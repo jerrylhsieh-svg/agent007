@@ -41,8 +41,9 @@ class BasePdfParser(ABC):
 
         return -value if negative else value
     
-    def _normalize_mmdd(self, value: str, statement_period: tuple[int, int, int, int]) -> str:
-
+    def _normalize_date_value(self, value: str | None, statement_period: tuple[int, int, int, int] | None) -> str | None:
+        if not value or statement_period is None or re.search(r"\b\d{4}-\d{2}-\d{2}\b", value):
+            return value
         start_month, start_year, _end_month, end_year = statement_period
         month_str, day_str = value[:5].split("/")
         month = int(month_str)
@@ -54,11 +55,6 @@ class BasePdfParser(ABC):
             year = end_year
 
         return f"{year:04d}-{month:02d}-{day:02d}"
-    
-    def _normalize_date_value(self, value: str | None, statement_period: tuple[int, int, int, int] | None) -> str | None:
-        if not value or statement_period is None:
-            return value
-        return self._normalize_mmdd(value, statement_period)
     
     def _extract_statement_years(self, text: str | None) -> tuple[int, int, int, int] | None:
         if not text:
@@ -120,6 +116,7 @@ class BasePdfParser(ABC):
         statement_period = self._extract_statement_years(full_text)
 
         for row in data:
+            print(row)
             self._normalize_date(record=row, statement_period=statement_period)
     
     @abstractmethod
