@@ -8,8 +8,11 @@ from agent.services.parser.boa_bank_parser import BOABankPdfParser
 from agent.services.parser.boa_credit_parser import BOACreditPdfParser
 
 def determine_pdf_type(line: str, pdf_info: dict[str, Any]) -> None:
-    if pdf_info["bank"] is None and "Bank of America" in line:
-        pdf_info["bank"] = "BOA"
+    if pdf_info["bank"] is None:
+        if "Bank of America" in line:
+            pdf_info["bank"] = "BOA"
+        elif "Bilt Cards" in line:
+            pdf_info["bank"] = "Bilt"
 
     if pdf_info["credit"] is None:
         if "your statement" in line.lower():
@@ -34,12 +37,8 @@ def detect_pdf_info(pdf: pdfplumber.PDF) -> str:
             determine_pdf_type(line, pdf_info)
 
             if pdf_info["bank"] is not None and pdf_info["credit"] is not None:
-                if pdf_info["bank"] == "BOA":
-                    if pdf_info["credit"] is True:
-                        return "BOA_credit"
-                    else:
-                        return "BOA_bank"
-                break
+                suffix = "credit" if pdf_info["credit"] else "bank"
+                return f"{pdf_info["bank"]}_{suffix}"
 
     raise ValueError("pdf info not found")
 
@@ -58,7 +57,7 @@ def parse_pages(
     full_text_parts: list[str] = []
     data: list[Any] = []
 
-    for page_number, page in enumerate(pdf.pages, start=1):
+    for page_number, page in enumerate(pdf.pages):
         page_result = pdf_parser.process_page(page_number, page)
         full_text_parts.append(
             f"\n--- Page {page_number} ---\n{page_result['full_text']}"
