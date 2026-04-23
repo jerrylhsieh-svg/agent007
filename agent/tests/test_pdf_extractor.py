@@ -1,14 +1,12 @@
 from __future__ import annotations
 
 import io
-from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
 import pytest
 from fastapi import HTTPException, UploadFile
 from starlette.datastructures import Headers
 
-from agent.models.pdf_models import TransactionRow
 from agent.services import pdf_extractor
 from agent.services.parser import base_pdf_parser, pdf_parser
 
