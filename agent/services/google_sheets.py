@@ -75,7 +75,7 @@ def _build_gsheet_rows(filename: str | None, upload_id: str, data: list[dict[str
                     row.get("raw_line"),
                 ]
             )
-        elif doc_tpye == "BOA_BOA_bankcredit":
+        elif doc_tpye == "BOA_bank":
             rows.append(
                 [
                     upload_id,

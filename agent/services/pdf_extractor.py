@@ -6,7 +6,7 @@ from fastapi import File, HTTPException, UploadFile
 
 from agent.services.google_sheets import _build_gsheet_rows, append_data
 from agent.services.gsheet_config import GSHEET_NAME, GSHEET_STATEMENT_TAB, GSHEET_TRANSACTIONS_TAB
-from agent.services.parser.pdf_parser_v1 import extract_pdf_content
+from agent.services.parser.pdf_parser import extract_pdf_content
 
 
 async def extract_pdf_service(file: UploadFile = File(...)):
@@ -37,13 +37,15 @@ async def extract_pdf_service(file: UploadFile = File(...)):
                 rows=rows,
                 data_type="transaction"
             )
-        elif doc_tpye == "BOA_BOA_bankcredit":
+        elif doc_tpye == "BOA_bank":
             append_data(
                 spreadsheet_name=GSHEET_NAME,
                 worksheet_name=GSHEET_STATEMENT_TAB,
                 rows=rows,
                 data_type="statement"
             )
+        else:
+            raise HTTPException(status_code=500, detail="Failed extract file type")
         gsheet_status = "uploaded"
     except Exception as exc:
         gsheet_status = "failed"
