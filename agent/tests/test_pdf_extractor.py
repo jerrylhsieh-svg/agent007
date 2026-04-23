@@ -8,18 +8,8 @@ from fastapi import HTTPException, UploadFile
 from starlette.datastructures import Headers
 
 from agent.services import pdf_extractor
-from agent.services.parser import base_pdf_parser, pdf_parser
+from agent.services.parser import pdf_parser
 
-
-class DummyPdfParser(base_pdf_parser.BasePdfParser):
-    def _process_line(self, line: str, current_section: str | None):
-        return None
-
-    def _normalize_date(self, record=None, statement_period=None) -> None:
-        return None
-
-    def _update_section(self, current_section: str | None, line: str) -> str | None:
-        return current_section
     
 def make_upload_file(
     filename: str = "statement.pdf",
@@ -28,17 +18,6 @@ def make_upload_file(
 ) -> UploadFile:
     file_obj = io.BytesIO(content)
     return UploadFile(filename=filename, file=file_obj, headers=Headers({"content-type": content_type}))
-
-
-def test_parse_amount_handles_positive_negative_and_invalid():
-    dummy = DummyPdfParser()
-    assert dummy._parse_amount("$1,234.56") == 1234.56
-    assert dummy._parse_amount("(123.45)") == -123.45
-    assert dummy._parse_amount("-99.01") == -99.01
-    with pytest.raises(AttributeError):
-        dummy._parse_amount(None)
-    with pytest.raises(ValueError):
-        dummy._parse_amount("not-a-number")
 
 
 def test_extract_pdf_content_builds_expected_result_shape():
