@@ -8,7 +8,6 @@ class TransactionRow:
     description: str
     reference_number: int
     amount: float | None
-    raw_line: str
 
 @dataclass
 class BankStatementRow:
@@ -16,4 +15,9 @@ class BankStatementRow:
     description: str
     statement_type: Literal["deposit", "withdraw"]
     amount: float | None
-    raw_line: str
+
+@dataclass
+class BiltTransactionRow:
+    date: str | None
+    description: str
+    amount: float | None

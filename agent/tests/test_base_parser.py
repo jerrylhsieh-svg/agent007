@@ -7,21 +7,15 @@ class DummyPdfParser(BasePdfParser):
     def __init__(self):
         self.normalize_calls = []
 
-    def _process_line(self, line: str, current_section: str | None):
-        if line == "skip":
-            return None
-        return {
-            "line": line,
-            "section": current_section,
-        }
+    def  _extract_from_page(self, page: str) -> list:
+        for raw_line in page.splitlines():
+            line = raw_line.strip()
+            if not line:
+                continue
+        return page.splitlines()
 
     def _normalize_date(self, record=None, statement_period=None) -> None:
         self.normalize_calls.append((record, statement_period))
-
-    def _update_section(self, current_section: str | None, line: str) -> str | None:
-        if line.startswith("SECTION:"):
-            return line.split("SECTION:", 1)[1].strip()
-        return current_section
 
 
 class FakePage:
@@ -165,28 +159,6 @@ def test_extract_statement_years_infers_previous_year_when_cross_year():
 
     assert result == (12, 2024, 1, 2025)
 
-
-def test_extract_from_page_tracks_section_and_skips_none_records():
-    parser = DummyPdfParser()
-    page_text = "\n".join(
-        [
-            "",
-            "SECTION: Deposits",
-            "line one",
-            "skip",
-            "SECTION: Withdrawals",
-            "line two",
-        ]
-    )
-
-    result = parser._extract_from_page(page_text)
-
-    assert result == [
-        {"line": "SECTION: Deposits", "section": "Deposits"},
-        {"line": "line one", "section": "Deposits"},
-        {"line": "SECTION: Withdrawals", "section": "Withdrawals"},
-        {"line": "line two", "section": "Withdrawals"},
-    ]
 
 
 def test_extract_tables_formats_each_table_with_page_metadata():

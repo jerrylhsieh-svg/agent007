@@ -1,6 +1,6 @@
 from datetime import datetime
 import re
-from typing import Any
+from typing import Any, List
 from abc import ABC, abstractmethod
 import pdfplumber
 
@@ -8,6 +8,7 @@ from agent.models.pdf_models import BankStatementRow, TransactionRow
 
 
 class BasePdfParser(ABC):
+    current = None
     date_re = re.compile(
     r"^(?P<date>\d{1,2}/\d{1,2}(?:/\d{2,4})?|\d{4}-\d{2}-\d{2}|[A-Z][a-z]{2}\s+\d{1,2})$"
 )
@@ -20,19 +21,6 @@ class BasePdfParser(ABC):
             "full_text": "",
         }
 
-    def process_page(self, page_number: int, page: pdfplumber.page.Page) -> dict[str, Any]:
-        page_text = page.extract_text() or ""
-        data = self._extract_from_page(page_text)
-
-        return {
-            "full_text": page_text,
-            "page": {
-                "page_number": page_number,
-                "text": page_text,
-            },
-            "tables": self._extract_tables(page, page_number),
-            "data": data,
-        }
     
     def _is_date_token(self, value: str) -> bool:
         return bool(self.date_re.match(value.strip()))
@@ -96,24 +84,19 @@ class BasePdfParser(ABC):
 
         return start_month, start_year, end_month, end_year
     
-    def _extract_from_page(self, page_text: str) -> list:
-        current_section: str | None = None
-        data = []
+    def process_page(self, page_number: int, page: pdfplumber.page.Page) -> dict[str, Any]:
+        page_text = page.extract_text() or ""
+        data = self._extract_from_page(page_text)
 
-        for raw_line in page_text.splitlines():
-            line = raw_line.strip()
-            if not line:
-                continue
-
-            current_section = self._update_section(current_section, line)
-            parsed = self._process_line(line, current_section)
-
-            if parsed is None:
-                continue
-
-            data.append(parsed)
-
-        return data
+        return {
+            "full_text": page_text,
+            "page": {
+                "page_number": page_number,
+                "text": page_text,
+            },
+            "tables": self._extract_tables(page, page_number),
+            "data": data,
+        }
     
     def _extract_tables(self, page: pdfplumber.page.Page, page_number: int) -> list[dict[str, Any]]:
         tables: list[dict[str, Any]] = []
@@ -140,10 +123,6 @@ class BasePdfParser(ABC):
             self._normalize_date(record=row, statement_period=statement_period)
     
     @abstractmethod
-    def _process_line(self, line: str, current_section: str | None,) -> TransactionRow | BankStatementRow | None:
-        raise NotImplementedError
-    
-    @abstractmethod
     def _normalize_date(
         self,
         record: TransactionRow | BankStatementRow | None = None,
@@ -152,5 +131,5 @@ class BasePdfParser(ABC):
         raise NotImplementedError
     
     @abstractmethod
-    def _update_section(self, current_section: str | None, line: str) -> str | None:
+    def _extract_from_page(self, page: str) -> list:
         raise NotImplementedError
