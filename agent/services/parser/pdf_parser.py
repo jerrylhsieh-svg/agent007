@@ -60,6 +60,8 @@ def parse_pages(
     data: list[Any] = []
 
     for page_number, page in enumerate(pdf.pages):
+        if page_number == 1:
+            continue
         page_result = pdf_parser.process_page(page_number, page)
         full_text_parts.append(
             f"\n--- Page {page_number} ---\n{page_result['full_text']}"
