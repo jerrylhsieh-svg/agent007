@@ -3,7 +3,7 @@ from typing import Literal
 
 @dataclass
 class TransactionRow:
-    transaction_date: str | None
+    date: str | None
     posting_date: str | None
     description: str
     reference_number: int

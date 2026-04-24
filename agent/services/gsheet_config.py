@@ -9,12 +9,9 @@ SCOPES = [
 TRANSACTION_HEADERS = [
     "upload_id",
     "source_file",
-    "transaction_date",
-    "posting_date",
+    "date",
     "description",
-    "reference_number",
     "amount",
-    "raw_line",
 ]
 
 STATEMENT_HEADERS = [
@@ -24,5 +21,4 @@ STATEMENT_HEADERS = [
     "description",
     "statement_type",
     "amount",
-    "raw_line",
 ]

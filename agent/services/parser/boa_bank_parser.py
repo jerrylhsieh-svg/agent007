@@ -5,20 +5,12 @@ from agent.services.parser.base_pdf_parser import BasePdfParser
 
 
 class BOABankPdfParser(BasePdfParser):
-    statement_type: str | None = None
-    def _normalize_date(
-        self,
-        record: TransactionRow | BankStatementRow | None = None,
-        statement_period: tuple[int, int, int, int] | None = None,
-    ) -> None:
-        if isinstance(record, BankStatementRow):
-            record.date = self._normalize_date_value(record.date, statement_period)
     
     def _extract_from_page(
         self,
         page: str,
-        data: List=[],
     ) -> List:
+        data = []
         for raw_line in page.splitlines():
             line = raw_line.strip()
             if not line:

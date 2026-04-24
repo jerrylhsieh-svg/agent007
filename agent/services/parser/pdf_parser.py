@@ -4,6 +4,7 @@ from typing import Any
 
 import pdfplumber
 
+from agent.services.parser.bilt_credit_parser import BiltCreditPdfParser
 from agent.services.parser.boa_bank_parser import BOABankPdfParser
 from agent.services.parser.boa_credit_parser import BOACreditPdfParser
 
@@ -43,16 +44,17 @@ def detect_pdf_info(pdf: pdfplumber.PDF) -> str:
     raise ValueError("pdf info not found")
 
 
-def build_parser(doc_tpye: str) -> BOACreditPdfParser | BOABankPdfParser:
+def build_parser(doc_tpye: str) -> BOACreditPdfParser | BOABankPdfParser | BiltCreditPdfParser:
 
-    if doc_tpye == "BOA_credit":
-        return BOACreditPdfParser()
-    return BOABankPdfParser()
+    if doc_tpye == "BOA_credit": return BOACreditPdfParser()
+    elif doc_tpye == "BOA_bank": return BOABankPdfParser()
+    elif doc_tpye == "Bilt_credit": return BiltCreditPdfParser()
+    else: ValueError(f"doc_tpye {doc_tpye} not found")
 
 
 def parse_pages(
     pdf: pdfplumber.PDF,
-    pdf_parser: BOACreditPdfParser | BOABankPdfParser,
+    pdf_parser: BOACreditPdfParser | BOABankPdfParser | BiltCreditPdfParser,
 ) -> tuple[str, list[Any]]:
     full_text_parts: list[str] = []
     data: list[Any] = []

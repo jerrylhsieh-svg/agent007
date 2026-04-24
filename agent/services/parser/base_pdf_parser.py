@@ -1,17 +1,20 @@
 from datetime import datetime
 import re
-from typing import Any, List
+from typing import Any
 from abc import ABC, abstractmethod
 import pdfplumber
 
-from agent.models.pdf_models import BankStatementRow, TransactionRow
+from agent.models.pdf_models import BankStatementRow, BiltTransactionRow, TransactionRow
 
 
 class BasePdfParser(ABC):
-    current = None
     date_re = re.compile(
-    r"^(?P<date>\d{1,2}/\d{1,2}(?:/\d{2,4})?|\d{4}-\d{2}-\d{2}|[A-Z][a-z]{2}\s+\d{1,2})$"
-)
+        r"^(?P<date>\d{1,2}/\d{1,2}(?:/\d{2,4})?|\d{4}-\d{2}-\d{2}|[A-Z][a-z]{2}\s+\d{1,2})$"
+    )
+
+    def __init__(self):
+        self.current = None
+        statement_type = None
 
     def build_base_result(self) -> dict[str, Any]:
         return {
@@ -45,16 +48,20 @@ class BasePdfParser(ABC):
         if not value or statement_period is None or re.search(r"\b\d{4}-\d{2}-\d{2}\b", value):
             return value
         start_month, start_year, _end_month, end_year = statement_period
-        month_str, day_str = value[:5].split("/")
-        month = int(month_str)
-        day = int(day_str)
+        parsed = None
+        for fmt in ("%m/%d", "%b %d", "%B %d"):
+            try:
+                parsed = datetime.strptime(value[:5].strip(","), fmt)
+            except ValueError:
+                continue
+        if parsed is None: raise ValueError(f"not able to normalize date {value}")
 
         if start_year != end_year:
-            year = start_year if month >= start_month else end_year
+            year = start_year if parsed.month() >= start_month else end_year
         else:
             year = end_year
 
-        return f"{year:04d}-{month:02d}-{day:02d}"
+        return f"{year:04d}-{parsed.strftime("%m")}-{parsed.strftime("%d")}"
     
     def _extract_statement_years(self, text: str | None) -> tuple[int, int, int, int] | None:
         if not text:
@@ -116,16 +123,24 @@ class BasePdfParser(ABC):
         statement_period = self._extract_statement_years(full_text)
 
         for row in data:
-            print(row)
             self._normalize_date(record=row, statement_period=statement_period)
     
-    @abstractmethod
     def _normalize_date(
         self,
-        record: TransactionRow | BankStatementRow | None = None,
+        record: TransactionRow | BankStatementRow | BiltTransactionRow | None = None,
         statement_period: tuple[int, int, int, int] | None = None,
     ) -> None:
-        raise NotImplementedError
+        if isinstance(record, TransactionRow):
+            record.date = self._normalize_date_value(
+                record.date,
+                statement_period,
+            )
+            record.posting_date = self._normalize_date_value(
+                record.posting_date,
+                statement_period,
+            )
+        else:
+            record.date = self._normalize_date_value(record.date, statement_period)
     
     @abstractmethod
     def _extract_from_page(self, page: str) -> list:

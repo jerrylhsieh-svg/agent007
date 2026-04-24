@@ -62,20 +62,7 @@ def append_data(
 def _build_gsheet_rows(filename: str | None, upload_id: str, data: list[dict[str, Any]], doc_tpye: str) -> list[list[Any]]:
     rows: list[list] = []
     for row in data:
-        if doc_tpye == "BOA_credit":
-            rows.append(
-                [
-                    upload_id,
-                    filename,
-                    row.get("transaction_date"),
-                    row.get("posting_date"),
-                    row.get("description"),
-                    row.get("reference_number"),
-                    row.get("amount"),
-                    row.get("raw_line"),
-                ]
-            )
-        elif doc_tpye == "BOA_bank":
+        if doc_tpye == "BOA_bank":
             rows.append(
                 [
                     upload_id,
@@ -85,6 +72,16 @@ def _build_gsheet_rows(filename: str | None, upload_id: str, data: list[dict[str
                     row.get("statement_type"),
                     row.get("amount"),
                     row.get("raw_line"),
+                ]
+            )
+        else:
+            rows.append(
+                [
+                    upload_id,
+                    filename,
+                    row.get("date"),
+                    row.get("description"),
+                    row.get("amount"),
                 ]
             )
     return rows

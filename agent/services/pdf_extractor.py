@@ -30,14 +30,7 @@ async def extract_pdf_service(file: UploadFile = File(...)):
     gsheet_status = "skipped"
     gsheet_error = None
     try:
-        if doc_tpye == "BOA_credit":
-            append_data(
-                spreadsheet_name=GSHEET_NAME,
-                worksheet_name=GSHEET_TRANSACTIONS_TAB,
-                rows=rows,
-                data_type="transaction"
-            )
-        elif doc_tpye == "BOA_bank":
+        if doc_tpye == "BOA_bank":
             append_data(
                 spreadsheet_name=GSHEET_NAME,
                 worksheet_name=GSHEET_STATEMENT_TAB,
@@ -45,7 +38,12 @@ async def extract_pdf_service(file: UploadFile = File(...)):
                 data_type="statement"
             )
         else:
-            raise HTTPException(status_code=500, detail="Failed extract file type")
+            append_data(
+                spreadsheet_name=GSHEET_NAME,
+                worksheet_name=GSHEET_TRANSACTIONS_TAB,
+                rows=rows,
+                data_type="transaction"
+            )
         gsheet_status = "uploaded"
     except Exception as exc:
         gsheet_status = "failed"
