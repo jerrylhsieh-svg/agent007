@@ -32,24 +32,16 @@ class BiltCreditPdfParser(BasePdfParser):
                     self.current.description = " ".join(self.current.description.split())
                     data.append(self.current)
 
-                    self.current = BiltTransactionRow(
-                        date=match.group("date"),
-                        description=match.group("description"),
-                        amount=self._parse_amount(match.group("amount")),
-                    )
-                elif line.startswith("Total new charges in this period"):
-                    data.append(self.current)
-                    self.current = None
-                else:
-                    if self.current is not None:
-                        self.current.description += " " + line
-                        continue
-                    
-                    self.current = BiltTransactionRow(
-                            date=match.group("date"),
-                            description=match.group("description"),
-                            amount=self._parse_amount(match.group("amount")),
-                        )
-                
+                self.current = BiltTransactionRow(
+                    date=match.group("date"),
+                    description=match.group("description"),
+                    amount=self._parse_amount(match.group("amount")),
+                )
+            elif line.startswith("Total new charges in this period"):
+                data.append(self.current)
+                self.current = None
+            else:
+                if self.current is not None:
+                    self.current.description += " " + line
 
         return data

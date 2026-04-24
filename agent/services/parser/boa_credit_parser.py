@@ -25,29 +25,22 @@ class BOACreditPdfParser(BasePdfParser):
             parts = line.split()
             if len(parts) >= 6 and self._is_date_token(parts[0]) and self._is_date_token(parts[1])\
                 and self._is_account_number(parts[-2]) and self._is_account_number(parts[-3]):
+                if line.startswith("TOTAL PURCHASES AND ADJUSTMENTS FOR THIS PERIOD"):
+                    data.append(self.current)
+                    break
                 if self.current is not None:
                     self.current.description = " ".join(self.current.description.split())
                     data.append(self.current)
 
-                    self.current = TransactionRow(
-                        date=parts[0],
-                        posting_date=parts[1],
-                        description=" ".join(parts[2:-3]),
-                        reference_number=int(parts[-3]),
-                        amount=self._parse_amount(parts[-1]),
-                    )
-                elif line.startswith("TOTAL PURCHASES AND ADJUSTMENTS FOR THIS PERIOD"):
-                    data.append(self.current)
-                    self.current = None
-                else:
-                    if self.current is not None:
-                        self.current.description += " " + line
-                        continue
-                    self.current = TransactionRow(
-                        date=parts[0],
-                        posting_date=parts[1],
-                        description=" ".join(parts[2:-2]),
-                        reference_number=int(parts[-2]),
-                        amount=self._parse_amount(parts[-1]),
-                    )
+                self.current = TransactionRow(
+                    date=parts[0],
+                    posting_date=parts[1],
+                    description=" ".join(parts[2:-3]),
+                    reference_number=int(parts[-3]),
+                    amount=self._parse_amount(parts[-1]),
+                )
+            else:
+                if self.current is not None:
+                    self.current.description += " " + line
+
         return data

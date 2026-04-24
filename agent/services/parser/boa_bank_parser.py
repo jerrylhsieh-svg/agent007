@@ -26,31 +26,21 @@ class BOABankPdfParser(BasePdfParser):
                     self.current.description = " ".join(self.current.description.split())
                     data.append(self.current)
 
-                    if self.statement_type is None:
-                        raise ValueError(f"statement_type not defined")
+                if self.statement_type is None:
+                    raise ValueError(f"statement_type not defined")
 
-                    self.current = BankStatementRow(
-                        date=parts[0],
-                        description=" ".join(parts[1:-1]),
-                        statement_type=self.statement_type,
-                        amount=self._parse_amount(parts[-1]),
-                    )
-                elif line.startswith("Total deposits and other additions") \
-                    or line.startswith("Total withdrawals and other subtractions"):
-                    data.append(self.current)
-                    self.current = None
-                else:
-                    if self.current is not None:
-                        self.current.description += " " + line
-                        continue
-
-                    if self.statement_type is None:
-                        raise ValueError(f"statement_type not defined")
+                self.current = BankStatementRow(
+                    date=parts[0],
+                    description=" ".join(parts[1:-1]),
+                    statement_type=self.statement_type,
+                    amount=self._parse_amount(parts[-1]),
+                )
+            elif line.startswith("Total deposits and other additions") \
+                or line.startswith("Total withdrawals and other subtractions"):
+                data.append(self.current)
+                self.current = None
+            else:
+                if self.current is not None:
+                    self.current.description += " " + line
                     
-                    self.current = BankStatementRow(
-                        date=parts[0],
-                        description=" ".join(parts[1:-1]),
-                        statement_type=self.statement_type,
-                        amount=self._parse_amount(parts[-1]),
-                    )
         return data
