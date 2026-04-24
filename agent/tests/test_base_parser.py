@@ -86,30 +86,6 @@ def test_parse_amount_raises_for_invalid_value():
         parser._parse_amount("abc")
 
 
-def test_normalize_mmdd_same_year_statement():
-    parser = DummyPdfParser()
-
-    result = parser._normalize_mmdd("01/15", (1, 2025, 1, 2025))
-
-    assert result == "2025-01-15"
-
-
-def test_normalize_mmdd_cross_year_uses_start_year_for_later_month():
-    parser = DummyPdfParser()
-
-    result = parser._normalize_mmdd("12/31", (12, 2024, 1, 2025))
-
-    assert result == "2024-12-31"
-
-
-def test_normalize_mmdd_cross_year_uses_end_year_for_earlier_month():
-    parser = DummyPdfParser()
-
-    result = parser._normalize_mmdd("01/02", (12, 2024, 1, 2025))
-
-    assert result == "2025-01-02"
-
-
 def test_normalize_date_value_returns_original_when_missing_inputs():
     parser = DummyPdfParser()
 

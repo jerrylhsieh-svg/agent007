@@ -49,7 +49,7 @@ def build_parser(doc_tpye: str) -> BOACreditPdfParser | BOABankPdfParser | BiltC
     if doc_tpye == "BOA_credit": return BOACreditPdfParser()
     elif doc_tpye == "BOA_bank": return BOABankPdfParser()
     elif doc_tpye == "Bilt_credit": return BiltCreditPdfParser()
-    else: ValueError(f"doc_tpye {doc_tpye} not found")
+    else: raise ValueError(f"doc_tpye {doc_tpye} not found")
 
 
 def parse_pages(

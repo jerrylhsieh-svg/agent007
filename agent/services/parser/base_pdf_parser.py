@@ -1,6 +1,6 @@
 from datetime import datetime
 import re
-from typing import Any
+from typing import Any, Literal
 from abc import ABC, abstractmethod
 import pdfplumber
 
@@ -14,7 +14,7 @@ class BasePdfParser(ABC):
 
     def __init__(self):
         self.current = None
-        statement_type = None
+        self.statement_type: Literal["deposit", "withdraw"] | None = None
 
     def build_base_result(self) -> dict[str, Any]:
         return {
@@ -57,7 +57,7 @@ class BasePdfParser(ABC):
         if parsed is None: raise ValueError(f"not able to normalize date {value}")
 
         if start_year != end_year:
-            year = start_year if parsed.month() >= start_month else end_year
+            year = start_year if parsed.month >= start_month else end_year
         else:
             year = end_year
 
@@ -127,7 +127,7 @@ class BasePdfParser(ABC):
     
     def _normalize_date(
         self,
-        record: TransactionRow | BankStatementRow | BiltTransactionRow | None = None,
+        record: TransactionRow | BankStatementRow | BiltTransactionRow,
         statement_period: tuple[int, int, int, int] | None = None,
     ) -> None:
         if isinstance(record, TransactionRow):
