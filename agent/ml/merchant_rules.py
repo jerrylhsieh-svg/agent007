@@ -1,42 +1,56 @@
+from __future__ import annotations
+
 import re
-from typing import Optional
+from dataclasses import dataclass
 
-RULES: list[tuple[re.Pattern[str], str]] = [
-    # transportation
-    (re.compile(r"\b(uber trip|uber\*? ?trip|lyft)\b", re.I), "transportation"),
 
-    # gas
-    (re.compile(r"\b(shell|exxon|mobil|chevron|bp|sunoco)\b", re.I), "gas"),
+@dataclass(frozen=True)
+class MerchantRule:
+    pattern: re.Pattern[str]
+    label: str
+    reason: str
 
-    # groceries
-    (re.compile(r"\b(whole ?foods|wholefds|trader joe'?s|costco|aldi|kroger)\b", re.I), "groceries"),
-
-    # food delivery first, before generic restaurant
-    (re.compile(r"\b(doordash|ubereats|uber eats|grubhub|seamless)\b", re.I), "restaurant"),
-
-    # restaurants / coffee
-    (re.compile(r"\b(starbucks|mcdonald'?s|chipotle|sweetgreen|coffee|tst\*?)\b", re.I), "restaurant"),
-
-    # subscriptions / digital services
-    (re.compile(r"\b(netflix|spotify|youtube ?premium|apple\.com/bill|apple\.com\/bill|uber ?one)\b", re.I), "subscription"),
-
-    # shopping / retail / marketplaces
-    (re.compile(r"\b(amazon|amzn|paypal|square)\b", re.I), "shopping"),
+OVERRIDE_RULES: list[MerchantRule] = [
+    MerchantRule(
+        re.compile(r"\b(uber\s*one|uber\s*pass)\b", re.I),
+        "subscription_membership",
+        "Uber membership should not be classified as rideshare.",
+    ),
+    MerchantRule(
+        re.compile(r"\b(uber\s*eats|ubereats|doordash|grubhub|seamless)\b", re.I),
+        "food_delivery",
+        "Food delivery should be separated from restaurants.",
+    ),
+    MerchantRule(
+        re.compile(r"\b(uber\s*trip|uber\*?\s*trip|lyft)\b", re.I),
+        "transportation",
+        "Rideshare should be separated from Uber Eats and Uber One.",
+    ),
+    MerchantRule(
+        re.compile(r"\b(amazon\s*prime|amzn\s*prime|prime\s*membership)\b", re.I),
+        "subscription_membership",
+        "Amazon subscription should be separated from Amazon shopping.",
+    ),
+    MerchantRule(
+        re.compile(r"\b(amazon|amzn)\b", re.I),
+        "amazon",
+        "Amazon purchases should have their own category.",
+    ),
 ]
 
 
 def normalize_description(text: str) -> str:
-    text = text.lower()
-    text = re.sub(r"\d{3,}", " ", text)         
-    text = re.sub(r"[^a-z0-9\s*]", " ", text)  
-    text = text.replace("*", " ")
-    text = re.sub(r"\s+", " ", text).strip()
-    return text
+    normalized = text.lower()
+    normalized = normalized.replace("*", " ")
+    normalized = re.sub(r"\d{3,}", " ", normalized)
+    normalized = re.sub(r"[^a-z0-9\s]", " ", normalized)
+    normalized = re.sub(r"\s+", " ", normalized).strip()
+    return normalized
 
 
-def rule_based_label(description: str) -> Optional[str]:
+def override_label(description: str) -> str | None:
     normalized = normalize_description(description)
-    for pattern, label in RULES:
-        if pattern.search(normalized):
-            return label
+    for rule in OVERRIDE_RULES:
+        if rule.pattern.search(normalized):
+            return rule.label
     return None
