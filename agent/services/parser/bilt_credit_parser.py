@@ -1,7 +1,7 @@
 import re
 from typing import List
 
-from agent.models.pdf_models import BiltTransactionRow
+from agent.models.pdf_models import TransactionRow
 from agent.services.parser.base_pdf_parser import BasePdfParser
 
 
@@ -32,7 +32,7 @@ class BiltCreditPdfParser(BasePdfParser):
                     self.current.description = " ".join(self.current.description.split())
                     data.append(self.current)
 
-                self.current = BiltTransactionRow(
+                self.current = TransactionRow(
                     date=match.group("date"),
                     description=match.group("description"),
                     amount=self._parse_amount(match.group("amount")),

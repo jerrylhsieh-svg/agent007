@@ -34,9 +34,7 @@ class BOACreditPdfParser(BasePdfParser):
 
                 self.current = TransactionRow(
                     date=parts[0],
-                    posting_date=parts[1],
                     description=" ".join(parts[2:-3]),
-                    reference_number=int(parts[-3]),
                     amount=self._parse_amount(parts[-1]),
                 )
             else:

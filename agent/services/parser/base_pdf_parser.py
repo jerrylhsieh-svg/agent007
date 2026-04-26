@@ -4,7 +4,7 @@ from typing import Any, Literal
 from abc import ABC, abstractmethod
 import pdfplumber
 
-from agent.models.pdf_models import BankStatementRow, BiltTransactionRow, TransactionRow
+from agent.models.pdf_models import BankStatementRow, TransactionRow
 
 
 class BasePdfParser(ABC):
@@ -117,30 +117,13 @@ class BasePdfParser(ABC):
     
     def normalize_records(
         self,
-        data: list,
+        data: list[TransactionRow | BankStatementRow],
         full_text: str,
     ) -> None:
         statement_period = self._extract_statement_years(full_text)
 
         for row in data:
-            self._normalize_date(record=row, statement_period=statement_period)
-    
-    def _normalize_date(
-        self,
-        record: TransactionRow | BankStatementRow | BiltTransactionRow,
-        statement_period: tuple[int, int, int, int] | None = None,
-    ) -> None:
-        if isinstance(record, TransactionRow):
-            record.date = self._normalize_date_value(
-                record.date,
-                statement_period,
-            )
-            record.posting_date = self._normalize_date_value(
-                record.posting_date,
-                statement_period,
-            )
-        else:
-            record.date = self._normalize_date_value(record.date, statement_period)
+            self._normalize_date_value(value=row.date, statement_period=statement_period)
     
     @abstractmethod
     def _extract_from_page(self, page: str) -> list:

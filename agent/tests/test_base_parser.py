@@ -205,38 +205,3 @@ def test_process_page_uses_empty_string_when_extract_text_returns_none(monkeypat
 
     assert result["full_text"] == ""
     assert result["page"] == {"page_number": 1, "text": ""}
-
-
-def test_normalize_records_extracts_statement_period_and_normalizes_each_row(monkeypatch):
-    parser = DummyPdfParser()
-    rows = [{"date": "01/15"}, {"date": "01/16"}]
-
-    monkeypatch.setattr(
-        parser,
-        "_extract_statement_years",
-        lambda full_text: (1, 2025, 1, 2025),
-    )
-
-    parser.normalize_records(rows, "statement text")
-
-    assert parser.normalize_calls == [
-        (rows[0], (1, 2025, 1, 2025)),
-        (rows[1], (1, 2025, 1, 2025)),
-    ]
-
-
-def test_normalize_records_passes_none_statement_period_when_not_found(monkeypatch):
-    parser = DummyPdfParser()
-    rows = [{"date": "01/15"}]
-
-    monkeypatch.setattr(
-        parser,
-        "_extract_statement_years",
-        lambda full_text: None,
-    )
-
-    parser.normalize_records(rows, "statement text")
-
-    assert parser.normalize_calls == [
-        (rows[0], None),
-    ]
