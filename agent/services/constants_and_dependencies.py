@@ -15,6 +15,7 @@ TRANSACTION_HEADERS = [
     "date",
     "description",
     "amount",
+    "label",
 ]
 
 STATEMENT_HEADERS = [
@@ -24,6 +25,7 @@ STATEMENT_HEADERS = [
     "description",
     "statement_type",
     "amount",
+    "label",
 ]
 
 labeling_store = InMemoryLabelingStore()

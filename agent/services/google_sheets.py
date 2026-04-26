@@ -72,6 +72,7 @@ def _build_gsheet_rows(filename: str | None, upload_id: str, data: list[dict[str
                     row.get("statement_type"),
                     row.get("amount"),
                     row.get("raw_line"),
+                    "",
                 ]
             )
         else:
@@ -82,6 +83,7 @@ def _build_gsheet_rows(filename: str | None, upload_id: str, data: list[dict[str
                     row.get("date"),
                     row.get("description"),
                     row.get("amount"),
+                    "",
                 ]
             )
     return rows
