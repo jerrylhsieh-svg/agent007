@@ -4,6 +4,9 @@ from agent.services.labeling.merchant_label_service import MerchantLabelService
 
 merchant_label_service = MerchantLabelService()
 
+def create_labeling_job(data):
+    return labeling_store.create_job(len(data))
+
 
 def run_labeling_job(job_id: str, transactions: list[dict]) -> None:
     job = labeling_store.get_job(job_id)

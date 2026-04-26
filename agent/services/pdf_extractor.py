@@ -2,14 +2,15 @@ from __future__ import annotations
 
 from uuid import uuid4
 
-from fastapi import File, HTTPException, UploadFile
+from fastapi import BackgroundTasks, File, HTTPException, UploadFile
 
 from agent.services.google_sheets import _build_gsheet_rows, append_data
 from agent.services.constants_and_dependencies import GSHEET_NAME, GSHEET_STATEMENT_TAB, GSHEET_TRANSACTIONS_TAB
+from agent.services.labeling.labeling_job_service import create_labeling_job, run_labeling_job
 from agent.services.parser.pdf_parser import extract_pdf_content
 
 
-async def extract_pdf_service(file: UploadFile = File(...)):
+async def extract_pdf_service(background_tasks: BackgroundTasks, file: UploadFile):
     if file.content_type != "application/pdf":
         raise HTTPException(status_code=400, detail="Only PDF files are supported.")
 
@@ -25,6 +26,12 @@ async def extract_pdf_service(file: UploadFile = File(...)):
         upload_id=upload_id,
         data=extracted["data"],
         doc_tpye=doc_tpye,
+    )
+    job = create_labeling_job(extracted["data"])
+    background_tasks.add_task(
+        run_labeling_job,
+        job,
+        extracted["data"],
     )
 
     gsheet_status = "skipped"
