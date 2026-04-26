@@ -12,6 +12,7 @@ SCOPES = [
 TRANSACTION_HEADERS = [
     "upload_id",
     "source_file",
+    "id",
     "date",
     "description",
     "amount",
@@ -21,6 +22,7 @@ TRANSACTION_HEADERS = [
 STATEMENT_HEADERS = [
     "upload_id",
     "source_file",
+    "id",
     "date",
     "description",
     "statement_type",

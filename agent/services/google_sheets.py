@@ -67,11 +67,11 @@ def _build_gsheet_rows(filename: str | None, upload_id: str, data: list[dict[str
                 [
                     upload_id,
                     filename,
+                    row.get("id"),
                     row.get("date"),
                     row.get("description"),
                     row.get("statement_type"),
                     row.get("amount"),
-                    row.get("raw_line"),
                     "",
                 ]
             )
@@ -80,6 +80,7 @@ def _build_gsheet_rows(filename: str | None, upload_id: str, data: list[dict[str
                 [
                     upload_id,
                     filename,
+                    row.get("id"),
                     row.get("date"),
                     row.get("description"),
                     row.get("amount"),
