@@ -8,7 +8,7 @@ import pandas as pd
 
 from agent.services.call_model import call_model
 from agent.services.google_sheets import read_transactions_df
-from agent.services.gsheet_config import GSHEET_NAME
+from agent.services.constants_and_dependencies import GSHEET_NAME
 
 
 class BaseFinancialAnalyzer(ABC):
