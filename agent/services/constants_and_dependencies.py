@@ -1,3 +1,6 @@
+from agent.models.labeling_job import InMemoryLabelingStore
+
+
 GSHEET_NAME = "transactions"
 GSHEET_TRANSACTIONS_TAB = "card_transactions"
 GSHEET_STATEMENT_TAB = "bank_statements"
@@ -22,3 +25,5 @@ STATEMENT_HEADERS = [
     "statement_type",
     "amount",
 ]
+
+labeling_store = InMemoryLabelingStore()

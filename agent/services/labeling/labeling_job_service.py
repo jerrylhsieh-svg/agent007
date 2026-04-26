@@ -1,5 +1,5 @@
-from agent.services.dependencies import labeling_store
-from agent.services.merchant_label_service import MerchantLabelService
+from agent.services.constants_and_dependencies import labeling_store
+from agent.services.labeling.merchant_label_service import MerchantLabelService
 
 
 merchant_label_service = MerchantLabelService()
@@ -18,11 +18,11 @@ def run_labeling_job(job_id: str, transactions: list[dict]) -> None:
         labeled_results: list[dict] = []
 
         for txn in transactions:
-            prediction = merchant_label_service.label(txn["description"])
+            prediction = merchant_label_service.label_one(txn["description"])
 
             labeled_txn = {
                 **txn,
-                "label": prediction.label,
+                "label": prediction.merchant_type,
                 "confidence": prediction.confidence,
                 "source": prediction.source,
             }
