@@ -22,9 +22,9 @@ def run_labeling_job(job_id: str, transactions: list[dict]) -> None:
 
             labeled_txn = {
                 **txn,
-                "label": prediction.merchant_type,
-                "confidence": prediction.confidence,
-                "source": prediction.source,
+                "label": prediction["merchant_type"],
+                "confidence": prediction["confidence"],
+                "source": prediction["source"],
             }
 
             labeled_results.append(labeled_txn)
