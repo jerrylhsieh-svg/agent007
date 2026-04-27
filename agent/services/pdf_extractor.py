@@ -34,7 +34,7 @@ async def extract_pdf_service(background_tasks: BackgroundTasks, file: UploadFil
     job = create_labeling_job(extracted["data"])
     background_tasks.add_task(
         run_labeling_job,
-        job,
+        job.id,
         extracted["data"],
         worksheet_name,
     )

@@ -7,6 +7,7 @@ import pytest
 from fastapi import BackgroundTasks, HTTPException, UploadFile
 from starlette.datastructures import Headers
 
+from agent.models.labeling_job import LabelingJob
 from agent.services import pdf_extractor
 from agent.services.parser import pdf_parser
 
@@ -102,7 +103,7 @@ async def test_extract_pdf_service_returns_summary_and_saves_json():
     background_tasks = BackgroundTasks()
 
     with patch("agent.services.pdf_extractor.extract_pdf_content", return_value=extracted_payload), \
-        patch("agent.services.pdf_extractor.create_labeling_job", return_value=None), \
+        patch("agent.services.pdf_extractor.create_labeling_job", return_value=LabelingJob(id=1)), \
         patch("agent.services.pdf_extractor.append_data", return_value=(None, None)):
         result = await pdf_extractor.extract_pdf_service(background_tasks, file)
 
