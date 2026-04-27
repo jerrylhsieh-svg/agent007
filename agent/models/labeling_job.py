@@ -18,6 +18,18 @@ class LabelingJob:
     result: list[dict] = field(default_factory=list)
     created_at: datetime = field(default_factory=datetime.utcnow)
 
+@dataclass
+class UnlabeledRecord:
+    record_id: str
+    sheet_name: str
+    description: str 
+    normalized_description: str
+    predicted_label: str
+    confidence: float
+    priority_score: float
+    similar_count: int
+    total_amount_impact: float
+
 
 class InMemoryLabelingStore:
     def __init__(self) -> None:

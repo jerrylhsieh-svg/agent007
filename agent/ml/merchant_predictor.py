@@ -21,6 +21,7 @@ class MerchantPrediction:
     source: str
     normalized_description: str
     needs_review: bool
+    predicted_label: str
 
 
 class MerchantPredictor:
@@ -55,6 +56,7 @@ class MerchantPredictor:
                 source="override_rule",
                 normalized_description=normalized,
                 needs_review=False,
+                predicted_label=label,
             )
 
         label, score = self._predict_with_model(normalized)
@@ -66,6 +68,7 @@ class MerchantPredictor:
             source="model",
             normalized_description=normalized,
             needs_review=needs_review,
+            predicted_label=label,
         )
 
     def predict_batch(self, descriptions: Iterable[str]) -> list[MerchantPrediction]:

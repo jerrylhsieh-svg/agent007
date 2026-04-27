@@ -28,10 +28,15 @@ STATEMENT_HEADERS = [
 ]
 
 LABEL_HEADERS = [
-    "sheet_name",
-    "id",
+    "record_id", 
+    "sheet_name", 
     "description",
-    "label",
+    "normalized_description",
+    "predicted_label",
+    "confidence",
+    "priority_score",
+    "similar_count",
+    "total_amount_impact",
 ]
 
 labeling_store = InMemoryLabelingStore()
