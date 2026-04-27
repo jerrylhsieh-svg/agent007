@@ -5,9 +5,10 @@ from typing import Any, Iterable
 
 import gspread
 from google.oauth2.service_account import Credentials
+from gspread.utils import rowcol_to_a1
 import pandas as pd
 
-from agent.services.constants_and_dependencies import SCOPES, STATEMENT_HEADERS, TRANSACTION_HEADERS
+from agent.services.constants_and_dependencies import GSHEET_NAME, SCOPES, STATEMENT_HEADERS, TRANSACTION_HEADERS
 
 
 
@@ -43,50 +44,69 @@ def append_data(
     spreadsheet_name: str,
     worksheet_name: str,
     rows: Iterable[list],
-    data_type: str,
+    headers: list[str],
 ) -> None:
     worksheet = get_or_create_worksheet(spreadsheet_name, worksheet_name)
-    if data_type == "transaction":
-        headers = TRANSACTION_HEADERS
-    elif data_type == "statement":
-        headers = STATEMENT_HEADERS
-    else:
-        raise ValueError("data type has to be either transaction or statement")
     
     ensure_headers(worksheet, headers)
     rows = list(rows)
     if rows:
         worksheet.append_rows(rows, value_input_option="USER_ENTERED")
 
+def add_labels(
+    worksheet_name: str,
+    rows: Iterable[tuple[str, str]],
+    spreadsheet_name: str = GSHEET_NAME
+) -> None:
+    worksheet = get_or_create_worksheet(spreadsheet_name, worksheet_name)
+    existing_values = worksheet.get_all_values()
 
-def _build_gsheet_rows(filename: str | None, upload_id: str, data: list[dict[str, Any]], doc_tpye: str) -> list[list[Any]]:
+    if not existing_values:
+        raise ValueError("Worksheet is empty. Expected a header row with an 'id' column.")
+
+    header = existing_values[0]
+
+    if "id" not in header:
+        raise ValueError("Worksheet must contain an 'id' column.")
+
+    if "label" not in header:
+        raise ValueError("Worksheet must contain a 'label' column.")
+
+    id_col_index = header.index("id")         
+    label_col_index = header.index("label")
+
+    id_to_sheet_row_number: dict[str, int] = {}
+
+    for sheet_row_number, row in enumerate(existing_values[1:], start=2):
+        if len(row) > id_col_index:
+            row_id = row[id_col_index]
+            if row_id:
+                id_to_sheet_row_number[row_id] = sheet_row_number
+
+    updates = []
+
+    for row_id, label in rows:
+        sheet_row_number = id_to_sheet_row_number[row_id]
+
+        label_cell = rowcol_to_a1(sheet_row_number, label_col_index + 1)
+
+        updates.append(
+            {
+                "range": label_cell,
+                "values": [[label]],
+            }
+        )
+
+    if updates:
+        worksheet.batch_update(updates)
+
+
+def build_gsheet_rows(data: list[dict[str, Any]], fields: list[str]) -> list[list[Any]]:
     rows: list[list] = []
     for row in data:
-        if doc_tpye == "BOA_bank":
-            rows.append(
-                [
-                    upload_id,
-                    filename,
-                    row.get("id"),
-                    row.get("date"),
-                    row.get("description"),
-                    row.get("statement_type"),
-                    row.get("amount"),
-                    "",
-                ]
-            )
-        else:
-            rows.append(
-                [
-                    upload_id,
-                    filename,
-                    row.get("id"),
-                    row.get("date"),
-                    row.get("description"),
-                    row.get("amount"),
-                    "",
-                ]
-            )
+        rows.append(
+            [row.get(field, "") for field in fields]
+        )
     return rows
 
 def read_transactions_df(

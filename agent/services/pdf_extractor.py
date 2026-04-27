@@ -4,8 +4,8 @@ from uuid import uuid4
 
 from fastapi import BackgroundTasks, File, HTTPException, UploadFile
 
-from agent.services.google_sheets import _build_gsheet_rows, append_data
-from agent.services.constants_and_dependencies import GSHEET_NAME, GSHEET_STATEMENT_TAB, GSHEET_TRANSACTIONS_TAB
+from agent.services.google_sheets import append_data, build_gsheet_rows
+from agent.services.constants_and_dependencies import GSHEET_NAME, GSHEET_STATEMENT_TAB, GSHEET_TRANSACTIONS_TAB, STATEMENT_HEADERS, TRANSACTION_HEADERS
 from agent.services.labeling.labeling_job_service import create_labeling_job, run_labeling_job
 from agent.services.parser.pdf_parser import extract_pdf_content
 
@@ -20,37 +20,34 @@ async def extract_pdf_service(background_tasks: BackgroundTasks, file: UploadFil
 
     extracted, doc_tpye = extract_pdf_content(file_bytes)
 
-    upload_id = uuid4().hex[:12]
-    rows = _build_gsheet_rows(
-        filename=file.filename,
-        upload_id=upload_id,
+    if doc_tpye == "BOA_bank":
+        worksheet_name=GSHEET_STATEMENT_TAB
+        headers=STATEMENT_HEADERS
+    else:
+        worksheet_name=GSHEET_TRANSACTIONS_TAB
+        headers=TRANSACTION_HEADERS
+
+    rows = build_gsheet_rows(
         data=extracted["data"],
-        doc_tpye=doc_tpye,
+        fields=headers,
     )
     job = create_labeling_job(extracted["data"])
     background_tasks.add_task(
         run_labeling_job,
         job,
         extracted["data"],
+        worksheet_name,
     )
 
     gsheet_status = "skipped"
     gsheet_error = None
     try:
-        if doc_tpye == "BOA_bank":
-            append_data(
-                spreadsheet_name=GSHEET_NAME,
-                worksheet_name=GSHEET_STATEMENT_TAB,
-                rows=rows,
-                data_type="statement"
-            )
-        else:
-            append_data(
-                spreadsheet_name=GSHEET_NAME,
-                worksheet_name=GSHEET_TRANSACTIONS_TAB,
-                rows=rows,
-                data_type="transaction"
-            )
+        append_data(
+            spreadsheet_name=GSHEET_NAME,
+            worksheet_name=worksheet_name,
+            rows=rows,
+            headers=headers
+        )
         gsheet_status = "uploaded"
     except Exception as exc:
         gsheet_status = "failed"
