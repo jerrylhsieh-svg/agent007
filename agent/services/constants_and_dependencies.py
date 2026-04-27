@@ -5,6 +5,7 @@ GSHEET_NAME = "transactions"
 GSHEET_TRANSACTIONS_TAB = "card_transactions"
 GSHEET_STATEMENT_TAB = "bank_statements"
 GSHEET_LABEL_TAB = "unknown_labels"
+GSHEET_LABEL_GROUP_TAB = "unknown_labels_group"
 SCOPES = [
     "https://www.googleapis.com/auth/spreadsheets",
     "https://www.googleapis.com/auth/drive",

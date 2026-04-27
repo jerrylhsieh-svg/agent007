@@ -3,7 +3,8 @@ from dataclasses import asdict
 
 from agent.ml.merchant_predictor import UNKNOWN_LABEL
 from agent.models.labeling_job import UnlabeledRecord
-from agent.services.constants_and_dependencies import GSHEET_LABEL_TAB, GSHEET_NAME, LABEL_HEADERS, labeling_store
+from agent.repo.UnlabeledRecordRepository import UnlabeledRecordRepository
+from agent.services.constants_and_dependencies import GSHEET_LABEL_GROUP_TAB, GSHEET_LABEL_TAB, GSHEET_NAME, LABEL_HEADERS, labeling_store
 from agent.services.google_sheets import add_labels, append_data, build_gsheet_rows
 from agent.services.labeling.merchant_label_service import MerchantLabelService
 
@@ -61,16 +62,12 @@ def run_labeling_job(job_id: str, transactions: list[dict], worksheet_name) -> N
         labeling_store.update_job(job)
 
         add_labels(worksheet_name, labeled)
-        rows = build_gsheet_rows(
-            data=[asdict(row) for row in unlabeled],
-            fields=LABEL_HEADERS,
-        )
-        append_data(
-            spreadsheet_name=GSHEET_NAME,
-            worksheet_name=GSHEET_LABEL_TAB,
-            rows=rows,
-            headers=LABEL_HEADERS
-        )
+
+        unlabel_repo = UnlabeledRecordRepository()
+        all_unlabeled = unlabeled + unlabel_repo.get_records()
+        unlabel_repo.insert_many(unlabeled)
+        all_unlabeled = rerank(all_unlabeled)
+        unlabel_repo.overwrite(all_unlabeled, GSHEET_LABEL_GROUP_TAB)
 
     except Exception as exc:
         job.status = "failed"
@@ -78,32 +75,47 @@ def run_labeling_job(job_id: str, transactions: list[dict], worksheet_name) -> N
         labeling_store.update_job(job)
 
 def rerank(records: list[UnlabeledRecord]) -> list[UnlabeledRecord]:
-        pending = [r for r in records]
-
         grouped: dict[str, list[UnlabeledRecord]] = defaultdict(list)
 
-        for record in pending:
-            key = record.normalized_description
-            grouped[key].append(record)
+        for record in records:
+            grouped[record.normalized_description].append(record)
 
-        for group_records in grouped.values():
-            similar_count = len(group_records)
+        consolidated: list[UnlabeledRecord] = []
+
+        for normalized_description, group_records in grouped.items():
+            representative = group_records[0]
+
+            similar_count = sum(r.similar_count for r in group_records)
             total_amount = sum(abs(r.total_amount_impact or 0.0) for r in group_records)
 
-            for record in group_records:
-                confidence = record.confidence if record.confidence is not None else 0.0
-                uncertainty_score = 1 - confidence
+            confidences = [
+                r.confidence*r.similar_count
+                for r in group_records
+                if r.confidence is not None
+            ]
 
-                record.similar_count = similar_count
-                record.total_amount_impact = total_amount
-                record.priority_score = (
-                    similar_count * 10
-                    + min(total_amount, 500) * 0.1
-                    + uncertainty_score * 25
-                )
+            avg_confidence = (
+                sum(confidences) / similar_count
+                if confidences
+                else 0.0
+            )
+
+            uncertainty_score = 1 - avg_confidence
+
+            representative.normalized_description = normalized_description
+            representative.similar_count = similar_count
+            representative.total_amount_impact = total_amount
+            representative.confidence = avg_confidence
+            representative.priority_score = (
+                similar_count * 10
+                + min(total_amount, 500) * 0.1
+                + uncertainty_score * 25
+            )
+
+            consolidated.append(representative)
 
         return sorted(
-            records,
+            consolidated,
             key=lambda r: r.priority_score,
             reverse=True,
         )
