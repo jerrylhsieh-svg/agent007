@@ -8,7 +8,7 @@ from google.oauth2.service_account import Credentials
 from gspread.utils import rowcol_to_a1
 import pandas as pd
 
-from agent.services.constants_and_dependencies import GSHEET_NAME, SCOPES, STATEMENT_HEADERS, TRANSACTION_HEADERS
+from agent.services.constants_and_dependencies import GSHEET_NAME, SCOPES
 
 
 

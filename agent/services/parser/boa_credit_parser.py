@@ -1,6 +1,6 @@
 from typing import List
 
-from agent.models.pdf_models import BankStatementRow, TransactionRow
+from agent.models.pdf_models import TransactionRow
 from agent.services.parser.base_pdf_parser import BasePdfParser
 
 
