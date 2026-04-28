@@ -9,7 +9,7 @@ test:
 type-check:
 	mypy -p agent
 
-train-model:
-	python -m agent.learning_models.transaction.train_merchant_model --csv data/description_labeled.csv
+train-trasaction:
+	python -m agent.learning_models.train_merchant_model --csv data/description_labeled.csv --file-type transaction
 
 check: test type-check

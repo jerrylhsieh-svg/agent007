@@ -1,40 +1,20 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 from functools import cached_property
 from pathlib import Path
 from typing import Any, Iterable
 
 import joblib
 
+from agent.learning_models.constants import TRANSACTION_ARTIFACT_PATH, UNKNOWN_LABEL
 from agent.learning_models.transaction.merchant_rules import normalize_description, override_label
-
-
-ARTIFACT_PATH = Path(__file__).resolve().parent / "artifacts" / "merchant_classifier.joblib"
-UNKNOWN_LABEL = "unknown"
-
-
-@dataclass(frozen=True)
-class MerchantPrediction:
-    merchant_type: str
-    confidence: float
-    source: str
-    normalized_description: str
-    needs_review: bool
-    predicted_label: str
+from agent.models.merchant_prediction import MerchantPrediction
 
 
 class MerchantPredictor:
-    """
-    Merchant classifier flow:
-    1. Normalize description.
-    2. Apply only small deterministic override rules for known ambiguous cases.
-    3. Let the ML model classify everything else.
-    4. Mark low-confidence predictions as unknown for manual review.
-    """
 
     def __init__(self, artifact_path: Path | None = None, threshold: float = 0.70) -> None:
-        self.artifact_path = artifact_path or ARTIFACT_PATH
+        self.artifact_path = artifact_path or TRANSACTION_ARTIFACT_PATH
         self.threshold = threshold
 
     @cached_property

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from pathlib import Path
 
 import joblib
 import pandas as pd
@@ -10,14 +9,13 @@ from sklearn.metrics import classification_report
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 
+from agent.learning_models.constants import BASE_DIR
 from agent.learning_models.transaction.merchant_rules import normalize_description
 
 
-BASE_DIR = Path(__file__).resolve().parent
-ARTIFACT_PATH = BASE_DIR / "artifacts" / "merchant_classifier.joblib"
 
-
-def train(csv_path: str) -> None:
+def train(csv_path: str, file_type: str) -> None:
+    ARTIFACT_PATH = BASE_DIR / file_type / "artifacts" / "merchant_classifier.joblib"
     df = pd.read_csv(csv_path)
 
     required_columns = {"description", "label"}
@@ -77,6 +75,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--csv", required=True, help="Path to labeled CSV")
+    parser.add_argument("--file-type", required=True, help="file type")
     args = parser.parse_args()
 
-    train(args.csv)
+    train(args.csv, args.file_type)
