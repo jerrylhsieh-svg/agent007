@@ -1,13 +1,14 @@
 from collections import defaultdict
-from dataclasses import asdict
 
 from agent.ml.merchant_predictor import UNKNOWN_LABEL
 from agent.models.labeling_job import UnlabeledRecord
 from agent.repo.UnlabeledRecordRepository import UnlabeledRecordRepository
-from agent.services.constants_and_dependencies import GSHEET_LABEL_GROUP_TAB, GSHEET_LABEL_TAB, GSHEET_NAME, LABEL_HEADERS, labeling_store
-from agent.services.google_sheets import add_labels, append_data, build_gsheet_rows
+from agent.services.constants_and_dependencies import GSHEET_LABEL_GROUP_TAB, labeling_store
+from agent.services.google_sheets import add_labels
 from agent.services.labeling.merchant_label_service import MerchantLabelService
+import logging
 
+logger = logging.getLogger(__name__)
 
 merchant_label_service = MerchantLabelService()
 
@@ -18,7 +19,7 @@ def run_labeling_job(job_id: str, transactions: list[dict], worksheet_name) -> N
     job = labeling_store.get_job(job_id)
 
     if job is None:
-        return
+        raise ValueError("Labeling job not found")
 
     try:
         job.status = "running"
@@ -34,6 +35,8 @@ def run_labeling_job(job_id: str, transactions: list[dict], worksheet_name) -> N
                 "label": prediction["merchant_type"],
                 "confidence": prediction["confidence"],
                 "source": prediction["source"],
+                "normalized_description": prediction["normalized_description"],
+                "predicted_label": prediction["predicted_label"]
             }
 
             if prediction["merchant_type"] == UNKNOWN_LABEL:
@@ -41,7 +44,7 @@ def run_labeling_job(job_id: str, transactions: list[dict], worksheet_name) -> N
                     record_id=labeled_txn["id"], 
                     sheet_name=worksheet_name, 
                     description=labeled_txn["description"],
-                    normalized_description=(labeled_txn["normalized_description"]),
+                    normalized_description=labeled_txn["normalized_description"],
                     predicted_label=labeled_txn["predicted_label"],
                     confidence=labeled_txn["confidence"],
                     priority_score=0.0,
@@ -73,6 +76,7 @@ def run_labeling_job(job_id: str, transactions: list[dict], worksheet_name) -> N
         job.status = "failed"
         job.error_message = str(exc)
         labeling_store.update_job(job)
+        logger.exception(f"Labeling job failed for job_id={job_id}, {job}", )
 
 def rerank(records: list[UnlabeledRecord]) -> list[UnlabeledRecord]:
         grouped: dict[str, list[UnlabeledRecord]] = defaultdict(list)

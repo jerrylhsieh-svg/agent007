@@ -31,13 +31,6 @@ async def extract_pdf_service(background_tasks: BackgroundTasks, file: UploadFil
         data=extracted["data"],
         fields=headers,
     )
-    job = create_labeling_job(extracted["data"])
-    background_tasks.add_task(
-        run_labeling_job,
-        job.id,
-        extracted["data"],
-        worksheet_name,
-    )
 
     gsheet_status = "skipped"
     gsheet_error = None
@@ -55,6 +48,14 @@ async def extract_pdf_service(background_tasks: BackgroundTasks, file: UploadFil
         raise HTTPException(status_code=500, detail="Failed to write to Gsheet")
 
     message = "PDF parsed with layout-based bank statement heuristics."
+
+    job = create_labeling_job(extracted["data"])
+    background_tasks.add_task(
+        run_labeling_job,
+        job.id,
+        extracted["data"],
+        worksheet_name,
+    )
 
     return {
         "filename": file.filename,
