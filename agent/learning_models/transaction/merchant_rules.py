@@ -48,7 +48,7 @@ def normalize_description(text: str) -> str:
     return normalized
 
 
-def override_label(description: str) -> str | None:
+def override_transaction_label(description: str) -> str | None:
     normalized = normalize_description(description)
     for rule in OVERRIDE_RULES:
         if rule.pattern.search(normalized):

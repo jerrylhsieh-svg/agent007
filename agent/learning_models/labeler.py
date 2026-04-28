@@ -1,20 +1,20 @@
 from __future__ import annotations
 
 from functools import cached_property
-from pathlib import Path
-from typing import Any, Iterable
+from typing import Any, Iterable, Literal
 
 import joblib
 
-from agent.learning_models.constants import TRANSACTION_ARTIFACT_PATH, UNKNOWN_LABEL
-from agent.learning_models.transaction.merchant_rules import normalize_description, override_label
+from agent.learning_models.constants import STATEMENT_ARTIFACT_PATH, TRANSACTION_ARTIFACT_PATH, UNKNOWN_LABEL
+from agent.learning_models.transaction.merchant_rules import normalize_description, override_transaction_label
 from agent.models.merchant_prediction import MerchantPrediction
 
 
-class MerchantPredictor:
+class Labeler:
 
-    def __init__(self, artifact_path: Path | None = None, threshold: float = 0.70) -> None:
-        self.artifact_path = artifact_path or TRANSACTION_ARTIFACT_PATH
+    def __init__(self, file_type: Literal["statement", "transaction"], threshold: float = 0.70) -> None:
+        self.file_type = file_type
+        self.artifact_path = STATEMENT_ARTIFACT_PATH if self.file_type == "statement" else TRANSACTION_ARTIFACT_PATH
         self.threshold = threshold
 
     @cached_property
@@ -28,7 +28,8 @@ class MerchantPredictor:
     def predict_one(self, description: str) -> MerchantPrediction:
         normalized = normalize_description(description)
 
-        label = override_label(description)
+        if self.file_type == "transaction":
+            label = override_transaction_label(description) 
         if label is not None:
             return MerchantPrediction(
                 merchant_type=label,

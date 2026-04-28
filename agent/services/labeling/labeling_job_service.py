@@ -1,21 +1,20 @@
 from collections import defaultdict
+from dataclasses import asdict
 
-from agent.learning_models.transaction.merchant_predictor import UNKNOWN_LABEL
+from agent.learning_models.labeler import Labeler
+from agent.learning_models.constants import UNKNOWN_LABEL
 from agent.models.labeling_job import UnlabeledRecord
 from agent.repo.UnlabeledRecordRepository import UnlabeledRecordRepository
 from agent.services.constants_and_dependencies import GSHEET_LABEL_GROUP_TAB, labeling_store
 from agent.services.google_sheets import add_labels
-from agent.services.labeling.merchant_label_service import MerchantLabelService
 import logging
 
 logger = logging.getLogger(__name__)
 
-merchant_label_service = MerchantLabelService()
-
 def create_labeling_job(data):
     return labeling_store.create_job(len(data))
 
-def run_transaction_labeling_job(job_id: str, transactions: list[dict], worksheet_name) -> None:
+def run_transaction_labeling_job(job_id: str, transactions: list[dict], worksheet_name: str, merchant_label_service: Labeler) -> None:
     job = labeling_store.get_job(job_id)
 
     if job is None:
@@ -27,7 +26,7 @@ def run_transaction_labeling_job(job_id: str, transactions: list[dict], workshee
     labeled_results: list[dict] = []
     labeled, unlabeled = [], []
     for txn in transactions:
-        prediction = merchant_label_service.label_one(txn["description"])
+        prediction = asdict(merchant_label_service.predict_one(txn["description"]))
 
         labeled_txn = {
             **txn,

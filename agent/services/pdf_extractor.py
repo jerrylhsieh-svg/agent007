@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from fastapi import BackgroundTasks, HTTPException, UploadFile
 
+from agent.learning_models.labeler import Labeler
 from agent.services.google_sheets import append_data, build_gsheet_rows
 from agent.services.constants_and_dependencies import GSHEET_NAME, GSHEET_STATEMENT_TAB, GSHEET_TRANSACTIONS_TAB, STATEMENT_HEADERS, TRANSACTION_HEADERS
 from agent.services.labeling.labeling_job_service import create_labeling_job, run_transaction_labeling_job
@@ -21,9 +22,11 @@ async def extract_pdf_service(background_tasks: BackgroundTasks, file: UploadFil
     if doc_tpye == "BOA_bank":
         worksheet_name=GSHEET_STATEMENT_TAB
         headers=STATEMENT_HEADERS
+        labeler = Labeler(file_type="statement")
     else:
         worksheet_name=GSHEET_TRANSACTIONS_TAB
         headers=TRANSACTION_HEADERS
+        labeler = Labeler(file_type="transaction")
 
     rows = build_gsheet_rows(
         data=extracted["data"],
@@ -53,6 +56,7 @@ async def extract_pdf_service(background_tasks: BackgroundTasks, file: UploadFil
         job.id,
         extracted["data"],
         worksheet_name,
+        labeler,
     )
 
     return {
