@@ -57,7 +57,7 @@ Update the credentials volume in `docker-compose.yml` to point to your local JSO
 ### 3. Start the app
 
 ```bash
-docker compose up --build
+make deploy
 ```
 
 ### 4. Pull the model
@@ -73,9 +73,3 @@ docker exec -it $(docker ps -qf "ancestor=ollama/ollama:latest") ollama pull qwe
 ```text
 http://localhost:8000
 ```
-
-## Endpoints
-
-- `GET /health`
-- `POST /chat`
-- `POST /pdf/extract`
