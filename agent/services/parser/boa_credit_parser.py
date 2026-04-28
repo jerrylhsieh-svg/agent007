@@ -6,6 +6,10 @@ from agent.services.parser.base_pdf_parser import BasePdfParser
 
 class BOACreditPdfParser(BasePdfParser):
 
+    def __init__(self):
+        super().__init__()
+        self.credit = True
+
     def _is_account_number(self, num):
         try:
             int(num)
@@ -26,11 +30,13 @@ class BOACreditPdfParser(BasePdfParser):
             if len(parts) >= 6 and self._is_date_token(parts[0]) and self._is_date_token(parts[1])\
                 and self._is_account_number(parts[-2]) and self._is_account_number(parts[-3]):
                 if line.startswith("TOTAL PURCHASES AND ADJUSTMENTS FOR THIS PERIOD"):
-                    data.append(self.current)
+                    if not self._ignore_neg():
+                        data.append(self.current) 
                     break
                 if self.current is not None:
                     self.current.description = " ".join(self.current.description.split())
-                    data.append(self.current)
+                    if not self._ignore_neg():
+                        data.append(self.current)
 
                 self.current = TransactionRow(
                     date=parts[0],

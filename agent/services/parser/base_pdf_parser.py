@@ -15,6 +15,7 @@ class BasePdfParser(ABC):
     def __init__(self):
         self.current = None
         self.statement_type: Literal["deposit", "withdraw"] | None = None
+        self.credit = False
 
     def build_base_result(self) -> dict[str, Any]:
         return {
@@ -43,6 +44,11 @@ class BasePdfParser(ABC):
         value = float(cleaned)
 
         return -value if negative else value
+
+    def _ignore_neg(self) -> bool:
+        if self.credit and self.current.amount<0:
+            return True
+        return False
     
     def _normalize_date_value(self, value: str | None, statement_period: tuple[int, int, int, int] | None) -> str | None:
         if not value or statement_period is None or re.search(r"\b\d{4}-\d{2}-\d{2}\b", value):

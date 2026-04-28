@@ -16,6 +16,10 @@ class BiltCreditPdfParser(BasePdfParser):
         """,
         re.VERBOSE,
     )
+
+    def __init__(self):
+        super().__init__()
+        self.credit = True
     
     def _extract_from_page(
         self,
@@ -30,7 +34,8 @@ class BiltCreditPdfParser(BasePdfParser):
             if match:
                 if self.current is not None:
                     self.current.description = " ".join(self.current.description.split())
-                    data.append(self.current)
+                    if not self._ignore_neg():
+                        data.append(self.current)
 
                 self.current = TransactionRow(
                     date=match.group("date"),
@@ -38,7 +43,8 @@ class BiltCreditPdfParser(BasePdfParser):
                     amount=self._parse_amount(match.group("amount")),
                 )
             elif line.startswith("Total new charges in this period"):
-                data.append(self.current)
+                if not self._ignore_neg():
+                    data.append(self.current)
                 self.current = None
             else:
                 if self.current is not None:
