@@ -20,6 +20,10 @@ IS_STATEMENT_TRIGGERS = [
     "bank statement summary",
 ]
 
+IS_WITHDRAW_TRIGGERS = [
+    "bank withdraw summary",
+]
+
 
 def normalize(text: str) -> str:
     return text.strip().lower()
@@ -37,6 +41,10 @@ def should_start_transaction_flow(message: str) -> bool:
 def should_start_statement_flow(message: str) -> bool:
     msg = normalize(message)
     return any(trigger in msg for trigger in IS_STATEMENT_TRIGGERS)
+
+def should_start_withdraw_flow(message: str) -> bool:
+    msg = normalize(message)
+    return any(trigger in msg for trigger in IS_WITHDRAW_TRIGGERS)
 
 
 def handle_file_flow(session_id: str, message: str):

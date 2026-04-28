@@ -45,6 +45,7 @@ class BankStatementAnalyzer(BaseFinancialAnalyzer):
         total_other = round(float(other_withdraw["amount"].sum()), 2)
 
         return {
+            "row_count": int(len(withdraw)),
             "card_payment_count": int(len(card_payment)),
             "card_payment_amount": total_card_payment,
             "30_days_card_payment_avg": thirty_days_avg(total_card_payment, self.total_days),

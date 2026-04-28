@@ -13,23 +13,21 @@ class CreditCardTransactionAnalyzer(BaseFinancialAnalyzer):
 
     def summarize(self) -> dict[str, Any]:
         working = self.df
-        expenses = working[working["amount"] >= 0].copy()
 
-        total_spend = round(float(expenses["amount"].sum()), 2) if not expenses.empty else 0.0
+        total_spend = round(float(working["amount"].sum()), 2) if not working.empty else 0.0
 
         merchant_counter: Counter[str] = Counter()
-        if "description" in expenses.columns:
-            for desc in expenses["description"].fillna(""):
-                normalized = " ".join(str(desc).strip().split())
-                if normalized:
-                    merchant_counter[normalized[:80]] += 1
+        if "label" in working.columns:
+            for l in working["label"].fillna(""):
+                if l:
+                    merchant_counter[l] += 1
 
         return {
             "row_count": int(len(working)),
             "date_range": self.get_date_range(working),
             "total_spend": total_spend,
             "30_days_spend_avg": thirty_days_avg(total_spend, self.total_days),
-            "top_merchants": merchant_counter.most_common(5),
+            "top_spending_categories": merchant_counter.most_common(5),
         }
 
     def build_summary_context(self, summary: dict[str, Any]) -> str:
@@ -41,7 +39,7 @@ Dataset summary:
 - Date range: {summary["date_range"]}
 - Total spend: {summary["total_spend"]}
 - 30-day spend average: {summary["30_days_spend_avg"]}
-- Top merchants: {summary["top_merchants"]}
+- Top spending categories: {summary["top_spending_categories"]}
 
 Answer the user's question using only this transaction context.
 If the data is insufficient, say what is missing.
