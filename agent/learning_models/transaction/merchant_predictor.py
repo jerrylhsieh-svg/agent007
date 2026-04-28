@@ -7,7 +7,7 @@ from typing import Any, Iterable
 
 import joblib
 
-from agent.ml.merchant_rules import normalize_description, override_label
+from agent.learning_models.transaction.merchant_rules import normalize_description, override_label
 
 
 ARTIFACT_PATH = Path(__file__).resolve().parent / "artifacts" / "merchant_classifier.joblib"

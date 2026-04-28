@@ -1,7 +1,7 @@
 from dataclasses import asdict
 from typing import Any
 
-from agent.ml.merchant_predictor import MerchantPredictor
+from agent.learning_models.transaction.merchant_predictor import MerchantPredictor
 
 
 class MerchantLabelService:

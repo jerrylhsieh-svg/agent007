@@ -10,6 +10,6 @@ type-check:
 	mypy -p agent
 
 train-model:
-	python -m agent.ml.train_merchant_model --csv data/description_labeled.csv
+	python -m agent.learning_models.transaction.train_merchant_model --csv data/description_labeled.csv
 
 check: test type-check

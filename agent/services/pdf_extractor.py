@@ -1,12 +1,10 @@
 from __future__ import annotations
 
-from uuid import uuid4
-
-from fastapi import BackgroundTasks, File, HTTPException, UploadFile
+from fastapi import BackgroundTasks, HTTPException, UploadFile
 
 from agent.services.google_sheets import append_data, build_gsheet_rows
 from agent.services.constants_and_dependencies import GSHEET_NAME, GSHEET_STATEMENT_TAB, GSHEET_TRANSACTIONS_TAB, STATEMENT_HEADERS, TRANSACTION_HEADERS
-from agent.services.labeling.labeling_job_service import create_labeling_job, run_labeling_job
+from agent.services.labeling.labeling_job_service import create_labeling_job, run_transaction_labeling_job
 from agent.services.parser.pdf_parser import extract_pdf_content
 
 
@@ -51,7 +49,7 @@ async def extract_pdf_service(background_tasks: BackgroundTasks, file: UploadFil
 
     job = create_labeling_job(extracted["data"])
     background_tasks.add_task(
-        run_labeling_job,
+        run_transaction_labeling_job,
         job.id,
         extracted["data"],
         worksheet_name,
