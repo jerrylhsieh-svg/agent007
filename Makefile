@@ -1,4 +1,4 @@
-.PHONY: deploy test type-check train-model
+.PHONY: deploy test type-check
 
 deploy:
 	docker compose up --build
@@ -10,6 +10,11 @@ type-check:
 	mypy -p agent
 
 train-trasaction:
-	python -m agent.learning_models.train_merchant_model --csv data/description_labeled.csv --file-type transaction
+	python -m agent.learning_models.train_merchant_model --file-type transaction
+
+train-statement:
+	python -m agent.learning_models.train_merchant_model --file-type statement
 
 check: test type-check
+
+train: train-trasaction train-statement

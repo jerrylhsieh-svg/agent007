@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 from functools import cached_property
-import re
 from typing import Any, Iterable, Literal
 
 import joblib
 
 from agent.learning_models.constants import STATEMENT_ARTIFACT_PATH, TRANSACTION_ARTIFACT_PATH, UNKNOWN_LABEL
+from agent.learning_models.statement.merchant_rules import override_statement_label
 from agent.learning_models.train_merchant_model import normalize_description
 from agent.learning_models.transaction.merchant_rules import override_transaction_label
 from agent.models.merchant_prediction import MerchantPrediction
@@ -30,7 +30,9 @@ class Labeler:
     def predict_one(self, description: str) -> MerchantPrediction:
         normalized = normalize_description(description)
 
-        if self.file_type == "transaction":
+        if self.file_type == "statement":
+            label = override_statement_label(description) 
+        else:
             label = override_transaction_label(description) 
         if label is not None:
             return MerchantPrediction(

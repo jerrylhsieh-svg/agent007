@@ -11,6 +11,11 @@ OVERRIDE_RULES: list[MerchantRule] = [
         "investment",
         "stock investment",
     ),
+    MerchantRule(
+        re.compile(r"\b(payroll)\b", re.I),
+        "income",
+        "payroll",
+    ),
 ]
 
 

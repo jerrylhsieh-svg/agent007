@@ -10,7 +10,7 @@ from sklearn.metrics import classification_report
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 
-from agent.learning_models.constants import BASE_DIR
+from agent.learning_models.constants import BASE_DIR, BASE_LABELED_CSV, TRAINING_CONFIG
 
 
 def normalize_description(text: str) -> str:
@@ -21,21 +21,47 @@ def normalize_description(text: str) -> str:
     normalized = re.sub(r"\s+", " ", normalized).strip()
     return normalized
 
-def train(csv_path: str, file_type: str) -> None:
+def build_training_text(df: pd.DataFrame, file_type: str) -> pd.Series:
+    if file_type == "transaction":
+        return df["description"].map(normalize_description)
+
+    if file_type == "statement":
+        return (
+            df["statement_type"].astype(str).str.lower().str.strip()
+            + " "
+            + df["description"].map(normalize_description)
+        )
+
+    raise ValueError(f"Unsupported file_type: {file_type}")
+
+def train(file_type: str) -> None:
     ARTIFACT_PATH = BASE_DIR / file_type / "artifacts" / "merchant_classifier.joblib"
+    config = TRAINING_CONFIG[file_type]
+    csv_path = BASE_LABELED_CSV.format(file_type=file_type)
     df = pd.read_csv(csv_path)
 
-    required_columns = {"description", "label"}
+    required_columns = config["required_columns"]
     missing = required_columns - set(df.columns)
     if missing:
         raise ValueError(f"Missing required CSV columns: {sorted(missing)}")
 
-    df = df.dropna(subset=["description", "label"]).copy()
+    df = df.dropna(subset=list(required_columns)).copy()
+
+    if file_type == "statement":
+        valid_statement_types = {"deposit", "withdraw"}
+        invalid_types = set(df["statement_type"]) - valid_statement_types
+
+        if invalid_types:
+            raise ValueError(
+                f"Invalid statement_type values: {sorted(invalid_types)}. "
+                f"Expected: {sorted(valid_statement_types)}"
+            )
+
     label_counts = df["label"].value_counts()
     rare_labels = label_counts[label_counts < 2].index
 
     df["label"] = df["label"].replace(list(rare_labels), "other")
-    df["text"] = df["description"].map(normalize_description)
+    df["text"] = build_training_text(df, file_type)
 
     X_train, X_test, y_train, y_test = train_test_split(
         df["text"],
@@ -74,6 +100,7 @@ def train(csv_path: str, file_type: str) -> None:
 
     ARTIFACT_PATH.parent.mkdir(parents=True, exist_ok=True)
     joblib.dump(pipeline, ARTIFACT_PATH)
+
     print(f"Saved model artifact to: {ARTIFACT_PATH}")
 
 
@@ -81,8 +108,7 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--csv", required=True, help="Path to labeled CSV")
     parser.add_argument("--file-type", required=True, help="file type")
     args = parser.parse_args()
 
-    train(args.csv, args.file_type)
+    train(args.file_type)
