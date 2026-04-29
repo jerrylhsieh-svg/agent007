@@ -1,14 +1,9 @@
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass
 
+from agent.models.merchant_prediction import MerchantRule
 
-@dataclass(frozen=True)
-class MerchantRule:
-    pattern: re.Pattern[str]
-    label: str
-    reason: str
 
 OVERRIDE_RULES: list[MerchantRule] = [
     MerchantRule(
@@ -39,18 +34,8 @@ OVERRIDE_RULES: list[MerchantRule] = [
 ]
 
 
-def normalize_description(text: str) -> str:
-    normalized = text.lower()
-    normalized = normalized.replace("*", " ")
-    normalized = re.sub(r"\d{3,}", " ", normalized)
-    normalized = re.sub(r"[^a-z0-9\s]", " ", normalized)
-    normalized = re.sub(r"\s+", " ", normalized).strip()
-    return normalized
-
-
 def override_transaction_label(description: str) -> str | None:
-    normalized = normalize_description(description)
     for rule in OVERRIDE_RULES:
-        if rule.pattern.search(normalized):
+        if rule.pattern.search(description):
             return rule.label
     return None

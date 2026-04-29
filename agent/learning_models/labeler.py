@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 from functools import cached_property
+import re
 from typing import Any, Iterable, Literal
 
 import joblib
 
 from agent.learning_models.constants import STATEMENT_ARTIFACT_PATH, TRANSACTION_ARTIFACT_PATH, UNKNOWN_LABEL
-from agent.learning_models.transaction.merchant_rules import normalize_description, override_transaction_label
+from agent.learning_models.train_merchant_model import normalize_description
+from agent.learning_models.transaction.merchant_rules import override_transaction_label
 from agent.models.merchant_prediction import MerchantPrediction
 
 

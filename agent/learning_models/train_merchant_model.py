@@ -1,4 +1,5 @@
 from __future__ import annotations
+import re
 
 
 import joblib
@@ -10,9 +11,15 @@ from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 
 from agent.learning_models.constants import BASE_DIR
-from agent.learning_models.transaction.merchant_rules import normalize_description
 
 
+def normalize_description(text: str) -> str:
+    normalized = text.lower()
+    normalized = normalized.replace("*", " ")
+    normalized = re.sub(r"\d{3,}", " ", normalized)
+    normalized = re.sub(r"[^a-z0-9\s]", " ", normalized)
+    normalized = re.sub(r"\s+", " ", normalized).strip()
+    return normalized
 
 def train(csv_path: str, file_type: str) -> None:
     ARTIFACT_PATH = BASE_DIR / file_type / "artifacts" / "merchant_classifier.joblib"
