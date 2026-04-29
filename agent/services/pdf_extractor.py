@@ -38,7 +38,7 @@ async def extract_pdf_service(background_tasks: BackgroundTasks, file: UploadFil
     try:
         append_data(
             spreadsheet_name=GSHEET_NAME,
-            worksheet_name=worksheet_name,
+            worksheet_name=labeler.get_worksheet(),
             rows=rows,
             headers=headers
         )
@@ -55,7 +55,6 @@ async def extract_pdf_service(background_tasks: BackgroundTasks, file: UploadFil
         run_transaction_labeling_job,
         job.id,
         extracted["data"],
-        worksheet_name,
         labeler,
     )
 

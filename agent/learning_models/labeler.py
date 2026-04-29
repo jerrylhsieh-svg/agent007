@@ -10,6 +10,7 @@ from agent.learning_models.statement.merchant_rules import override_statement_la
 from agent.learning_models.train_merchant_model import normalize_description
 from agent.learning_models.transaction.merchant_rules import override_transaction_label
 from agent.models.merchant_prediction import MerchantPrediction
+from agent.services.constants_and_dependencies import GSHEET_LABEL_STATEMENT_GROUP_TAB, GSHEET_LABEL_STATEMENTS_TAB, GSHEET_LABEL_TRANSACTION_GROUP_TAB, GSHEET_LABEL_TRANSACTIONS_TAB, GSHEET_STATEMENT_TAB, GSHEET_TRANSACTIONS_TAB, STATEMENT_LABEL_HEADERS, TRANSACTION_LABEL_HEADERS
 
 
 class Labeler:
@@ -65,3 +66,15 @@ class Labeler:
 
         best_index = int(probabilities.argmax())
         return str(classes[best_index]), float(probabilities[best_index])
+    
+    def get_worksheet(self) -> str:
+        return GSHEET_STATEMENT_TAB if self.file_type == "statement" else GSHEET_TRANSACTIONS_TAB
+    
+    def get_label_sheet(self) -> str:
+        return GSHEET_LABEL_STATEMENTS_TAB if self.file_type == "statement" else GSHEET_LABEL_TRANSACTIONS_TAB
+    
+    def get_label_group_sheet(self) -> str:
+        return GSHEET_LABEL_STATEMENT_GROUP_TAB if self.file_type == "statement" else GSHEET_LABEL_TRANSACTION_GROUP_TAB
+    
+    def get_label_header(self) -> list[str]:
+        return STATEMENT_LABEL_HEADERS if self.file_type == "statement" else TRANSACTION_LABEL_HEADERS

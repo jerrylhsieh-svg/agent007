@@ -5,7 +5,7 @@ from agent.learning_models.labeler import Labeler
 from agent.learning_models.constants import UNKNOWN_LABEL
 from agent.models.labeling_job import UnlabeledRecord
 from agent.repo.UnlabeledRecordRepository import UnlabeledRecordRepository
-from agent.services.constants_and_dependencies import GSHEET_LABEL_GROUP_TAB, labeling_store
+from agent.services.constants_and_dependencies import labeling_store
 from agent.services.google_sheets import add_labels
 import logging
 
@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 def create_labeling_job(data):
     return labeling_store.create_job(len(data))
 
-def run_transaction_labeling_job(job_id: str, transactions: list[dict], worksheet_name: str, merchant_label_service: Labeler) -> None:
+def run_transaction_labeling_job(job_id: str, transactions: list[dict], merchant_label_service: Labeler) -> None:
     job = labeling_store.get_job(job_id)
 
     if job is None:
@@ -40,7 +40,7 @@ def run_transaction_labeling_job(job_id: str, transactions: list[dict], workshee
         if prediction["merchant_type"] == UNKNOWN_LABEL:
             unlabeled.append(UnlabeledRecord(
                 record_id=labeled_txn["id"], 
-                sheet_name=worksheet_name, 
+                sheet_name=merchant_label_service.get_worksheet(), 
                 description=labeled_txn["description"],
                 normalized_description=labeled_txn["normalized_description"],
                 predicted_label=labeled_txn["predicted_label"],
@@ -62,13 +62,14 @@ def run_transaction_labeling_job(job_id: str, transactions: list[dict], workshee
     job.status = "completed"
     labeling_store.update_job(job)
 
-    add_labels(worksheet_name, labeled)
+    add_labels(merchant_label_service.get_worksheet(), labeled)
 
-    unlabel_repo = UnlabeledRecordRepository()
+    unlabel_repo = UnlabeledRecordRepository(merchant_label_service.get_label_sheet())
     all_unlabeled = unlabeled + unlabel_repo.get_records()
-    unlabel_repo.insert_many(unlabeled)
+    unlabel_repo.insert_many(unlabeled, merchant_label_service.get_label_header())
+    unlabel_group_repo = UnlabeledRecordRepository(merchant_label_service.get_label_group_sheet())
     all_unlabeled = rerank(all_unlabeled)
-    unlabel_repo.overwrite(all_unlabeled, GSHEET_LABEL_GROUP_TAB)
+    unlabel_group_repo.overwrite(all_unlabeled, merchant_label_service.get_label_header())
 
 def rerank(records: list[UnlabeledRecord]) -> list[UnlabeledRecord]:
         grouped: dict[str, list[UnlabeledRecord]] = defaultdict(list)
