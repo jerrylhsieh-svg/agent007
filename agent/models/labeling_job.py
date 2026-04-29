@@ -29,6 +29,7 @@ class UnlabeledRecord:
     priority_score: float
     similar_count: int
     total_amount_impact: float
+    statement_type: str = ""
 
 
 class InMemoryLabelingStore:
