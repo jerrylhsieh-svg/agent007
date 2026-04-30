@@ -56,22 +56,13 @@ STATEMENT_LABEL_HEADERS = [
 ]
 
 ALLOWED_LABELS = [
-    "grocery",
-    "restaurant",
-    "food_delivery",
-    "transportation",
-    "subscription",
-    "shopping",
-    "rent",
-    "utilities",
-    "income",
-    "transfer",
-    "fee",
-    "healthcare",
-    "travel",
-    "entertainment",
-    "other",
-    "needs_manual_review",
+    "Merchandise",
+    "Entertainment",
+    "Travel and Transportation",
+    "Health",
+    "Services",
+    "Dining",
+    "Housing"
 ]
 
 labeling_store = InMemoryLabelingStore()
