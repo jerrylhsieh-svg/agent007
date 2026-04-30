@@ -3,13 +3,13 @@ import re
 
 from agent.models.labeling_job import LabelSuggested, UnlabeledRecord
 from agent.services.call_model import call_model
-from agent.services.constants_and_dependencies import ALLOWED_LABELS
+from agent.services.constants_and_dependencies import ALLOWED_TRANSACTION_LABELS
 from agent.services.helper import safe_float
 
 
 class LLMLabelSuggester:
     def __init__(self, allowed_labels: list[str] | None = None):
-        self.allowed_labels = allowed_labels or ALLOWED_LABELS
+        self.allowed_labels = allowed_labels or ALLOWED_TRANSACTION_LABELS
 
     def suggest_label(
         self,

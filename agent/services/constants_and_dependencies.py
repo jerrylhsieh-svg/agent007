@@ -55,7 +55,7 @@ STATEMENT_LABEL_HEADERS = [
     "total_amount_impact",
 ]
 
-ALLOWED_LABELS = [
+ALLOWED_TRANSACTION_LABELS = [
     "Merchandise",
     "Entertainment",
     "Travel and Transportation",
@@ -63,6 +63,12 @@ ALLOWED_LABELS = [
     "Services",
     "Dining",
     "Housing"
+]
+
+ALLOWED_STATEMENT_LABELS = [
+    "Card payment",
+    "Investment",
+    "Income"
 ]
 
 labeling_store = InMemoryLabelingStore()
