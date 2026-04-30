@@ -31,6 +31,12 @@ class UnlabeledRecord:
     total_amount_impact: float
     statement_type: str = ""
 
+@dataclass(frozen=True)
+class LabelSuggested:
+    suggested_label: str
+    confidence: float
+    reason: str
+
 
 class InMemoryLabelingStore:
     def __init__(self) -> None:

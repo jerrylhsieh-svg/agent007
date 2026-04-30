@@ -55,4 +55,23 @@ STATEMENT_LABEL_HEADERS = [
     "total_amount_impact",
 ]
 
+ALLOWED_LABELS = [
+    "grocery",
+    "restaurant",
+    "food_delivery",
+    "transportation",
+    "subscription",
+    "shopping",
+    "rent",
+    "utilities",
+    "income",
+    "transfer",
+    "fee",
+    "healthcare",
+    "travel",
+    "entertainment",
+    "other",
+    "needs_manual_review",
+]
+
 labeling_store = InMemoryLabelingStore()
