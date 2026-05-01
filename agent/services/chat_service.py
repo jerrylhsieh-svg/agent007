@@ -22,9 +22,9 @@ def get_reply(req: ChatRequest) -> str:
         return generate_bank_withdraw_summary(req.message, req.history)
     
     if should_start_statement_train_flow(req.message):
-        return train_model(req.message, "transaction", req.history)
+        return train_model(req.message, "statement", req.history)
     
     if should_start_transaction_train_flow(req.message):
-        return train_model(req.message, "statement", req.history)
+        return train_model(req.message, "transaction", req.history)
 
     return call_model(req.message, req.history)

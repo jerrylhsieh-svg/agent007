@@ -46,13 +46,12 @@ def get_and_clean(df: pd.DataFrame, file_type: str, config: dict[str, Any]) -> p
 
     if file_type == "statement":
         valid_statement_types = {"deposit", "withdraw"}
-        
-    invalid_types = set(df["statement_type"]) - valid_statement_types
-    if invalid_types:
-        raise ValueError(
-            f"Invalid statement_type values: {sorted(invalid_types)}. "
-            f"Expected: {sorted(valid_statement_types)}"
-        )
+        invalid_types = set(df["statement_type"]) - valid_statement_types
+        if invalid_types:
+            raise ValueError(
+                f"Invalid statement_type values: {sorted(invalid_types)}. "
+                f"Expected: {sorted(valid_statement_types)}"
+            )
 
     label_counts = df["label"].value_counts()
     rare_labels = label_counts[label_counts < 2].index
