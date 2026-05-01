@@ -37,6 +37,11 @@ class LabelSuggested:
     confidence: float
     reason: str
 
+@dataclass
+class TrainRecord:
+    description: str 
+    label: str
+    statement_type: str | None = None
 
 class InMemoryLabelingStore:
     def __init__(self) -> None:

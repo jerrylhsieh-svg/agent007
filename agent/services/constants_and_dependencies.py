@@ -55,6 +55,12 @@ STATEMENT_LABEL_HEADERS = [
     "total_amount_impact",
 ]
 
+TRAIN_RECORD_HEADERS = [
+    "description",
+    "statement_type",
+    "label",
+]
+
 ALLOWED_TRANSACTION_LABELS = [
     "Merchandise",
     "Entertainment",
