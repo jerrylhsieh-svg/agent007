@@ -9,8 +9,10 @@ BASE_LABELED_CSV = "data/{file_type}/description_labeled.csv"
 TRAINING_CONFIG = {
     "transaction": {
         "required_columns": {"description", "label"},
+        "worksheet": "transaction_train_data",
     },
     "statement": {
         "required_columns": {"description", "statement_type", "label"},
+        "worksheet": "statement_train_data",
     },
 }
