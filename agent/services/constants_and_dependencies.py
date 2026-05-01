@@ -78,3 +78,31 @@ ALLOWED_STATEMENT_LABELS = [
 ]
 
 labeling_store = InMemoryLabelingStore()
+
+SAVE_TRIGGERS = {
+    "help me write a file",
+    "write a file",
+    "create a file",
+    "save a file",
+    "make a file",
+}
+
+IS_TRANSACTION_TRIGGERS = [
+    "credit card spending summary",
+]
+
+IS_STATEMENT_TRIGGERS = [
+    "bank statement summary",
+]
+
+IS_WITHDRAW_TRIGGERS = [
+    "bank withdraw summary",
+]
+
+IS_STATEMENT_TRAIN_TRIGGERS = [
+    "train statement model",
+]
+
+IS_TRANSACTION_TRAIN_TRIGGERS = [
+    "train transaction model",
+]

@@ -1,6 +1,6 @@
 from __future__ import annotations
 import re
-from typing import Any
+from typing import Any, Literal
 
 
 import joblib
@@ -68,7 +68,7 @@ def get_and_clean(df: pd.DataFrame, file_type: str, config: dict[str, Any]) -> p
 
     return df
 
-def train(file_type: str) -> None:
+def train(file_type: Literal["transaction", "statement"]) -> str:
     ARTIFACT_PATH = BASE_DIR / file_type / "artifacts" / "merchant_classifier.joblib"
     config = TRAINING_CONFIG[file_type]
     train_repo = TrainRecordRepository(config["worksheet"])
@@ -108,12 +108,15 @@ def train(file_type: str) -> None:
     pipeline.fit(X_train, y_train)
 
     predictions = pipeline.predict(X_test)
-    print(classification_report(y_test, predictions))
 
     ARTIFACT_PATH.parent.mkdir(parents=True, exist_ok=True)
     joblib.dump(pipeline, ARTIFACT_PATH)
 
-    print(f"Saved model artifact to: {ARTIFACT_PATH}")
+    return f"""
+Model training succeeded for {file_type}. Artifact is saved to {ARTIFACT_PATH}
+Here is the report:
+{classification_report(y_test, predictions)}
+"""
 
 
 if __name__ == "__main__":
