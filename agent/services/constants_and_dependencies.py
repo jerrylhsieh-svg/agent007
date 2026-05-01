@@ -1,4 +1,4 @@
-from agent.models.labeling_job import InMemoryLabelingStore
+from agent.models.label import InMemoryLabelingStore
 
 
 GSHEET_NAME = "transactions"

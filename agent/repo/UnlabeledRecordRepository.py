@@ -1,6 +1,6 @@
 from dataclasses import asdict
 
-from agent.models.labeling_job import UnlabeledRecord
+from agent.models.label import UnlabeledRecord
 from agent.services.constants_and_dependencies import GSHEET_NAME
 from agent.services.google_sheets import append_data, build_gsheet_rows, get_or_create_worksheet
 
