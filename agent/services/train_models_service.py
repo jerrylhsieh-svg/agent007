@@ -15,7 +15,7 @@ Training result:
 Now ask the user whether they want to re-predict existing unconfirmed {file_type} records using the newly trained model.
 
 Keep the response concise. Include the exact phrase they can reply with:
-"yes re-predict {file_type}"
+"Do you want to re-predict {file_type}? If yes, please reply yes re-predict {file_type}"
 
 Also mention that human-confirmed labels should not be overwritten.
 """
