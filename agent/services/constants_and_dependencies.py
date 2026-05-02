@@ -106,3 +106,11 @@ IS_STATEMENT_TRAIN_TRIGGERS = [
 IS_TRANSACTION_TRAIN_TRIGGERS = [
     "train transaction model",
 ]
+
+IS_STATEMENT_PREDICT_TRIGGERS = [
+    "yes re-predict statement",
+]
+
+IS_TRANSACTION_PREDICT_TRIGGERS = [
+    "yes re-predict transaction",
+]

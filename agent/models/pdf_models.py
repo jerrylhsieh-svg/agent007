@@ -8,6 +8,7 @@ class TransactionRow:
     description: str
     amount: float | None
     id: str = field(default_factory=lambda: uuid4().hex[:12])
+    label: str = ""
 
 @dataclass
 class BankStatementRow:
@@ -16,3 +17,4 @@ class BankStatementRow:
     statement_type: Literal["deposit", "withdraw"]
     amount: float | None
     id: str = field(default_factory=lambda: uuid4().hex[:12])
+    label: str = ""
