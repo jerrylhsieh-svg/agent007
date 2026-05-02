@@ -6,6 +6,7 @@ from agent.services.analyzer.transaction_analyzer import generate_credit_card_su
 from agent.services.call_model import call_model
 from agent.services.constants_and_dependencies import IS_STATEMENT_PREDICT_TRIGGERS, IS_STATEMENT_TRAIN_TRIGGERS, IS_STATEMENT_TRIGGERS, IS_TRANSACTION_PREDICT_TRIGGERS, IS_TRANSACTION_TRAIN_TRIGGERS, IS_TRANSACTION_TRIGGERS, IS_WITHDRAW_TRIGGERS
 from agent.services.file_flow import handle_file_flow
+from agent.services.repredict_service import repredict_records
 from agent.services.train_models_service import train_model
 from agent.services.triggers import contains_any_trigger
 
@@ -18,8 +19,8 @@ ROUTES: list[Route] = [
     (IS_WITHDRAW_TRIGGERS, generate_bank_withdraw_summary, {}),
     (IS_STATEMENT_TRAIN_TRIGGERS, train_model, {"file_type": "statement"}),
     (IS_TRANSACTION_TRAIN_TRIGGERS, train_model, {"file_type": "transaction"}),
-    IS_STATEMENT_PREDICT_TRIGGERS,
-    IS_TRANSACTION_PREDICT_TRIGGERS,
+    (IS_STATEMENT_PREDICT_TRIGGERS, repredict_records, {"file_type": "statement"}),
+    (IS_TRANSACTION_PREDICT_TRIGGERS, repredict_records, {"file_type": "transaction"}),
 ]
 
 def get_reply(req: ChatRequest) -> str:
