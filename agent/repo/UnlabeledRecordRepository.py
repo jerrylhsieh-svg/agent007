@@ -30,7 +30,21 @@ class UnlabeledRecordRepository:
             UnlabeledRecord(**row)
             for row in rows
         ]
+    
+    def get_first_record(self) -> UnlabeledRecord | None:
+        records = self.get_records()
+        return records[0] if records else None
 
     def overwrite(self, records: list[UnlabeledRecord], fields: list[str]) -> None:
         self.worksheet.clear()
         self.insert_many(records, fields)
+
+    def delete_record(self, record: UnlabeledRecord) -> None:
+        rows = self.worksheet.get_all_records()
+
+        for index, row in enumerate(rows, start=2):
+            if row.get("record_id") == record.id:
+                self.worksheet.delete_rows(index)
+                return
+
+        raise ValueError(f"Record with id={record.id} not found")

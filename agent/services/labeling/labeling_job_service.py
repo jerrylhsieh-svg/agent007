@@ -39,7 +39,7 @@ def run_transaction_labeling_job(job_id: str, transactions: list[dict], merchant
 
         if prediction["merchant_type"] == UNKNOWN_LABEL:
             unlabeled.append(UnlabeledRecord(
-                record_id=labeled_txn["id"], 
+                id=labeled_txn["id"], 
                 sheet_name=merchant_label_service.get_worksheet(), 
                 description=labeled_txn["description"],
                 normalized_description=labeled_txn["normalized_description"],

@@ -8,6 +8,8 @@ GSHEET_LABEL_TRANSACTIONS_TAB = "unknown_transactions_labels"
 GSHEET_LABEL_STATEMENTS_TAB = "unknown_statements_labels"
 GSHEET_LABEL_TRANSACTION_GROUP_TAB = "unknown_transaction_labels_group"
 GSHEET_LABEL_STATEMENT_GROUP_TAB = "unknown_statement_labels_group"
+GSHEET_LABEL_TRANSACTION_TRAIN_TAB = "transaction_train_data"
+GSHEET_LABEL_STATEMENT_TRAIN_TAB = "statement_train_data"
 SCOPES = [
     "https://www.googleapis.com/auth/spreadsheets",
     "https://www.googleapis.com/auth/drive",
@@ -31,7 +33,7 @@ STATEMENT_HEADERS = [
 ]
 
 TRANSACTION_LABEL_HEADERS = [
-    "record_id", 
+    "id", 
     "sheet_name", 
     "description",
     "normalized_description",
@@ -43,7 +45,7 @@ TRANSACTION_LABEL_HEADERS = [
 ]
 
 STATEMENT_LABEL_HEADERS = [
-    "record_id", 
+    "id", 
     "sheet_name", 
     "description",
     "statement_type",
@@ -113,4 +115,8 @@ IS_STATEMENT_PREDICT_TRIGGERS = [
 
 IS_TRANSACTION_PREDICT_TRIGGERS = [
     "yes re-predict transaction",
+]
+
+LABEL_TRIGGERS = [
+    "help with labeling"
 ]

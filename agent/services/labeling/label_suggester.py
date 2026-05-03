@@ -7,11 +7,11 @@ from agent.services.constants_and_dependencies import ALLOWED_TRANSACTION_LABELS
 from agent.services.helper import safe_float
 
 
-class LLMLabelSuggester:
+class LabelSuggester:
     def __init__(self, allowed_labels: list[str] | None = None):
         self.allowed_labels = allowed_labels or ALLOWED_TRANSACTION_LABELS
 
-    def suggest_label(
+    def suggest_one_label(
         self,
         unlabel_reocrd: UnlabeledRecord,
     ) -> LabelSuggested:

@@ -20,7 +20,7 @@ class LabelingJob:
 
 @dataclass
 class UnlabeledRecord:
-    record_id: str
+    id: str
     sheet_name: str
     description: str 
     normalized_description: str
