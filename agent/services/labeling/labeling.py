@@ -15,7 +15,7 @@ def handle_label_flow(session_id: str, message: str):
     
 
     if state is None:
-        label_sessions[session_id] = {"step": "awaiting_file_type"}
+        state["step"] = "awaiting_file_type"
         
         return {
             "handled": True,
@@ -26,13 +26,13 @@ def handle_label_flow(session_id: str, message: str):
 
     if step == "awaiting_file_type":
         file_type = message.strip()
-        if file_type not in {"transation", "statement"}:
+        if file_type not in {"transaction", "statement"}:
             return {
                 "handled": True,
                 "reply": """Please give me a valid file type. Answer "transaction" or "statement only."""
             }
-
-        state["file_type"] = file_type,
+        state["step"] = "awaiting_approval"
+        state["file_type"] = file_type
 
         unlabel_repo = UnlabeledRecordRepository(GSHEET_LABEL_TRANSACTION_GROUP_TAB if file_type == "transaction" else GSHEET_LABEL_STATEMENT_GROUP_TAB)
         first_record = unlabel_repo.get_first_record()
@@ -40,17 +40,17 @@ def handle_label_flow(session_id: str, message: str):
         state["unlabel_repo"] = unlabel_repo
         if first_record is None:
             return  {
-                "handled": False,
+                "handled": True,
                 "reply": f"No recrod found for {file_type} that has not been labeled"
             }
         
-        label_suggestsed = suggester.suggest_one_label(first_record)
-        state["label_suggestsed"] = label_suggestsed
+        label_suggested = suggester.suggest_one_label(first_record)
+        state["label_suggestsed"] = label_suggested
 
         return {
             "handled": True,
             "reply": f"""The record's description is {first_record.description} and machine learning model suggested {first_record.predicted_label}.
-            I suggest the label should be {label_suggestsed.suggested_label} and reason is {label_suggestsed.reason}. Do you approve?
+            I suggest the label should be {label_suggested.suggested_label} and reason is {label_suggested.reason}. Do you approve?
             Reply `approve` or `not approve` only.
 """
         }
@@ -61,7 +61,7 @@ def handle_label_flow(session_id: str, message: str):
         approval = message.strip()
 
         if approval not in {'approve', 'not approve'} and tried < 1:
-            state[tried] = 1
+            state["tried"] += 1
             return {
                 "handled": True,
                 "reply": """Please give me a valid respone. Answer "approve" only for approval else it will not proceed."""
@@ -78,7 +78,7 @@ def handle_label_flow(session_id: str, message: str):
         train_record = TrainRecord(
             description=state["unlabel_record"].description,
             label=state["label_suggestsed"].suggested_label,
-            statement_type=state["unlabel_record"]
+            statement_type=state["unlabel_record"].statement_type,
         )
         train_repo.insert_many([train_record])
         unlabel_repo.delete_record(state["unlabel_record"])
