@@ -1,6 +1,6 @@
 from typing import Iterable
 
-from agent.services.constants_and_dependencies import LABEL_TRIGGERS, SAVE_TRIGGERS
+from agent.services.constants_and_dependencies import IS_LABEL_TRIGGERS, SAVE_TRIGGERS
 
 def normalize(text: str) -> str:
     return text.strip().lower()
@@ -15,4 +15,4 @@ def should_start_file_flow(message: str) -> bool:
 
 def should_start_label_flow(message: str) -> bool:
     msg = normalize(message)
-    return any(trigger in msg for trigger in LABEL_TRIGGERS)
+    return any(trigger in msg for trigger in IS_LABEL_TRIGGERS)

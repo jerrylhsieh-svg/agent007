@@ -15,15 +15,12 @@ def handle_label_flow(session_id: str, message: str):
     
 
     if state is None:
-        if should_start_label_flow(message):
-            label_sessions[session_id] = {"step": "awaiting_file_type"}
-            
-            return {
-                "handled": True,
-                "reply": "Which file type you want to help with the labeling, transaction or statement?"
-            }
-
-        return {"handled": False}
+        label_sessions[session_id] = {"step": "awaiting_file_type"}
+        
+        return {
+            "handled": True,
+            "reply": "Which file type you want to help with the labeling, transaction or statement?"
+        }
 
     step = state["step"]
 

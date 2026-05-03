@@ -8,14 +8,11 @@ def handle_file_flow(session_id: str, message: str):
     state = file_sessions.get(session_id)
 
     if state is None:
-        if should_start_file_flow(message):
-            file_sessions[session_id] = {"step": "awaiting_filename"}
-            return {
-                "handled": True,
-                "reply": "What should the file be named?"
-            }
-
-        return {"handled": False}
+        file_sessions[session_id] = {"step": "awaiting_filename"}
+        return {
+            "handled": True,
+            "reply": "What should the file be named?"
+        }
 
     step = state["step"]
 

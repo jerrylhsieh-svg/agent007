@@ -117,6 +117,6 @@ IS_TRANSACTION_PREDICT_TRIGGERS = [
     "yes re-predict transaction",
 ]
 
-LABEL_TRIGGERS = [
+IS_LABEL_TRIGGERS = [
     "help with labeling"
 ]
