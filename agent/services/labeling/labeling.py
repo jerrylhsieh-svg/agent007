@@ -30,11 +30,11 @@ def handle_label_flow(session_id: str, message: str):
                 "handled": True,
                 "reply": """Please give me a valid file type. Answer "transaction" or "statement only."""
             }
-        step = "awaiting_approval"
-        state["file_type"] = file_type
-
+        
         unlabel_repo = UnlabeledRecordRepository(GSHEET_LABEL_TRANSACTION_GROUP_TAB if file_type == "transaction" else GSHEET_LABEL_STATEMENT_GROUP_TAB)
         first_record = unlabel_repo.get_first_record()
+        step = "awaiting_approval"
+        state["file_type"] = file_type
         state["unlabel_record"] = first_record
         state["unlabel_repo"] = unlabel_repo
         if first_record is None:
