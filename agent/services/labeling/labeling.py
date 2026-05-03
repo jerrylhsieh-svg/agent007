@@ -3,7 +3,6 @@ from agent.repo.TrainRecordRepository import TrainRecordRepository
 from agent.repo.UnlabeledRecordRepository import UnlabeledRecordRepository
 from agent.services.constants_and_dependencies import GSHEET_LABEL_STATEMENT_GROUP_TAB, GSHEET_LABEL_STATEMENT_TRAIN_TAB, GSHEET_LABEL_TRANSACTION_GROUP_TAB, GSHEET_LABEL_TRANSACTION_TRAIN_TAB
 from agent.services.labeling.label_suggester import LabelSuggester
-from agent.services.triggers import should_start_label_flow
 
 
 label_sessions: dict[str, dict] = {}
@@ -15,7 +14,7 @@ def handle_label_flow(session_id: str, message: str):
     
 
     if state is None:
-        state["step"] = "awaiting_file_type"
+        label_sessions[session_id] = {"step": "awaiting_file_type"}
         
         return {
             "handled": True,

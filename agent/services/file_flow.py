@@ -1,5 +1,4 @@
 from agent.services.save_file import save_text_file
-from agent.services.triggers import should_start_file_flow
 
 file_sessions: dict[str, dict] = {}
 
