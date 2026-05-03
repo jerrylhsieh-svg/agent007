@@ -1,8 +1,8 @@
 from unittest.mock import Mock, patch
-from agent.services.call_model import call_model
+from agent.services.chat.call_model import call_model
 
 
-@patch("agent.services.call_model.requests.post")
+@patch("agent.services.chat.call_model.requests.post")
 def test_call_model_builds_expected_payload(mock_post):
     mock_response = Mock()
     mock_response.json.return_value = {
@@ -33,7 +33,7 @@ def test_call_model_builds_expected_payload(mock_post):
     ]
 
 
-@patch("agent.services.call_model.requests.post")
+@patch("agent.services.chat.call_model.requests.post")
 def test_call_model_filters_invalid_history_items(mock_post):
     mock_response = Mock()
     mock_response.json.return_value = {
@@ -64,7 +64,7 @@ def test_call_model_filters_invalid_history_items(mock_post):
     ]
 
 
-@patch("agent.services.call_model.requests.post")
+@patch("agent.services.chat.call_model.requests.post")
 def test_call_model_raises_on_http_error(mock_post):
     mock_response = Mock()
     mock_response.raise_for_status.side_effect = Exception("boom")

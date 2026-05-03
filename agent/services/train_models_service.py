@@ -1,7 +1,7 @@
 from typing import Literal
 
 from agent.learning_models.train_merchant_model import train
-from agent.services.call_model import call_model
+from agent.services.chat.call_model import call_model
 
 
 def train_model(question: str, file_type: Literal["transaction", "statement"], history: list[dict] | None):

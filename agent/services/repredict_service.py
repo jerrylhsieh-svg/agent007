@@ -2,7 +2,7 @@ from typing import Literal
 
 from agent.learning_models.labeler import Labeler
 from agent.repo.FinacialRecordRepository import FinacialRecordRepository
-from agent.services.call_model import call_model
+from agent.services.chat.call_model import call_model
 
 
 def repredict_records(
