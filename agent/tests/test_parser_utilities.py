@@ -1,0 +1,271 @@
+import pytest
+
+from agent.models.pdf_models import LineSchema, TransactionRow
+from agent.services.parser.parser_utilities import (
+    extract_statement_years,
+    flush_current,
+    ignore_neg,
+    is_account_number,
+    is_date_token,
+    is_end_line,
+    normalize_date_value,
+    parse_amount,
+    parse_boa_credit,
+    parse_date_description_amount,
+    parse_transaction_line,
+)
+
+
+TRANSACTION_SCHEMA = LineSchema(
+    name="date_description_amount",
+    record_type="transaction",
+    columns=["date", "description", "amount"],
+    min_parts=3,
+    start_markers=[],
+    end_markers=["Total"],
+    credit=False,
+)
+
+BANK_SCHEMA = LineSchema(
+    name="date_description_amount",
+    record_type="bank_statement",
+    columns=["date", "description", "amount"],
+    min_parts=3,
+    start_markers=[],
+    end_markers=["Total deposits"],
+    credit=False,
+)
+
+BOA_CREDIT_SCHEMA = LineSchema(
+    name="transaction_posting_description_ref_account_amount_total",
+    record_type="transaction",
+    columns=[
+        "transaction_date",
+        "posting_date",
+        "description",
+        "reference_number",
+        "account_number",
+        "amount",
+        "total",
+    ],
+    min_parts=6,
+    start_markers=[],
+    end_markers=[],
+    credit=True,
+)
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        ("01/15", True),
+        ("1/5/2025", True),
+        ("2025-01-15", True),
+        ("Jan 5", True),
+        (" not-a-date ", False),
+        ("01-15", False),
+    ],
+)
+def test_is_date_token(value, expected):
+    assert is_date_token(value) is expected
+
+
+@pytest.mark.parametrize(
+    ("raw", "expected"),
+    [
+        ("$1,234.56", 1234.56),
+        ("(123.45)", -123.45),
+        ("123.45-", -123.45),
+        (" 99.01 ", 99.01),
+        ("$0.00", 0.0),
+    ],
+)
+def test_parse_amount(raw, expected):
+    assert parse_amount(raw) == expected
+
+
+def test_parse_amount_raises_for_invalid_value():
+    with pytest.raises(ValueError):
+        parse_amount("abc")
+
+
+def test_ignore_neg_returns_true_only_for_credit_negative_amount():
+    negative = TransactionRow(date="01/01", description="Refund", amount=-10.0)
+    positive = TransactionRow(date="01/01", description="Purchase", amount=10.0)
+
+    assert ignore_neg(True, negative) is True
+    assert ignore_neg(True, positive) is False
+    assert ignore_neg(False, negative) is False
+
+
+def test_normalize_date_value_returns_original_when_missing_inputs():
+    assert normalize_date_value(None, (1, 2025, 1, 2025)) is None
+    assert normalize_date_value("01/15", None) == "01/15"
+    assert normalize_date_value("2025-01-15", (1, 2025, 1, 2025)) == "2025-01-15"
+
+
+def test_normalize_date_value_mmdd_same_year():
+    assert normalize_date_value("01/15", (1, 2025, 1, 2025)) == "2025-01-15"
+
+
+def test_normalize_date_value_cross_year_uses_start_year_for_later_month():
+    assert normalize_date_value("12/31", (12, 2024, 1, 2025)) == "2024-12-31"
+
+
+def test_normalize_date_value_cross_year_uses_end_year_for_earlier_month():
+    assert normalize_date_value("01/01", (12, 2024, 1, 2025)) == "2025-01-01"
+
+
+def test_normalize_date_value_raises_for_invalid_date():
+    with pytest.raises(ValueError):
+        normalize_date_value("hello", (1, 2025, 1, 2025))
+
+
+def test_extract_statement_years_returns_none_for_empty_or_no_match():
+    assert extract_statement_years(None) is None
+    assert extract_statement_years("") is None
+    assert extract_statement_years("hello world") is None
+
+
+def test_extract_statement_years_with_explicit_start_year():
+    text = "Statement period January 15, 2024 to February 14, 2025"
+
+    assert extract_statement_years(text) == (1, 2024, 2, 2025)
+
+
+def test_extract_statement_years_infers_same_year_when_start_year_missing():
+    text = "January 15 to February 14, 2025"
+
+    assert extract_statement_years(text) == (1, 2025, 2, 2025)
+
+
+def test_extract_statement_years_infers_previous_year_when_cross_year():
+    text = "December 15 to January 14, 2025"
+
+    assert extract_statement_years(text) == (12, 2024, 1, 2025)
+
+
+def test_flush_current_appends_normalized_description():
+    data = []
+    current = TransactionRow(
+        date="01/01",
+        description="STARBUCKS     NEW     YORK",
+        amount=5.0,
+    )
+
+    flush_current(data, current, TRANSACTION_SCHEMA)
+
+    assert len(data) == 1
+    assert data[0].description == "STARBUCKS NEW YORK"
+
+
+def test_flush_current_skips_negative_credit_amount():
+    schema = LineSchema(
+        name="date_description_amount",
+        record_type="transaction",
+        columns=["date", "description", "amount"],
+        min_parts=3,
+        start_markers=[],
+        end_markers=[],
+        credit=True,
+    )
+
+    data = []
+    current = TransactionRow(date="01/01", description="Refund", amount=-5.0)
+
+    flush_current(data, current, schema)
+
+    assert data == []
+
+
+def test_flush_current_ignores_none_current():
+    data = []
+
+    flush_current(data, None, TRANSACTION_SCHEMA)
+
+    assert data == []
+
+
+def test_is_end_line():
+    assert is_end_line(TRANSACTION_SCHEMA, "Total new charges in this period") is True
+    assert is_end_line(TRANSACTION_SCHEMA, "01/01 Starbucks 5.00") is False
+
+
+def test_parse_transaction_line_returns_none_when_too_short():
+    assert parse_transaction_line(TRANSACTION_SCHEMA, "01/01") is None
+
+
+def test_parse_transaction_line_for_date_description_amount_transaction():
+    result = parse_transaction_line(
+        TRANSACTION_SCHEMA,
+        "01/01 STARBUCKS NEW YORK 5.75",
+    )
+
+    assert result.date == "01/01"
+    assert result.description == "STARBUCKS NEW YORK"
+    assert result.amount == 5.75
+
+
+def test_parse_date_description_amount_returns_none_when_first_token_not_date():
+    result = parse_date_description_amount(
+        TRANSACTION_SCHEMA,
+        ["STARBUCKS", "NEW", "YORK", "5.75"],
+        None,
+    )
+
+    assert result is None
+
+
+def test_parse_date_description_amount_for_bank_statement_requires_statement_type():
+    with pytest.raises(ValueError, match="statement_type not detected"):
+        parse_date_description_amount(
+            BANK_SCHEMA,
+            ["01/01", "ATM", "WITHDRAWAL", "20.00"],
+            None,
+        )
+
+
+def test_parse_date_description_amount_for_bank_statement():
+    result = parse_date_description_amount(
+        BANK_SCHEMA,
+        ["01/01", "ATM", "WITHDRAWAL", "20.00"],
+        "withdraw",
+    )
+
+    assert result.date == "01/01"
+    assert result.description == "ATM WITHDRAWAL"
+    assert result.statement_type == "withdraw"
+    assert result.amount == 20.0
+
+
+def test_parse_transaction_line_for_boa_credit():
+    result = parse_transaction_line(
+        BOA_CREDIT_SCHEMA,
+        "01/01 01/02 STARBUCKS NEW YORK 1234 5678 5.75",
+    )
+
+    assert result.date == "01/01"
+    assert result.description == "STARBUCKS NEW YORK"
+    assert result.amount == 5.75
+
+
+def test_parse_boa_credit_returns_none_for_invalid_layout():
+    result = parse_boa_credit(
+        ["01/01", "01/02", "STARBUCKS", "abcd", "5678", "5.75"]
+    )
+
+    assert result is None
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        ("1234", True),
+        ("0000", True),
+        ("123", False),
+        ("12345", False),
+        ("abcd", False),
+    ],
+)
+def test_is_account_number(value, expected):
+    assert is_account_number(value) is expected
