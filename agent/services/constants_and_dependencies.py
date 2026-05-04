@@ -120,7 +120,11 @@ IS_TRANSACTION_PREDICT_TRIGGERS = [
 ]
 
 IS_LABEL_TRIGGERS = [
-    "help with labeling"
+    "help with labeling",
+    "transaction",
+    "statement",
+    "approve",
+    "not approve"
 ]
 
 MONTH_RE = r"(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)[a-z]*\.?"

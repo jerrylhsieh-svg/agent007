@@ -5,8 +5,8 @@ from agent.services.analyzer.bank_statement_analyzer import generate_bank_statem
 from agent.services.analyzer.transaction_analyzer import generate_credit_card_summary
 from agent.services.chat.call_model import call_model
 from agent.services.constants_and_dependencies import IS_LABEL_TRIGGERS, IS_STATEMENT_PREDICT_TRIGGERS, IS_STATEMENT_TRAIN_TRIGGERS, IS_STATEMENT_TRIGGERS, IS_TRANSACTION_PREDICT_TRIGGERS, IS_TRANSACTION_TRAIN_TRIGGERS, IS_TRANSACTION_TRIGGERS, IS_WITHDRAW_TRIGGERS, SAVE_TRIGGERS
-from agent.services.file_flow import handle_file_flow
-from agent.services.labeling.labeling import handle_label_flow
+from agent.services.file_flow import handle_file_flow, file_sessions
+from agent.services.labeling.labeling import handle_label_flow, label_sessions
 from agent.services.repredict_service import repredict_records
 from agent.services.train_models_service import train_model
 from agent.services.chat.triggers import contains_any_trigger
@@ -25,17 +25,17 @@ ROUTES: list[Route] = [
     (IS_TRANSACTION_PREDICT_TRIGGERS, repredict_records, {"file_type": "transaction"}),
 ]
 FLOW_ROUTES: list[Flow_Route] = [
-    (SAVE_TRIGGERS, handle_file_flow, {}),
-    (IS_LABEL_TRIGGERS, handle_label_flow, {}),
+    (SAVE_TRIGGERS, handle_file_flow, file_sessions, {}),
+    (IS_LABEL_TRIGGERS, handle_label_flow, label_sessions, {}),
 ]
 
 def get_reply(req: ChatRequest) -> str:
-    for flow_triggers, flow_handler, flow_extra_kwargs in FLOW_ROUTES:
-        if not contains_any_trigger(req.message, flow_triggers, **flow_extra_kwargs,):
+    for flow_triggers, flow_handler, session, flow_extra_kwargs in FLOW_ROUTES:
+        if not contains_any_trigger(req.message, flow_triggers, **flow_extra_kwargs,) and req.session_id not in session:
             continue
-        result =  flow_handler(req.session_id, req.message).get("handled", False)
-        if result["handled"]:
-            return result["reply"]
+        result =  flow_handler(req.session_id, req.message)
+        if result.get("handled", False):
+            return result.get("reply", "Failed to get response")
 
     for triggers, handler, extra_kwargs in ROUTES:
         if contains_any_trigger(req.message, triggers):

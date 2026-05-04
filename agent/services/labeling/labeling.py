@@ -28,12 +28,12 @@ def handle_label_flow(session_id: str, message: str):
         if file_type not in {"transaction", "statement"}:
             return {
                 "handled": True,
-                "reply": """Please give me a valid file type. Answer "transaction" or "statement only."""
+                "reply": """Please give me a valid file type. Answer "transaction" or "statement" only."""
             }
         
         unlabel_repo = UnlabeledRecordRepository(GSHEET_LABEL_TRANSACTION_GROUP_TAB if file_type == "transaction" else GSHEET_LABEL_STATEMENT_GROUP_TAB)
         first_record = unlabel_repo.get_first_record()
-        step = "awaiting_approval"
+        state["step"] = "awaiting_approval"
         state["file_type"] = file_type
         state["unlabel_record"] = first_record
         state["unlabel_repo"] = unlabel_repo
@@ -66,12 +66,17 @@ def handle_label_flow(session_id: str, message: str):
                 "reply": """Please give me a valid respone. Answer "approve" only for approval else it will not proceed."""
             }
         elif approval != 'approve' and tried > 0:
+            label_sessions.pop(session_id, None)
             return {
                 "handled": False,
                 "reply": "Unable to proceed due to no clear approval",
             }
         if approval == "not approve":
-            return {"handled": False}
+            label_sessions.pop(session_id, None)
+            return {
+                "handled": True,
+                "reply": "No problem. I will skip this suggestion and stop the labeling flow."
+            }
         
         train_repo = TrainRecordRepository(GSHEET_LABEL_TRANSACTION_TRAIN_TAB if file_type == "transaction" else GSHEET_LABEL_STATEMENT_TRAIN_TAB)
         train_record = TrainRecord(
@@ -80,7 +85,7 @@ def handle_label_flow(session_id: str, message: str):
             statement_type=state["unlabel_record"].statement_type,
         )
         train_repo.insert_many([train_record])
-        unlabel_repo.delete_record(state["unlabel_record"])
+        state["unlabel_repo"].delete_record(state["unlabel_record"])
         label_sessions.pop(session_id, None)
         return {
             "handled": True,
