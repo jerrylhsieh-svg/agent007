@@ -85,7 +85,7 @@ def handle_label_flow(session_id: str, message: str):
                 "reply": f"What label do you think it is? And be aware that label is limit to {ALLOWED_TRANSACTION_LABELS if state["file_type"] == "transaction" else ALLOWED_STATEMENT_LABELS}"
             }
         
-        return _add_to_train_data(state, session_id)
+        return _add_to_train_data(state["label_suggestsed"].suggested_label, state, session_id)
     
     if step == "manual_input":
         input = message.strip()
@@ -103,17 +103,17 @@ def handle_label_flow(session_id: str, message: str):
                 "reply": f"Not able to add label: {input}. Label is limit to {ALLOWED_TRANSACTION_LABELS if state["file_type"] == "transaction" else ALLOWED_STATEMENT_LABELS}"
             }
         
-        return _add_to_train_data(state, session_id)
+        return _add_to_train_data(input, state, session_id)
         
     
     label_sessions.pop(session_id, None)
     return {"handled": False}
 
-def _add_to_train_data(state, session_id):
+def _add_to_train_data(suggested_label, state, session_id):
     train_repo = TrainRecordRepository(GSHEET_LABEL_TRANSACTION_TRAIN_TAB if state["file_type"] == "transaction" else GSHEET_LABEL_STATEMENT_TRAIN_TAB)
     train_record = TrainRecord(
         description=state["unlabel_record"].description,
-        label=state["label_suggestsed"].suggested_label,
+        label=suggested_label,
         statement_type=state["unlabel_record"].statement_type,
     )
     train_repo.insert_many([train_record])
