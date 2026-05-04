@@ -1,3 +1,5 @@
+import re
+
 from agent.models.label import InMemoryLabelingStore
 
 
@@ -120,3 +122,98 @@ IS_TRANSACTION_PREDICT_TRIGGERS = [
 IS_LABEL_TRIGGERS = [
     "help with labeling"
 ]
+
+MONTH_RE = r"(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)[a-z]*\.?"
+
+STATEMENT_PERIOD_RE = re.compile(
+    rf"""
+    (?P<start_month>{MONTH_RE}|\d{{1,2}})
+    [\s/-]+
+    (?P<start_day>\d{{1,2}})
+    (?:,?\s*
+        (?P<start_year>\d{{4}})
+    )?
+
+    \s*
+    (?:
+        to
+        |
+        through
+        |
+        thru
+        |
+        -
+        |
+        –
+        |
+        —
+    )
+    \s*
+
+    (?P<end_month>{MONTH_RE}|\d{{1,2}})
+    [\s/-]+
+    (?P<end_day>\d{{1,2}})
+    (?:,?\s*
+        (?P<end_year>\d{{4}})
+    )
+    """,
+    re.IGNORECASE | re.VERBOSE,
+)
+
+
+DATE_RE = re.compile(
+    r"""
+    ^
+    (?:
+        # 2024-01-31, 2024/1/31, 2024.01.31
+        \d{4}[-/.]\d{1,2}[-/.]\d{1,2}
+
+        |
+
+        # 01/31, 1/31/24, 01-31-2024, 1.31.2024
+        \d{1,2}/\d{1,2}(?:/\d{2,4})?
+
+        |
+
+        # Jan 31, January 31, Jan 31 2024, January 31, 2024
+        (?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)
+        [a-z]*\.?\s+\d{1,2}(?:,?\s+\d{2,4})?
+
+        |
+
+        # 31 Jan, 31 January 2024
+        \d{1,2}\s+
+        (?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)
+        [a-z]*\.?(?:,?\s+\d{2,4})?
+    )
+    $
+    """,
+    re.IGNORECASE | re.VERBOSE,
+)
+
+MONTH_LOOKUP = {
+    "jan": 1,
+    "january": 1,
+    "feb": 2,
+    "february": 2,
+    "mar": 3,
+    "march": 3,
+    "apr": 4,
+    "april": 4,
+    "may": 5,
+    "jun": 6,
+    "june": 6,
+    "jul": 7,
+    "july": 7,
+    "aug": 8,
+    "august": 8,
+    "sep": 9,
+    "sept": 9,
+    "september": 9,
+    "oct": 10,
+    "october": 10,
+    "nov": 11,
+    "november": 11,
+    "dec": 12,
+    "december": 12,
+}

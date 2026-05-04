@@ -76,6 +76,7 @@ def extract_pdf_content(file_bytes: bytes) -> tuple[dict[str, Any], str]:
         full_text, data = parse_pages(pdf, pdf_parser)
 
     pdf_parser.normalize_records(data, full_text)
+    print(data)
 
     return {"full_text": full_text,"data": [asdict(row) for row in data]}, doc_tpye
     
