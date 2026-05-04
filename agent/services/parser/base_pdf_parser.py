@@ -43,9 +43,8 @@ class BasePdfParser(ABC):
         full_text: str,
     ) -> None:
         statement_period = extract_statement_years(full_text)
-
         for row in data:
-            normalize_date_value(value=row.date, statement_period=statement_period)
+            row.date = normalize_date_value(value=row.date, statement_period=statement_period)
     
     def parse_page(self, page: str) -> list[TransactionRow | BankStatementRow]:
         data: list[TransactionRow | BankStatementRow] = []
