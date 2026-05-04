@@ -1,6 +1,6 @@
 import pytest
 
-from agent.models.pdf_models import LineSchema
+from agent.models.pdf_models import LineSchema, TransactionRow
 from agent.services.parser.base_pdf_parser import BasePdfParser
 
 
@@ -10,16 +10,15 @@ TEST_SCHEMA = LineSchema(
     min_parts=3,
     start_markers=[],
     end_markers=[],
-    credit=False,
+    credit=True,
 )
 
 
 class DummyPdfParser(BasePdfParser):
     def __init__(self):
         super().__init__()
-
-    def _extract_from_page(self, page: str) -> list:
-        return [{"parsed": page}]
+    
+    schema = TEST_SCHEMA
 
 
 class FakePage:
@@ -50,27 +49,26 @@ def test_process_page_returns_text_page_and_data():
     parser = DummyPdfParser()
     page = FakePage(text="01/01 Starbucks 5.00")
 
-    result = parser.process_page(2, page)
-
-    assert result == {
-        "full_text": "01/01 Starbucks 5.00",
-        "page": {
-            "page_number": 2,
-            "text": "01/01 Starbucks 5.00",
-        },
-        "data": [{"parsed": "01/01 Starbucks 5.00"}],
-    }
+    result = parser.process_page(2, page, 2)
+    row = result["data"][0]
+    
+    assert isinstance(row, TransactionRow)
+    assert row.date == "01/01"
+    assert row.description == "Starbucks"
+    assert row.amount == 5.00
+    assert row.label == ""
+    assert row.id
 
 
 def test_process_page_uses_empty_string_when_extract_text_returns_none():
     parser = DummyPdfParser()
     page = FakePage(text=None)
 
-    result = parser.process_page(1, page)
+    result = parser.process_page(1, page, 1)
 
     assert result["full_text"] == ""
     assert result["page"] == {
         "page_number": 1,
         "text": "",
     }
-    assert result["data"] == [{"parsed": ""}]
+    assert result["data"] == []

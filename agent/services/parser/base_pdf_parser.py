@@ -22,9 +22,11 @@ class BasePdfParser(ABC):
             "full_text": "",
         }
     
-    def process_page(self, page_number: int, page: pdfplumber.page.Page) -> dict[str, Any]:
+    def process_page(self, page_number: int, page: pdfplumber.page.Page, end_page: int) -> dict[str, Any]:
         page_text = page.extract_text() or ""
-        data = self._extract_from_page(page_text)
+        data = self.parse_page(page_text)
+        if page_number ==  end_page and self.current is not None:
+            self._flush_current(data)
 
         return {
             "full_text": page_text,
@@ -132,7 +134,3 @@ class BasePdfParser(ABC):
             return self._parse_date_description_amount(parts)
 
         return None
-    
-    @abstractmethod
-    def _extract_from_page(self, page: str) -> list:
-        raise NotImplementedError
