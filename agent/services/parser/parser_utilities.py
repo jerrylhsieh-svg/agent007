@@ -2,7 +2,7 @@ from datetime import datetime
 import re
 from typing import Literal
 
-from agent.models.pdf_models import BankStatementRow, LineSchema, TransactionRow
+from agent.models.pdf_models import LineSchema, TransactionRow
 
 date_re = re.compile(
         r"^(?P<date>\d{1,2}/\d{1,2}(?:/\d{2,4})?|\d{4}-\d{2}-\d{2}|[A-Z][a-z]{2}\s+\d{1,2})$"
@@ -11,7 +11,7 @@ date_re = re.compile(
 def is_date_token(value: str, date_re=date_re) -> bool:
         return bool(date_re.match(value.strip()))
     
-def parse_amount(raw: str) -> float | None:
+def parse_amount(raw: str) -> float:
     cleaned = raw.strip().replace("$", "").replace(",", "")
     negative = False
 
@@ -26,11 +26,6 @@ def parse_amount(raw: str) -> float | None:
     value = float(cleaned)
 
     return -value if negative else value
-
-def ignore_neg(credit: bool, current) -> bool:
-    if credit and current.amount<0:
-        return True
-    return False
 
 def normalize_date_value(value: str | None, statement_period: tuple[int, int, int, int] | None) -> str | None:
     if not value or statement_period is None or re.search(r"\b\d{4}-\d{2}-\d{2}\b", value):
@@ -74,67 +69,6 @@ def extract_statement_years(text: str | None) -> tuple[int, int, int, int] | Non
         start_year = end_year - 1 if start_month > end_month else end_year
 
     return start_month, start_year, end_month, end_year
-
-def flush_current(data: list, current, schema: LineSchema):
-    if current is None:
-        return
-
-    current.description = " ".join(current.description.split())
-
-    if schema.credit and current.amount < 0:
-        return
-
-    data.append(current)
-
-def is_end_line(schema: LineSchema, line: str) -> bool:
-    return any(line.startswith(marker) for marker in schema.end_markers)
-
-def update_statement_type(schema: LineSchema, line: str) -> None:
-    if not schema.statement_type_markers:
-        return
-
-    for marker, statement_type in schema.statement_type_markers.items():
-        if line == marker:
-            statement_type = statement_type
-
-def parse_transaction_line(schema: LineSchema, line: str, statement_type: Literal["deposit", "withdraw"] | None = None):
-    parts = line.split()
-
-    if len(parts) < schema.min_parts:
-        return None
-
-    if schema.name == "date_description_amount":
-        return parse_date_description_amount(schema, parts, statement_type)
-
-    if schema.name == "transaction_posting_description_ref_account_amount_total":
-        return parse_boa_credit(parts)
-
-    return None
-
-def parse_date_description_amount(schema: LineSchema, parts: list[str], statement_type: Literal["deposit", "withdraw"] | None):
-    if not is_date_token(parts[0]):
-        return None
-
-    date = parts[0]
-    amount = parse_amount(parts[-1])
-    description = " ".join(parts[1:-1])
-
-    if schema.record_type == "bank_statement":
-        if statement_type is None:
-            raise ValueError("statement_type not detected")
-
-        return BankStatementRow(
-            date=date,
-            description=description,
-            statement_type=statement_type,
-            amount=amount,
-        )
-
-    return TransactionRow(
-        date=date,
-        description=description,
-        amount=amount,
-    )
 
 def parse_boa_credit(parts: list[str]):
     if not (

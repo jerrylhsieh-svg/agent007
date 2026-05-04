@@ -2,7 +2,7 @@ from typing import List
 
 from agent.models.pdf_models import BankStatementRow, LineSchema, TransactionRow
 from agent.services.parser.base_pdf_parser import BasePdfParser
-from agent.services.parser.parser_utilities import ignore_neg, is_account_number, is_date_token, parse_amount
+from agent.services.parser.parser_utilities import is_account_number, is_date_token, parse_amount
 
 
 class BOACreditPdfParser(BasePdfParser):
@@ -49,12 +49,12 @@ class BOACreditPdfParser(BasePdfParser):
             if len(parts) >= 6 and is_date_token(parts[0]) and is_date_token(parts[1])\
                 and is_account_number(parts[-2]) and is_account_number(parts[-3]):
                 if line.startswith("TOTAL PURCHASES AND ADJUSTMENTS FOR THIS PERIOD"):
-                    if not ignore_neg(self.credit, self.current):
+                    if not self._ignore_neg():
                         data.append(self.current) 
                     break
                 if self.current is not None:
                     self.current.description = " ".join(self.current.description.split())
-                    if not ignore_neg(self.credit, self.current):
+                    if not self._ignore_neg():
                         data.append(self.current)
 
                 self.current = TransactionRow(

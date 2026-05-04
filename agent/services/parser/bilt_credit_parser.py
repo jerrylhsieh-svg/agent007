@@ -3,7 +3,7 @@ from typing import List
 
 from agent.models.pdf_models import BankStatementRow, LineSchema, TransactionRow
 from agent.services.parser.base_pdf_parser import BasePdfParser
-from agent.services.parser.parser_utilities import ignore_neg, parse_amount
+from agent.services.parser.parser_utilities import parse_amount, parse_boa_credit
 
 
 class BiltCreditPdfParser(BasePdfParser):
@@ -45,7 +45,7 @@ class BiltCreditPdfParser(BasePdfParser):
             if match:
                 if self.current is not None:
                     self.current.description = " ".join(self.current.description.split())
-                    if not ignore_neg(self.credit, self.current):
+                    if not self._ignore_neg():
                         data.append(self.current)
 
                 self.current = TransactionRow(
@@ -54,7 +54,7 @@ class BiltCreditPdfParser(BasePdfParser):
                     amount=parse_amount(match.group("amount")),
                 )
             elif line.startswith("Total new charges in this period"):
-                if not ignore_neg(self.credit, self.current):
+                if not self._ignore_neg():
                     data.append(self.current)
                 self.current = None
             else:
@@ -62,3 +62,17 @@ class BiltCreditPdfParser(BasePdfParser):
                     self.current.description += " " + line
 
         return data
+    
+    def _parse_transaction_line(self, line: str):
+        parts = line.split()
+
+        if len(parts) < self.schema.min_parts:
+            return None
+
+        if self.schema.name == "date_description_amount":
+            return self._parse_date_description_amount(parts)
+
+        if self.schema.name == "transaction_posting_description_ref_account_amount_total":
+            return parse_boa_credit(parts)
+
+        return None

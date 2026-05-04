@@ -6,7 +6,7 @@ from uuid import uuid4
 class TransactionRow:
     date: str | None
     description: str
-    amount: float | None
+    amount: float
     id: str = field(default_factory=lambda: uuid4().hex[:12])
     label: str = ""
 
@@ -15,7 +15,7 @@ class BankStatementRow:
     date: str | None
     description: str
     statement_type: Literal["deposit", "withdraw"]
-    amount: float | None
+    amount: float
     id: str = field(default_factory=lambda: uuid4().hex[:12])
     label: str = ""
 
@@ -28,4 +28,4 @@ class LineSchema:
     start_markers: list[str]
     end_markers: list[str]
     credit: bool = False
-    statement_type_markers: dict[str, str] | None = None
+    statement_type_markers: dict[str, Literal['deposit', 'withdraw'] | None] | None = None
