@@ -1,12 +1,36 @@
 from datetime import datetime
 import re
-from typing import Literal
 
-from agent.models.pdf_models import LineSchema, TransactionRow
 
 date_re = re.compile(
-        r"^(?P<date>\d{1,2}/\d{1,2}(?:/\d{2,4})?|\d{4}-\d{2}-\d{2}|[A-Z][a-z]{2}\s+\d{1,2})$"
+    r"""
+    ^
+    (?:
+        # 2024-01-31, 2024/1/31, 2024.01.31
+        \d{4}[-/.]\d{1,2}[-/.]\d{1,2}
+
+        |
+
+        # 01/31, 1/31/24, 01-31-2024, 1.31.2024
+        \d{1,2}/\d{1,2}(?:/\d{2,4})?
+
+        |
+
+        # Jan 31, January 31, Jan 31 2024, January 31, 2024
+        (?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)
+        [a-z]*\.?\s+\d{1,2}(?:,?\s+\d{2,4})?
+
+        |
+
+        # 31 Jan, 31 January 2024
+        \d{1,2}\s+
+        (?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)
+        [a-z]*\.?(?:,?\s+\d{2,4})?
     )
+    $
+    """,
+    re.IGNORECASE | re.VERBOSE,
+)
 
 def is_date_token(value: str, date_re=date_re) -> bool:
         return bool(date_re.match(value.strip()))

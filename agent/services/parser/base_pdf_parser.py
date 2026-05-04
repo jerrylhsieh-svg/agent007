@@ -98,13 +98,10 @@ class BasePdfParser(ABC):
             if line == marker:
                 self.statement_type = statement_type
     
-    def _parse_date_description_amount(self, parts: list[str],):
-        if not is_date_token(parts[0]):
-            return None
-
-        date = parts[0]
+    def _parse_date_description_amount(self, date: str, rest: str):
+        parts = rest.split()
         amount = parse_amount(parts[-1])
-        description = " ".join(parts[1:-1])
+        description = " ".join(parts[0:-1])
 
         if self.schema.credit is False:
             if self.statement_type is None:
@@ -128,8 +125,29 @@ class BasePdfParser(ABC):
 
         if len(parts) < self.schema.min_parts:
             return None
+        
+        parsed_date = self._extract_date_prefix(line)
+
+        if parsed_date is None:
+            return None
+
+        date, rest = parsed_date
 
         if self.schema.name == "date_description_amount":
-            return self._parse_date_description_amount(parts)
+            return self._parse_date_description_amount(date, rest)
+
+        return None
+    
+    def _extract_date_prefix(self, line: str) -> tuple[str, str] | None:
+        tokens = line.split()
+
+        max_date_tokens = min(4, len(tokens))
+
+        for size in range(max_date_tokens, 0, -1):
+            candidate = " ".join(tokens[:size])
+
+            if is_date_token(candidate):
+                rest = " ".join(tokens[size:]).strip()
+                return candidate, rest
 
         return None

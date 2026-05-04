@@ -1,9 +1,7 @@
 import re
-from typing import List
 
-from agent.models.pdf_models import BankStatementRow, LineSchema, TransactionRow
+from agent.models.pdf_models import LineSchema
 from agent.services.parser.base_pdf_parser import BasePdfParser
-from agent.services.parser.parser_utilities import parse_amount
 
 
 class BiltCreditPdfParser(BasePdfParser):

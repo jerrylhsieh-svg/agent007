@@ -1,6 +1,4 @@
-from typing import List
-
-from agent.models.pdf_models import BankStatementRow, LineSchema, TransactionRow
+from agent.models.pdf_models import LineSchema, TransactionRow
 from agent.services.parser.base_pdf_parser import BasePdfParser
 from agent.services.parser.parser_utilities import is_account_number, is_date_token, parse_amount
 
@@ -33,20 +31,26 @@ class BOACreditPdfParser(BasePdfParser):
 
         if len(parts) < self.schema.min_parts:
             return None
+        
+        parsed_date = self._extract_date_prefix(line)
+
+        if parsed_date is None:
+            return None
+
+        date, rest = parsed_date
 
         if self.schema.name == "date_description_amount":
-            return self._parse_date_description_amount(parts)
+            return self._parse_date_description_amount(date, rest)
 
         if self.schema.name == "transaction_posting_description_ref_account_amount_total":
-            return self._parse_boa_credit(parts)
+            return self._parse_boa_credit(date, rest)
 
         return None
     
-    def _parse_boa_credit(self, parts: list[str]):
+    def _parse_boa_credit(self, date: str, rest: str):
+        parts = rest.split()
         if not (
-            is_date_token(parts[0])
-            and is_date_token(parts[1])
-            and is_account_number(parts[-2])
+            is_account_number(parts[-2])
             and is_account_number(parts[-3])
         ):
             return None

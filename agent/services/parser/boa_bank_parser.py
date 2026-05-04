@@ -1,8 +1,5 @@
-from typing import List
-
-from agent.models.pdf_models import BankStatementRow, LineSchema, TransactionRow
+from agent.models.pdf_models import LineSchema
 from agent.services.parser.base_pdf_parser import BasePdfParser
-from agent.services.parser.parser_utilities import is_date_token, parse_amount
 
 
 class BOABankPdfParser(BasePdfParser):
