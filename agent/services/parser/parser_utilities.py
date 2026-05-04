@@ -70,20 +70,6 @@ def extract_statement_years(text: str | None) -> tuple[int, int, int, int] | Non
 
     return start_month, start_year, end_month, end_year
 
-def parse_boa_credit(parts: list[str]):
-    if not (
-        is_date_token(parts[0])
-        and is_date_token(parts[1])
-        and is_account_number(parts[-2])
-        and is_account_number(parts[-3])
-    ):
-        return None
-
-    return TransactionRow(
-        date=parts[0],
-        description=" ".join(parts[2:-3]),
-        amount=parse_amount(parts[-1]),
-    )
 
 def is_account_number(value: str) -> bool:
     return value.isdigit() and len(value) == 4

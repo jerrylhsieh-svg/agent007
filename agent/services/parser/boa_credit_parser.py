@@ -67,3 +67,32 @@ class BOACreditPdfParser(BasePdfParser):
                     self.current.description += " " + line
 
         return data
+    
+    def _parse_transaction_line(self, line: str):
+        parts = line.split()
+
+        if len(parts) < self.schema.min_parts:
+            return None
+
+        if self.schema.name == "date_description_amount":
+            return self._parse_date_description_amount(parts)
+
+        if self.schema.name == "transaction_posting_description_ref_account_amount_total":
+            return self._parse_boa_credit(parts)
+
+        return None
+    
+    def _parse_boa_credit(self, parts: list[str]):
+        if not (
+            is_date_token(parts[0])
+            and is_date_token(parts[1])
+            and is_account_number(parts[-2])
+            and is_account_number(parts[-3])
+        ):
+            return None
+
+        return TransactionRow(
+            date=parts[0],
+            description=" ".join(parts[2:-3]),
+            amount=parse_amount(parts[-1]),
+        )

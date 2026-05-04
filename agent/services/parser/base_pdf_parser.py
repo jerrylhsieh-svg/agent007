@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 import pdfplumber
 
 from agent.models.pdf_models import BankStatementRow, LineSchema, TransactionRow
-from agent.services.parser.parser_utilities import extract_statement_years, is_date_token, normalize_date_value, parse_amount, parse_boa_credit
+from agent.services.parser.parser_utilities import extract_statement_years, is_date_token, normalize_date_value, parse_amount
 
 
 class BasePdfParser(ABC):

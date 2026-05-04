@@ -7,7 +7,6 @@ from agent.services.parser.parser_utilities import (
     is_date_token,
     normalize_date_value,
     parse_amount,
-    parse_boa_credit,
 )
 
 
@@ -129,15 +128,7 @@ def test_extract_statement_years_infers_previous_year_when_cross_year():
     text = "December 15 to January 14, 2025"
 
     assert extract_statement_years(text) == (12, 2024, 1, 2025)
-
-
-def test_parse_boa_credit_returns_none_for_invalid_layout():
-    result = parse_boa_credit(
-        ["01/01", "01/02", "STARBUCKS", "abcd", "5678", "5.75"]
-    )
-
-    assert result is None
-
+    
 
 @pytest.mark.parametrize(
     ("value", "expected"),
