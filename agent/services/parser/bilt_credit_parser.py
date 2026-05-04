@@ -1,8 +1,9 @@
 import re
 from typing import List
 
-from agent.models.pdf_models import TransactionRow
+from agent.models.pdf_models import BankStatementRow, LineSchema, TransactionRow
 from agent.services.parser.base_pdf_parser import BasePdfParser
+from agent.services.parser.parser_utilities import ignore_neg, parse_amount
 
 
 class BiltCreditPdfParser(BasePdfParser):
@@ -17,6 +18,16 @@ class BiltCreditPdfParser(BasePdfParser):
         re.VERBOSE,
     )
 
+    schema = LineSchema(
+        name="date_description_amount",
+        record_type="transaction",
+        columns=["date", "description", "amount"],
+        min_parts=3,
+        start_markers=[],
+        end_markers=["Total new charges in this period"],
+        credit=True,
+    )
+
     def __init__(self):
         super().__init__()
         self.credit = True
@@ -25,7 +36,7 @@ class BiltCreditPdfParser(BasePdfParser):
         self,
         page: str,
     ) -> List:
-        data = []
+        data: list[TransactionRow | BankStatementRow | None] = []
         for raw_line in page.splitlines():
             line = raw_line.strip()
             if not line:
@@ -34,16 +45,16 @@ class BiltCreditPdfParser(BasePdfParser):
             if match:
                 if self.current is not None:
                     self.current.description = " ".join(self.current.description.split())
-                    if not self._ignore_neg():
+                    if not ignore_neg(self.credit, self.current):
                         data.append(self.current)
 
                 self.current = TransactionRow(
                     date=match.group("date"),
                     description=match.group("description"),
-                    amount=self._parse_amount(match.group("amount")),
+                    amount=parse_amount(match.group("amount")),
                 )
             elif line.startswith("Total new charges in this period"):
-                if not self._ignore_neg():
+                if not ignore_neg(self.credit, self.current):
                     data.append(self.current)
                 self.current = None
             else:

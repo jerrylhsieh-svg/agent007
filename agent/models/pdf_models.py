@@ -18,3 +18,14 @@ class BankStatementRow:
     amount: float | None
     id: str = field(default_factory=lambda: uuid4().hex[:12])
     label: str = ""
+
+@dataclass(frozen=True)
+class LineSchema:
+    name: str
+    record_type: Literal["transaction", "bank_statement"]
+    columns: list[str]
+    min_parts: int
+    start_markers: list[str]
+    end_markers: list[str]
+    credit: bool = False
+    statement_type_markers: dict[str, str] | None = None
