@@ -1,7 +1,7 @@
 from agent.models.label import TrainRecord
 from agent.repo.TrainRecordRepository import TrainRecordRepository
 from agent.repo.UnlabeledRecordRepository import UnlabeledRecordRepository
-from agent.services.constants_and_dependencies import GSHEET_LABEL_STATEMENT_GROUP_TAB, GSHEET_LABEL_STATEMENT_TRAIN_TAB, GSHEET_LABEL_TRANSACTION_GROUP_TAB, GSHEET_LABEL_TRANSACTION_TRAIN_TAB
+from agent.services.constants_and_dependencies import ALLOWED_STATEMENT_LABELS, ALLOWED_TRANSACTION_LABELS, GSHEET_LABEL_STATEMENT_GROUP_TAB, GSHEET_LABEL_STATEMENT_TRAIN_TAB, GSHEET_LABEL_TRANSACTION_GROUP_TAB, GSHEET_LABEL_TRANSACTION_TRAIN_TAB
 from agent.services.labeling.label_suggester import LabelSuggester
 
 
@@ -25,10 +25,18 @@ def handle_label_flow(session_id: str, message: str):
 
     if step == "awaiting_file_type":
         file_type = message.strip()
-        if file_type not in {"transaction", "statement"}:
+        tried = state.get("file_type_retry", 0)
+        if file_type not in {"transaction", "statement"} and tried < 1:
+            tried+=1 
             return {
                 "handled": True,
                 "reply": """Please give me a valid file type. Answer "transaction" or "statement" only."""
+            }
+        elif file_type not in {"transaction", "statement"}:
+            label_sessions.pop(session_id, None)
+            return {
+                "handled": True,
+                "reply": f"Not able to process file_type: {file_type}"
             }
         
         unlabel_repo = UnlabeledRecordRepository(GSHEET_LABEL_TRANSACTION_GROUP_TAB if file_type == "transaction" else GSHEET_LABEL_STATEMENT_GROUP_TAB)
@@ -55,12 +63,11 @@ def handle_label_flow(session_id: str, message: str):
         }
 
     if step == "awaiting_approval":
-        file_type = state["file_type"]
-        tried = state.get("tried", 0)
+        tried = state.get("approval_retry", 0)
         approval = message.strip()
 
         if approval not in {'approve', 'not approve'} and tried < 1:
-            state["tried"] += 1
+            tried += 1
             return {
                 "handled": True,
                 "reply": """Please give me a valid respone. Answer "approve" only for approval else it will not proceed."""
@@ -72,26 +79,48 @@ def handle_label_flow(session_id: str, message: str):
                 "reply": "Unable to proceed due to no clear approval",
             }
         if approval == "not approve":
+            state["step"] = "manual_input"
+            return {
+                "handled": True,
+                "reply": f"What label do you think it is? And be aware that label is limit to {ALLOWED_TRANSACTION_LABELS if state["file_type"] == "transaction" else ALLOWED_STATEMENT_LABELS}"
+            }
+        
+        return _add_to_train_data(state, session_id)
+    
+    if step == "manual_input":
+        input = message.strip()
+        tried = tried = state.get("input_retry", 0)
+        if input not in ALLOWED_TRANSACTION_LABELS if state["file_type"] == "transaction" else ALLOWED_STATEMENT_LABELS and tried < 1:
+            tried+=1
+            return {
+                "handled": True,
+                "reply": f"Label should is to {ALLOWED_TRANSACTION_LABELS if state["file_type"] == "transaction" else ALLOWED_STATEMENT_LABELS}"
+            }
+        elif input not in ALLOWED_TRANSACTION_LABELS if state["file_type"] == "transaction" else ALLOWED_STATEMENT_LABELS:
             label_sessions.pop(session_id, None)
             return {
                 "handled": True,
-                "reply": "No problem. I will skip this suggestion and stop the labeling flow."
+                "reply": f"Not able to add label: {input}. Label is limit to {ALLOWED_TRANSACTION_LABELS if state["file_type"] == "transaction" else ALLOWED_STATEMENT_LABELS}"
             }
         
-        train_repo = TrainRecordRepository(GSHEET_LABEL_TRANSACTION_TRAIN_TAB if file_type == "transaction" else GSHEET_LABEL_STATEMENT_TRAIN_TAB)
-        train_record = TrainRecord(
-            description=state["unlabel_record"].description,
-            label=state["label_suggestsed"].suggested_label,
-            statement_type=state["unlabel_record"].statement_type,
-        )
-        train_repo.insert_many([train_record])
-        state["unlabel_repo"].delete_record(state["unlabel_record"])
-        label_sessions.pop(session_id, None)
-        return {
-            "handled": True,
-            "reply": f"train_record description: {train_record.description},\n label: {train_record.label}\n, statement_type: {train_record.statement_type}\n has been added to train data."
-        }
+        return _add_to_train_data(state, session_id)
+        
     
     label_sessions.pop(session_id, None)
     return {"handled": False}
-        
+
+def _add_to_train_data(state, session_id):
+    train_repo = TrainRecordRepository(GSHEET_LABEL_TRANSACTION_TRAIN_TAB if state["file_type"] == "transaction" else GSHEET_LABEL_STATEMENT_TRAIN_TAB)
+    train_record = TrainRecord(
+        description=state["unlabel_record"].description,
+        label=state["label_suggestsed"].suggested_label,
+        statement_type=state["unlabel_record"].statement_type,
+    )
+    train_repo.insert_many([train_record])
+    state["unlabel_repo"].delete_record(state["unlabel_record"])
+
+    label_sessions.pop(session_id, None)
+    return {
+        "handled": True,
+        "reply": f"train_record description: {train_record.description},\n label: {train_record.label}\n, statement_type: {train_record.statement_type}\n has been added to train data."
+    }

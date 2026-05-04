@@ -13,7 +13,7 @@ from agent.services.chat.triggers import contains_any_trigger
 
 
 Route = tuple[Iterable[str], Callable[..., str], dict[str, Any]]
-Flow_Route = tuple[Iterable[str], Callable[..., dict[str, Any]], dict[str, Any]]
+Flow_Route = tuple[Iterable[str], Callable[..., dict[str, Any]], dict[str, dict], dict[str, Any]]
 
 ROUTES: list[Route] = [
     (IS_TRANSACTION_TRIGGERS, generate_credit_card_summary, {}),
