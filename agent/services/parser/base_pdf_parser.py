@@ -1,5 +1,5 @@
 from typing import Any, Literal
-from abc import ABC, abstractmethod
+from abc import ABC
 import pdfplumber
 
 from agent.models.pdf_models import BankStatementRow, LineSchema, TransactionRow
@@ -68,7 +68,7 @@ class BasePdfParser(ABC):
                 self._flush_current(data)
                 self.current = parsed
             elif self.current is not None:
-                self.current.description += " " + line
+                self.current.description += f" {line}"
 
         return data
     
