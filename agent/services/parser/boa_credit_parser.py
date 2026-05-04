@@ -9,7 +9,6 @@ class BOACreditPdfParser(BasePdfParser):
 
     schema = LineSchema(
         name="transaction_posting_description_ref_account_amount_total",
-        record_type="transaction",
         columns=[
             "transaction_date",
             "posting_date",

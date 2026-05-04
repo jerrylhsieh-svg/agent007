@@ -20,7 +20,6 @@ class BiltCreditPdfParser(BasePdfParser):
 
     schema = LineSchema(
         name="date_description_amount",
-        record_type="transaction",
         columns=["date", "description", "amount"],
         min_parts=3,
         start_markers=[],

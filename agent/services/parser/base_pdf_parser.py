@@ -105,7 +105,7 @@ class BasePdfParser(ABC):
         amount = parse_amount(parts[-1])
         description = " ".join(parts[1:-1])
 
-        if self.schema.record_type == "bank_statement":
+        if self.schema.credit is False:
             if self.statement_type is None:
                 raise ValueError("statement_type not detected")
 

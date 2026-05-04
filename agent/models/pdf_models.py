@@ -22,7 +22,6 @@ class BankStatementRow:
 @dataclass(frozen=True)
 class LineSchema:
     name: str
-    record_type: Literal["transaction", "bank_statement"]
     columns: list[str]
     min_parts: int
     start_markers: list[str]
