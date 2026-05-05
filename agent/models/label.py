@@ -16,7 +16,7 @@ class LabelingJob:
     processed_records: int = 0
     error_message: str | None = None
     result: list[dict] = field(default_factory=list)
-    created_at: datetime = field(default_factory=datetime.utcnow)
+    created_at: datetime = field(default_factory=datetime.now)
 
 @dataclass
 class UnlabeledRecord:
