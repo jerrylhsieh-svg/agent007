@@ -1,5 +1,3 @@
-from uuid import uuid4
-
 from sqlalchemy import Float, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 

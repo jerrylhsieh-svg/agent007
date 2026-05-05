@@ -1,5 +1,3 @@
-from uuid import uuid4
-
 from sqlalchemy import Float, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -8,7 +6,7 @@ from agent.db.session import Base
 
 
 class UnlabeledRecordGroup(Base):
-    __tablename__ = "unlabeled_record_groups"
+    __abstract__ = True
 
     id: Mapped[str] = mapped_column(String(12), primary_key=True, default=generate_id)
     date: Mapped[str | None] = mapped_column(String(20), nullable=True)
