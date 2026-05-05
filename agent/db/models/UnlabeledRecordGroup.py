@@ -3,13 +3,14 @@ from uuid import uuid4
 from sqlalchemy import Float, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
+from agent.db.models.IdGenerator import generate_id
 from agent.db.session import Base
 
 
 class UnlabeledRecordGroup(Base):
     __tablename__ = "unlabeled_record_groups"
 
-    id: Mapped[str] = mapped_column(String(12), primary_key=True, default=uuid4().hex[:12])
+    id: Mapped[str] = mapped_column(String(12), primary_key=True, default=generate_id)
     date: Mapped[str | None] = mapped_column(String(20), nullable=True)
     description: Mapped[str] = mapped_column(Text, nullable=False)
     normalized_description: Mapped[str | None] = mapped_column(Text, nullable=True)

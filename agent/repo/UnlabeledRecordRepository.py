@@ -1,11 +1,18 @@
 from dataclasses import asdict
+from typing import Literal
+
+from sqlalchemy.orm import Session
 
 from agent.db.data_classes.label import UnlabeledRecord
 from agent.services.constants_and_dependencies import GSHEET_NAME
 from agent.services.google_sheets import append_data, build_gsheet_rows, get_or_create_worksheet
 
+RecordType = Literal["transaction", "statement"]
 
 class UnlabeledRecordRepository:
+    def __init__(self, db: Session, record_type: RecordType):
+        self.db = db
+        self.record_type = record_type
     def __init__(self, worksheet_name):
         self.worksheet_name = worksheet_name
         self.worksheet = get_or_create_worksheet(spreadsheet_name=GSHEET_NAME, worksheet_name=worksheet_name)
