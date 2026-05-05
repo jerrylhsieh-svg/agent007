@@ -1,6 +1,6 @@
 from typing import Any, Callable, Iterable
 
-from agent.models.chat import ChatRequest
+from agent.db.data_classes.chat import ChatRequest
 from agent.services.analyzer.bank_statement_analyzer import generate_bank_statement_summary, generate_bank_withdraw_summary
 from agent.services.analyzer.transaction_analyzer import generate_credit_card_summary
 from agent.services.chat.call_model import call_model

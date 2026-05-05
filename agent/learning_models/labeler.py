@@ -9,7 +9,7 @@ from agent.learning_models.constants import STATEMENT_ARTIFACT_PATH, TRANSACTION
 from agent.learning_models.statement.merchant_rules import override_statement_label
 from agent.learning_models.train_merchant_model import normalize_description
 from agent.learning_models.transaction.merchant_rules import override_transaction_label
-from agent.models.merchant_prediction import MerchantPrediction
+from agent.db.data_classes.merchant_prediction import MerchantPrediction
 from agent.services.constants_and_dependencies import GSHEET_LABEL_STATEMENT_GROUP_TAB, GSHEET_LABEL_STATEMENTS_TAB, GSHEET_LABEL_TRANSACTION_GROUP_TAB, GSHEET_LABEL_TRANSACTIONS_TAB, GSHEET_STATEMENT_TAB, GSHEET_TRANSACTIONS_TAB, STATEMENT_LABEL_HEADERS, TRANSACTION_LABEL_HEADERS
 
 

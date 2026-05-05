@@ -4,7 +4,7 @@ from fastapi import APIRouter, BackgroundTasks, Request, UploadFile, File
 from fastapi.responses import HTMLResponse
 
 from agent.services.chat import chat_service
-from agent.models.chat import ChatRequest, ChatResponse
+from agent.db.data_classes.chat import ChatRequest, ChatResponse
 from agent.services.pdf_extractor import extract_pdf_service
 
 

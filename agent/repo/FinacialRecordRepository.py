@@ -2,7 +2,7 @@
 from dataclasses import asdict
 from typing import Any
 
-from agent.models.pdf_models import BankStatementRow, TransactionRow
+from agent.db.data_classes.pdf_models import BankStatementRow, TransactionRow
 from agent.services.constants_and_dependencies import GSHEET_NAME
 from agent.services.google_sheets import get_or_create_worksheet
 

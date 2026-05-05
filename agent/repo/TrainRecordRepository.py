@@ -2,7 +2,7 @@ from dataclasses import asdict
 
 import pandas as pd
 
-from agent.models.label import TrainRecord
+from agent.db.data_classes.label import TrainRecord
 from agent.services.constants_and_dependencies import GSHEET_NAME, TRAIN_RECORD_HEADERS
 from agent.services.google_sheets import append_data, build_gsheet_rows, get_or_create_worksheet
 

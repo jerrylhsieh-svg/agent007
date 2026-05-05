@@ -1,6 +1,6 @@
 import re
 
-from agent.models.label import InMemoryLabelingStore
+from agent.db.data_classes.label import InMemoryLabelingStore
 
 
 GSHEET_NAME = "transactions"

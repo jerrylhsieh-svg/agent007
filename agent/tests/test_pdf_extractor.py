@@ -7,7 +7,7 @@ import pytest
 from fastapi import BackgroundTasks, HTTPException, UploadFile
 from starlette.datastructures import Headers
 
-from agent.models.label import LabelingJob
+from agent.db.data_classes.label import LabelingJob
 from agent.services import pdf_extractor
 from agent.services.parser import pdf_parser
 

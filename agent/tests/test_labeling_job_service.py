@@ -6,7 +6,7 @@ import pytest
 
 import agent.services.labeling.labeling_job_service as service
 from agent.learning_models.constants import UNKNOWN_LABEL
-from agent.models.label import UnlabeledRecord
+from agent.db.data_classes.label import UnlabeledRecord
 
 
 @dataclass

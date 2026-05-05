@@ -1,7 +1,7 @@
 import json
 import re
 
-from agent.models.label import LabelSuggested, UnlabeledRecord
+from agent.db.data_classes.label import LabelSuggested, UnlabeledRecord
 from agent.services.chat.call_model import call_model
 from agent.services.constants_and_dependencies import ALLOWED_TRANSACTION_LABELS
 from agent.services.helper import safe_float

@@ -3,7 +3,7 @@ from dataclasses import asdict
 
 from agent.learning_models.labeler import Labeler
 from agent.learning_models.constants import UNKNOWN_LABEL
-from agent.models.label import UnlabeledRecord
+from agent.db.data_classes.label import UnlabeledRecord
 from agent.repo.UnlabeledRecordRepository import UnlabeledRecordRepository
 from agent.services.constants_and_dependencies import labeling_store
 from agent.services.google_sheets import add_labels

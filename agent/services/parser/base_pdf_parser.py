@@ -2,7 +2,7 @@ from typing import Any, Literal
 from abc import ABC
 import pdfplumber
 
-from agent.models.pdf_models import BankStatementRow, LineSchema, TransactionRow
+from agent.db.data_classes.pdf_models import BankStatementRow, LineSchema, TransactionRow
 from agent.services.parser.parser_utilities import extract_statement_years, is_date_token, normalize_date_value, parse_amount
 
 

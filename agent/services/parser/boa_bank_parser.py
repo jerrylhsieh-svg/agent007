@@ -1,4 +1,4 @@
-from agent.models.pdf_models import LineSchema
+from agent.db.data_classes.pdf_models import LineSchema
 from agent.services.parser.base_pdf_parser import BasePdfParser
 
 

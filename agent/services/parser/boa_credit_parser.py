@@ -1,4 +1,4 @@
-from agent.models.pdf_models import LineSchema, TransactionRow
+from agent.db.data_classes.pdf_models import LineSchema, TransactionRow
 from agent.services.parser.base_pdf_parser import BasePdfParser
 from agent.services.parser.parser_utilities import is_account_number, is_date_token, parse_amount
 

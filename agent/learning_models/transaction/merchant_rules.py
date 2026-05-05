@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import re
 
-from agent.models.merchant_prediction import MerchantRule
+from agent.db.data_classes.merchant_prediction import MerchantRule
 
 
 OVERRIDE_RULES: list[MerchantRule] = [
