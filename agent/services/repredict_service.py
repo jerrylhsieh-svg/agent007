@@ -1,7 +1,10 @@
 from typing import Literal
 
+from fastapi import Depends
+
 from agent.learning_models.labeler import Labeler
-from agent.repo.FinacialRecordRepository import FinacialRecordRepository
+from agent.repo.financial_record_repository import FinancialRecordRepository
+from agent.db.session import get_db_session
 from agent.services.chat.call_model import call_model
 
 
@@ -12,9 +15,12 @@ def repredict_records(
 ) -> str:
     
     predictor = Labeler(file_type=file_type)
-    repo = FinacialRecordRepository(predictor.get_worksheet())
+    repo = FinancialRecordRepository(Depends(get_db_session), file_type)
 
     records = repo.get_records()
+
+    if records is None:
+        raise ValueError("No record found")
 
     updated_count = 0
     changed_count = 0

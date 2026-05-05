@@ -1,6 +1,6 @@
-from agent.db.data_classes.pdf_models import LineSchema, TransactionRow
+from agent.db.data_classes.pdf_models import FinancialRecordRow, LineSchema
 from agent.services.parser.base_pdf_parser import BasePdfParser
-from agent.services.parser.parser_utilities import is_account_number, is_date_token, parse_amount
+from agent.services.parser.parser_utilities import is_account_number, parse_amount
 
 
 class BOACreditPdfParser(BasePdfParser):
@@ -55,7 +55,7 @@ class BOACreditPdfParser(BasePdfParser):
         ):
             return None
 
-        return TransactionRow(
+        return FinancialRecordRow(
             date=parts[0],
             description=" ".join(parts[2:-3]),
             amount=parse_amount(parts[-1]),

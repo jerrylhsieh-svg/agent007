@@ -2,7 +2,7 @@ from typing import Any, Literal
 from abc import ABC
 import pdfplumber
 
-from agent.db.data_classes.pdf_models import BankStatementRow, LineSchema, TransactionRow
+from agent.db.data_classes.pdf_models import LineSchema, FinancialRecordRow
 from agent.services.parser.parser_utilities import extract_statement_years, is_date_token, normalize_date_value, parse_amount
 
 
@@ -10,7 +10,7 @@ class BasePdfParser(ABC):
     schema: LineSchema
 
     def __init__(self):
-        self.current: BankStatementRow | TransactionRow | None = None
+        self.current: FinancialRecordRow | None = None
         self.statement_type: Literal["deposit", "withdraw"] | None = None
         self.credit = False
 
@@ -39,15 +39,15 @@ class BasePdfParser(ABC):
     
     def normalize_records(
         self,
-        data: list[TransactionRow | BankStatementRow],
+        data: list[FinancialRecordRow],
         full_text: str,
     ) -> None:
         statement_period = extract_statement_years(full_text)
         for row in data:
             row.date = normalize_date_value(value=row.date, statement_period=statement_period)
     
-    def parse_page(self, page: str) -> list[TransactionRow | BankStatementRow]:
-        data: list[TransactionRow | BankStatementRow] = []
+    def parse_page(self, page: str) -> list[FinancialRecordRow]:
+        data: list[FinancialRecordRow] = []
 
         for raw_line in page.splitlines():
             line = raw_line.strip()
@@ -103,18 +103,7 @@ class BasePdfParser(ABC):
         amount = parse_amount(parts[-1])
         description = " ".join(parts[0:-1])
 
-        if self.schema.credit is False:
-            if self.statement_type is None:
-                raise ValueError("statement_type not detected")
-
-            return BankStatementRow(
-                date=date,
-                description=description,
-                statement_type=self.statement_type,
-                amount=amount,
-            )
-
-        return TransactionRow(
+        return FinancialRecordRow(
             date=date,
             description=description,
             amount=amount,

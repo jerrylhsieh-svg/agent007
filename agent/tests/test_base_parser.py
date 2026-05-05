@@ -1,6 +1,6 @@
 import pytest
 
-from agent.db.data_classes.pdf_models import LineSchema, TransactionRow
+from agent.db.data_classes.pdf_models import FinancialRecordRow, LineSchema
 from agent.services.parser.base_pdf_parser import BasePdfParser
 
 
@@ -52,7 +52,7 @@ def test_process_page_returns_text_page_and_data():
     result = parser.process_page(2, page, 2)
     row = result["data"][0]
     
-    assert isinstance(row, TransactionRow)
+    assert isinstance(row, FinancialRecordRow)
     assert row.date == "01/01"
     assert row.description == "Starbucks"
     assert row.amount == 5.00
