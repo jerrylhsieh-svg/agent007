@@ -1,5 +1,5 @@
-from agent.db.data_classes.label import UnlabeledRecord
+from agent.db.models.unlabeled.UnlabeledRecord import UnlabeledBaseRecord
 
 
-class UnlabeledTransactionRecord(UnlabeledRecord):
+class UnlabeledTransactionRecord(UnlabeledBaseRecord):
     __tablename__ = "unlabeled_transaction_records"

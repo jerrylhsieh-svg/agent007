@@ -1,11 +1,11 @@
-from dataclasses import asdict
 from typing import Literal
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from agent.db.data_classes.label import UnlabeledRecord
-from agent.services.constants_and_dependencies import GSHEET_NAME
-from agent.services.google_sheets import append_data, build_gsheet_rows, get_or_create_worksheet
+from agent.db.models.unlabeled.UnlabeledStatementRecord import UnlabeledStatementnRecord
+from agent.db.models.unlabeled.UnlabeledTransactionRecord import UnlabeledTransactionRecord
 
 RecordType = Literal["transaction", "statement"]
 
@@ -13,45 +13,79 @@ class UnlabeledRecordRepository:
     def __init__(self, db: Session, record_type: RecordType):
         self.db = db
         self.record_type = record_type
-    def __init__(self, worksheet_name):
-        self.worksheet_name = worksheet_name
-        self.worksheet = get_or_create_worksheet(spreadsheet_name=GSHEET_NAME, worksheet_name=worksheet_name)
+        if record_type == "statement":
+            self.record_class = UnlabeledStatementnRecord  
+        else: 
+            self.record_class = UnlabeledTransactionRecord
 
-    def insert_many(self, records: list[UnlabeledRecord], fields: list[str]) -> None:
-        rows = build_gsheet_rows(
-            data=[asdict(row) for row in records],
-            fields=fields,
-        )
-        
-        append_data(
-            spreadsheet_name=GSHEET_NAME,
-            worksheet_name=self.worksheet_name,
-            rows=rows,
-            headers=fields
-        )
+    def insert_many(self, records: list[UnlabeledRecord]) -> None:
+        db_records = [
+            self.record_class(
+                id=record.id,
+                record_type=self.record_type,
+                description=record.description,
+                normalized_description=record.normalized_description,
+                amount=record.total_amount_impact,
+                predicted_label=record.predicted_label,
+                confidence=record.confidence,
+            )
+            for record in records
+        ]
 
-    def get_records(self) -> list[UnlabeledRecord]:
-        rows = self.worksheet.get_all_records()
+        self.db.add_all(db_records)
+        self.db.commit()
+
+    def get_records(self) -> list[UnlabeledRecord] | None:
+        stmt = select(self.record_class).order_by(self.record_class.date)
+        rows = self.db.scalars(stmt).all()
 
         return [
-            UnlabeledRecord(**row)
+            UnlabeledRecord(
+                id=row.id,
+                description=row.description,
+                normalized_description=row.normalized_description,
+                total_amount_impact=row.amount,
+                predicted_label=row.predicted_label,
+                confidence=row.confidence,
+            )
             for row in rows
         ]
-    
-    def get_first_record(self) -> UnlabeledRecord | None:
-        records = self.get_records()
-        return records[0] if records else None
 
-    def overwrite(self, records: list[UnlabeledRecord], fields: list[str]) -> None:
-        self.worksheet.clear()
-        self.insert_many(records, fields)
+    def get_record_by_id(self, record_id: str) -> UnlabeledRecord:
+        row = self.db.get(self.record_class, record_id)
 
-    def delete_record(self, record: UnlabeledRecord) -> None:
-        rows = self.worksheet.get_all_records()
+        if row is None:
+            raise ValueError(f"{self.record_type} record with id={record_id} not found")
 
-        for index, row in enumerate(rows, start=2):
-            if row.get("id") == record.id:
-                self.worksheet.delete_rows(index)
-                return
+        return UnlabeledRecord(
+            id=row.id,
+            description=row.description,
+            normalized_description=row.normalized_description,
+            total_amount_impact=row.amount,
+            predicted_label=row.predicted_label,
+            confidence=row.confidence,
+        )
 
-        raise ValueError(f"Record with id={record.id} not found")
+    def update_record(self, record: UnlabeledRecord) -> None:
+        row = self.db.get(self.record_class, record.id)
+
+        if row is None:
+            raise ValueError(f"{self.record_type} record with id={record.id} not found")
+
+        row.id=record.id,
+        row.description=record.description,
+        row.normalized_description=record.normalized_description,
+        row.amount=record.total_amount_impact,
+        row.predicted_label=record.predicted_label,
+        row.confidence=record.confidence,
+
+        self.db.commit()
+
+    def delete_record(self, record_id: str) -> None:
+        row = self.db.get(self.record_class, record_id)
+
+        if row is None:
+            raise ValueError(f"{self.record_type} record with id={record_id} not found")
+
+        self.db.delete(row)
+        self.db.commit()

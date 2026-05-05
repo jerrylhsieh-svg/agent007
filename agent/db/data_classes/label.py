@@ -21,7 +21,6 @@ class LabelingJob:
 @dataclass
 class UnlabeledRecord:
     id: str
-    sheet_name: str
     description: str 
     normalized_description: str
     predicted_label: str
@@ -29,7 +28,6 @@ class UnlabeledRecord:
     priority_score: float
     similar_count: int
     total_amount_impact: float
-    statement_type: str = ""
 
 @dataclass(frozen=True)
 class LabelSuggested:

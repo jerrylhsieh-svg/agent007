@@ -1,4 +1,7 @@
+from fastapi import Depends
+
 from agent.db.data_classes.label import TrainRecord
+from agent.db.session import get_db_session
 from agent.repo.TrainRecordRepository import TrainRecordRepository
 from agent.repo.UnlabeledRecordRepository import UnlabeledRecordRepository
 from agent.services.constants_and_dependencies import ALLOWED_STATEMENT_LABELS, ALLOWED_TRANSACTION_LABELS, GSHEET_LABEL_STATEMENT_GROUP_TAB, GSHEET_LABEL_STATEMENT_TRAIN_TAB, GSHEET_LABEL_TRANSACTION_GROUP_TAB, GSHEET_LABEL_TRANSACTION_TRAIN_TAB
@@ -39,7 +42,7 @@ def handle_label_flow(session_id: str, message: str):
                 "reply": f"Not able to process file_type: {file_type}"
             }
         
-        unlabel_repo = UnlabeledRecordRepository(GSHEET_LABEL_TRANSACTION_GROUP_TAB if file_type == "transaction" else GSHEET_LABEL_STATEMENT_GROUP_TAB)
+        unlabel_repo = UnlabeledRecordRepository(Depends(get_db_session), file_type)
         first_record = unlabel_repo.get_first_record()
         state["step"] = "awaiting_approval"
         state["file_type"] = file_type

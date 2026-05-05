@@ -1,6 +1,9 @@
 from collections import defaultdict
 from dataclasses import asdict
 
+from fastapi import Depends
+
+from agent.db.session import get_db_session
 from agent.learning_models.labeler import Labeler
 from agent.learning_models.constants import UNKNOWN_LABEL
 from agent.db.data_classes.label import UnlabeledRecord
@@ -40,7 +43,6 @@ def run_transaction_labeling_job(job_id: str, transactions: list[dict], merchant
         if prediction["merchant_type"] == UNKNOWN_LABEL:
             unlabeled.append(UnlabeledRecord(
                 id=labeled_txn["id"], 
-                sheet_name=merchant_label_service.get_worksheet(), 
                 description=labeled_txn["description"],
                 normalized_description=labeled_txn["normalized_description"],
                 predicted_label=labeled_txn["predicted_label"],
@@ -64,12 +66,12 @@ def run_transaction_labeling_job(job_id: str, transactions: list[dict], merchant
 
     add_labels(merchant_label_service.get_worksheet(), labeled)
 
-    unlabel_repo = UnlabeledRecordRepository(merchant_label_service.get_label_sheet())
+    unlabel_repo = UnlabeledRecordRepository(Depends(get_db_session), "transaction")
     all_unlabeled = unlabeled + unlabel_repo.get_records()
     unlabel_repo.insert_many(unlabeled, merchant_label_service.get_label_header())
-    unlabel_group_repo = UnlabeledRecordRepository(merchant_label_service.get_label_group_sheet())
+    # unlabel_group_repo = UnlabeledRecordRepository(merchant_label_service.get_label_group_sheet())
     all_unlabeled = rerank(all_unlabeled)
-    unlabel_group_repo.overwrite(all_unlabeled, merchant_label_service.get_label_header())
+    # unlabel_group_repo.overwrite(all_unlabeled, merchant_label_service.get_label_header())
 
 def rerank(records: list[UnlabeledRecord]) -> list[UnlabeledRecord]:
         grouped: dict[str, list[UnlabeledRecord]] = defaultdict(list)

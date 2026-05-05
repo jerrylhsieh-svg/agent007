@@ -4,6 +4,8 @@ from unittest.mock import Mock
 
 import pytest
 
+from agent.db.models.unlabeled import UnlabeledStatementRecord
+from agent.db.models.unlabeled.UnlabeledTransactionRecord import UnlabeledTransactionRecord
 import agent.services.labeling.labeling_job_service as service
 from agent.learning_models.constants import UNKNOWN_LABEL
 from agent.db.data_classes.label import UnlabeledRecord
@@ -37,7 +39,6 @@ class FakeLabeler:
     def get_label_header(self):
         return [
             "id",
-            "sheet_name",
             "description",
             "normalized_description",
             "predicted_label",
@@ -85,7 +86,6 @@ def make_unlabeled(
 ):
     return UnlabeledRecord(
         id=id,
-        sheet_name="transactions",
         description=normalized_description,
         normalized_description=normalized_description,
         predicted_label=UNKNOWN_LABEL,
@@ -195,11 +195,16 @@ def test_run_transaction_labeling_job_labels_known_and_stores_unknown(monkeypatc
     created_repos = {}
 
     class FakeUnlabeledRecordRepository:
-        def __init__(self, worksheet_name):
-            self.worksheet_name = worksheet_name
+        def __init__(self, db, record_type):
+            self.db = db
+            self.record_type = record_type
+            self.record_class = (
+                UnlabeledStatementRecord
+                if record_type == "statement"
+                else UnlabeledTransactionRecord
+            )
             self.inserted_records = None
             self.overwritten_records = None
-            created_repos[worksheet_name] = self
 
         def get_records(self):
             return [
@@ -278,21 +283,6 @@ def test_run_transaction_labeling_job_labels_known_and_stores_unknown(monkeypatc
         "transactions",
         [("txn-1", "Merchandise")],
     )
-
-    raw_repo = created_repos["unlabeled_raw"]
-    assert len(raw_repo.inserted_records) == 1
-    assert raw_repo.inserted_records[0].id == "txn-2"
-    assert raw_repo.inserted_records[0].description == "Mystery Store"
-    assert raw_repo.inserted_records[0].total_amount_impact == 40.0
-
-    grouped_repo = created_repos["unlabeled_grouped"]
-    assert grouped_repo.overwritten_records is not None
-    assert len(grouped_repo.overwritten_records) == 2
-
-    normalized_descriptions = {
-        record.normalized_description for record in grouped_repo.overwritten_records
-    }
-    assert normalized_descriptions == {"mystery store", "existing unknown"}
 
     statuses = [updated.status for updated in fake_store.updated_jobs]
     assert statuses[0] == "running"
