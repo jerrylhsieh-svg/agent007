@@ -42,8 +42,8 @@ class UnlabeledRecordRepository:
     def delete_record(self, record: UnlabeledRecord) -> None:
         rows = self.worksheet.get_all_records()
 
-        for index, row in enumerate(rows, start=2):
-            if row.get("record_id") == record.id:
+        for index, row in enumerate(rows, start=1):
+            if row.get("id") == record.id:
                 self.worksheet.delete_rows(index)
                 return
 

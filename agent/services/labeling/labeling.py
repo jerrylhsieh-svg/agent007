@@ -122,5 +122,5 @@ def _add_to_train_data(suggested_label, state, session_id):
     label_sessions.pop(session_id, None)
     return {
         "handled": True,
-        "reply": f"train_record description: {train_record.description},\n label: {train_record.label}\n, statement_type: {train_record.statement_type}\n has been added to train data."
+        "reply": f"train_record:\n description: {train_record.description},\n label: {train_record.label}\n, statement_type: {train_record.statement_type}\n has been added to train data."
     }
