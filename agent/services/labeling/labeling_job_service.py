@@ -7,7 +7,8 @@ from agent.db.session import get_db_session
 from agent.learning_models.labeler import Labeler
 from agent.learning_models.constants import UNKNOWN_LABEL
 from agent.db.data_classes.label import UnlabeledRecord
-from agent.repo.UnlabeledRecordRepository import UnlabeledRecordRepository
+from agent.repo.unlabeled_geoup_repository import UnlabeledGroupRepository
+from agent.repo.unlabeled_record_repository import UnlabeledRecordRepository
 from agent.services.constants_and_dependencies import labeling_store
 from agent.services.google_sheets import add_labels
 import logging
@@ -66,12 +67,12 @@ def run_transaction_labeling_job(job_id: str, transactions: list[dict], merchant
 
     add_labels(merchant_label_service.get_worksheet(), labeled)
 
-    unlabel_repo = UnlabeledRecordRepository(Depends(get_db_session), "transaction")
-    all_unlabeled = unlabeled + unlabel_repo.get_records()
-    unlabel_repo.insert_many(unlabeled, merchant_label_service.get_label_header())
-    # unlabel_group_repo = UnlabeledRecordRepository(merchant_label_service.get_label_group_sheet())
+    unlabel_repo = UnlabeledRecordRepository(Depends(get_db_session), merchant_label_service.file_type)
+    all_unlabeled = unlabeled +  unlabel_repo.get_records()
+    unlabel_repo.insert_many(unlabeled)
+    unlabel_group_repo = UnlabeledGroupRepository(Depends(get_db_session), merchant_label_service.file_type)
     all_unlabeled = rerank(all_unlabeled)
-    # unlabel_group_repo.overwrite(all_unlabeled, merchant_label_service.get_label_header())
+    unlabel_group_repo.upsert_many(all_unlabeled)
 
 def rerank(records: list[UnlabeledRecord]) -> list[UnlabeledRecord]:
         grouped: dict[str, list[UnlabeledRecord]] = defaultdict(list)

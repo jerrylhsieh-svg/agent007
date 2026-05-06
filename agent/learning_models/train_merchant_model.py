@@ -12,7 +12,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 
 from agent.learning_models.constants import BASE_DIR, TRAINING_CONFIG
-from agent.repo.TrainRecordRepository import TrainRecordRepository
+from agent.repo.train_record_repository import TrainRecordRepository
 
 
 def normalize_description(text: str) -> str:

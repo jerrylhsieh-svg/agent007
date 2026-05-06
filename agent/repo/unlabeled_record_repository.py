@@ -22,12 +22,12 @@ class UnlabeledRecordRepository:
         db_records = [
             self.record_class(
                 id=record.id,
-                record_type=self.record_type,
                 description=record.description,
                 normalized_description=record.normalized_description,
                 amount=record.total_amount_impact,
                 predicted_label=record.predicted_label,
                 confidence=record.confidence,
+                priority_score=record.priority_score,
             )
             for record in records
         ]
@@ -35,8 +35,8 @@ class UnlabeledRecordRepository:
         self.db.add_all(db_records)
         self.db.commit()
 
-    def get_records(self) -> list[UnlabeledRecord] | None:
-        stmt = select(self.record_class).order_by(self.record_class.date)
+    def get_records(self) -> list[UnlabeledRecord]:
+        stmt = select(self.record_class).order_by(self.record_class.priority_score)
         rows = self.db.scalars(stmt).all()
 
         return [
@@ -47,6 +47,8 @@ class UnlabeledRecordRepository:
                 total_amount_impact=row.amount,
                 predicted_label=row.predicted_label,
                 confidence=row.confidence,
+                priority_score=row.priority_score,
+                similar_count=1,
             )
             for row in rows
         ]
@@ -64,6 +66,8 @@ class UnlabeledRecordRepository:
             total_amount_impact=row.amount,
             predicted_label=row.predicted_label,
             confidence=row.confidence,
+            priority_score=row.priority_score,
+            similar_count=1,
         )
 
     def update_record(self, record: UnlabeledRecord) -> None:
@@ -72,12 +76,13 @@ class UnlabeledRecordRepository:
         if row is None:
             raise ValueError(f"{self.record_type} record with id={record.id} not found")
 
-        row.id=record.id,
-        row.description=record.description,
-        row.normalized_description=record.normalized_description,
-        row.amount=record.total_amount_impact,
-        row.predicted_label=record.predicted_label,
-        row.confidence=record.confidence,
+        row.id=record.id
+        row.description=record.description
+        row.normalized_description=record.normalized_description
+        row.amount=record.total_amount_impact
+        row.predicted_label=record.predicted_label
+        row.confidence=record.confidence
+        row.priority_score=record.priority_score
 
         self.db.commit()
 
