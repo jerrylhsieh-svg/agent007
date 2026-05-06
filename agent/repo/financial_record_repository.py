@@ -3,8 +3,8 @@ from typing import Literal
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from agent.db.models.BankStatementRecord import BankStatementRecord
-from agent.db.models.TransactionRecord import TransactionRecord
+from agent.db.models.financial_records.BankStatementRecord import BankStatementRecord
+from agent.db.models.financial_records.TransactionRecord import TransactionRecord
 from agent.db.data_classes.pdf_models import FinancialRecordRow
 
 
