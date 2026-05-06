@@ -13,8 +13,8 @@ class BankStatementAnalyzer(BaseFinancialAnalyzer):
     def summarize(self) -> dict[str, Any]:
         working = self.df
 
-        withdraw = working[working["statement_type"] == "withdraw"].copy()
-        deposit = working[working["statement_type"] == "deposit"].copy()
+        withdraw = working[working["amount"] < 0].copy()
+        deposit = working[working["amount"] >= 0].copy()
 
         total_withdraw = round(abs(float(withdraw["amount"].sum())), 2) if not withdraw.empty else 0.0
         total_deposit = round(float(deposit["amount"].sum()), 2) if not deposit.empty else 0.0

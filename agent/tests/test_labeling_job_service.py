@@ -94,6 +94,7 @@ def make_unlabeled(
         priority_score=0.0,
         similar_count=similar_count,
         total_amount_impact=total_amount_impact,
+        record_type="statement",
     )
 
 

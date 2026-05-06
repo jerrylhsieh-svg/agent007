@@ -51,6 +51,7 @@ def run_transaction_labeling_job(job_id: str, transactions: list[dict], merchant
                 priority_score=0.0,
                 similar_count=1,
                 total_amount_impact=labeled_txn["amount"],
+                record_type=merchant_label_service.file_type,
                 )
             )
         else:

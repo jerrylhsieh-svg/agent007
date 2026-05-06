@@ -29,6 +29,7 @@ class UnlabeledGroupRepository:
                 confidence=record.confidence,
                 priority_score=record.priority_score,
                 similar_count=record.similar_count,
+                record_type=self.record_type,
             )
             for record in records
         ]
@@ -50,6 +51,7 @@ class UnlabeledGroupRepository:
                 confidence=row.confidence,
                 priority_score=row.priority_score,
                 similar_count=row.similar_count,
+                record_type=self.record_type,
             )
             for row in rows
         ]
@@ -69,6 +71,7 @@ class UnlabeledGroupRepository:
             confidence=row.confidence,
             priority_score=row.priority_score,
             similar_count=row.similar_count,
+            record_type=self.record_type,
         )
     
     def yield_record_by_score(self) -> UnlabeledRecord | None:
@@ -86,6 +89,7 @@ class UnlabeledGroupRepository:
             confidence=row.confidence,
             priority_score=row.priority_score,
             similar_count=row.similar_count,
+            record_type=self.record_type,
         )
 
     def update_record(self, record: UnlabeledRecord) -> None:

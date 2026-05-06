@@ -49,6 +49,7 @@ class UnlabeledRecordRepository:
                 confidence=row.confidence,
                 priority_score=row.priority_score,
                 similar_count=1,
+                record_type=self.record_type,
             )
             for row in rows
         ]
@@ -68,6 +69,7 @@ class UnlabeledRecordRepository:
             confidence=row.confidence,
             priority_score=row.priority_score,
             similar_count=1,
+            record_type=self.record_type,
         )
 
     def update_record(self, record: UnlabeledRecord) -> None:

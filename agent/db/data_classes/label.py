@@ -28,6 +28,7 @@ class UnlabeledRecord:
     priority_score: float
     similar_count: int
     total_amount_impact: float
+    record_type: str
 
 @dataclass(frozen=True)
 class LabelSuggested:
