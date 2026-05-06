@@ -5,10 +5,9 @@ from agent.db.session import Base
 
 
 
-class BankStatementTrained(Base):
-    __tablename__ = "bank_statement_trained"
+class TransactionTrained(Base):
+    __tablename__ = "transaction_trained"
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
 
     description: Mapped[str] = mapped_column(Text, nullable=False)
     label: Mapped[str] = mapped_column(String(100), nullable=False, default="")
-    statement_type: Mapped[str] = mapped_column(String(100), nullable=False, default="")

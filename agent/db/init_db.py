@@ -4,6 +4,8 @@ from agent.db.models.unlabeled.UnlabeledStatementGroup import UnlabeledStatement
 from agent.db.models.unlabeled.UnlabeledTransactionGroup import UnlabeledTransactionGroup
 from agent.db.models.unlabeled.UnlabeledStatementRecord import UnlabeledStatementnRecord
 from agent.db.models.unlabeled.UnlabeledTransactionRecord import UnlabeledTransactionRecord
+from agent.db.models.trained.BankStatementTrained import BankStatementTrained
+from agent.db.models.trained.TransactionTrained import TransactionTrained
 
 from agent.db.session import Base, engine
 
