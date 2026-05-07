@@ -6,6 +6,7 @@ from fastapi.templating import Jinja2Templates
 
 from agent.db.init_db import init_db
 from agent.routes.routes import router
+from agent.routes.labeling_routes import router as labeling_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -20,3 +21,4 @@ templates = Jinja2Templates(directory="agent/templates")
 app.state.templates = templates
 
 app.include_router(router)
+app.include_router(labeling_router)

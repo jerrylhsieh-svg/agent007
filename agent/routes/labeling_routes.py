@@ -1,5 +1,3 @@
-# agent/api/labeling_routes.py
-
 from fastapi import APIRouter, HTTPException
 
 from agent.services.constants_and_dependencies import labeling_store
