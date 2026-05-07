@@ -40,7 +40,8 @@ class LabelSuggested:
 class TrainRecord:
     description: str 
     label: str
-    statement_type: str | None = None
+    statement_type: str = ""
+    id: int | None = None
 
 class InMemoryLabelingStore:
     def __init__(self) -> None:

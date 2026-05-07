@@ -3,6 +3,7 @@ import re
 from typing import Any, Literal
 
 
+from fastapi import Depends
 import joblib
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -11,6 +12,7 @@ from sklearn.metrics import classification_report
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 
+from agent.db.session import get_db_session
 from agent.learning_models.constants import BASE_DIR, TRAINING_CONFIG
 from agent.repo.train_record_repository import TrainRecordRepository
 
@@ -70,7 +72,7 @@ def get_and_clean(df: pd.DataFrame, file_type: str, config: dict[str, Any]) -> p
 def train(file_type: Literal["transaction", "statement"]) -> str:
     ARTIFACT_PATH = BASE_DIR / file_type / "artifacts" / "merchant_classifier.joblib"
     config = TRAINING_CONFIG[file_type]
-    train_repo = TrainRecordRepository(config["worksheet"])
+    train_repo = TrainRecordRepository(Depends(get_db_session), file_type)
     df = train_repo.to_df()
     cleaned_df = get_and_clean(df, file_type, config)
 
