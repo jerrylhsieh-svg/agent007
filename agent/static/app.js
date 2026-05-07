@@ -4,9 +4,9 @@ const inputEl = document.getElementById("message-input");
 const sendButtonEl = document.getElementById("send-button");
 const statusEl = document.getElementById("status");
 const sessionId = crypto.randomUUID();
-const pdfInput = document.getElementById("pdf-file");
-const uploadPdfBtn = document.getElementById("upload-btn");
-const pdfForm = document.getElementById("pdf-form");
+const fileInput = document.getElementById("ile");
+const uploadBtn = document.getElementById("upload-btn");
+const fileForm = document.getElementById("file-form");
 
 const history = [];
 
@@ -30,9 +30,9 @@ function setLoading(isLoading) {
 }
 
 function setUploading(isLoading) {
-  pdfInput.disabled = isLoading;
-  uploadPdfBtn.disabled = isLoading;
-  uploadPdfBtn.textContent = isLoading ? "Uploading..." : "Upload PDF";
+  fileInput.disabled = isLoading;
+  uploadBtn.disabled = isLoading;
+  uploadBtn.textContent = isLoading ? "Uploading..." : "Upload file";
 }
 
 async function checkHealth() {
@@ -47,27 +47,35 @@ async function checkHealth() {
   }
 }
 
-pdfInput.addEventListener("change", () => {
-  const file = pdfInput.files[0];
+fileInput.addEventListener("change", () => {
+  const file = fileInput.files[0];
   fileNameEl.textContent = file ? file.name : "";
 });
 
-uploadPdfBtn.addEventListener("click", async (e) => {
+uploadBtn.addEventListener("click", async (e) => {
   e.preventDefault();
 
-  const file = pdfInput?.files?.[0];
+  const file = fileInput?.files?.[0];
   if (!file) {
-    addMessage("assistant", "Please choose a PDF first.");
+    addMessage("assistant", "Please choose a file first.");
     return;
   }
 
   const formData = new FormData();
   formData.append("file", file);
 
+  const ext = getFileExtension(file.name);
+  let url;
+  if (ext === "pdf") {
+    url = "/pdf/extract";
+  } else {
+    url = `/training/upload-labeled-csv`;
+  }
+
   try {
     setLoading(true);
     setUploading(true);
-    const response = await fetch("/pdf/extract", {
+    const response = await fetch(url, {
       method: "POST",
       body: formData,
     });
@@ -75,7 +83,7 @@ uploadPdfBtn.addEventListener("click", async (e) => {
     const data = await response.json();
 
     if (!response.ok) {
-      addMessage("assistant", `PDF upload failed: ${data.detail || "Unknown error"}`);
+      addMessage("assistant", `File upload failed: ${data.detail || "Unknown error"}`);
       return;
     }
 
@@ -83,9 +91,9 @@ uploadPdfBtn.addEventListener("click", async (e) => {
       "assistant",
       `Uploaded ${data.filename || file.name} successfully.`
     );
-    pdfForm.reset();
+    fileForm.reset();
   } catch (err) {
-    addMessage("assistant", `PDF upload failed: ${err.message}`);
+    addMessage("assistant", `File upload failed: ${err.message}`);
   } finally {
     setLoading(false);
     setUploading(false);
