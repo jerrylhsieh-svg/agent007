@@ -62,5 +62,4 @@ async def upload_labeled_csv(
     return {
         "message": "Labeled CSV uploaded successfully",
         "inserted": result["inserted"],
-        "skipped": result["skipped"],
     }

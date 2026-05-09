@@ -4,7 +4,7 @@ const inputEl = document.getElementById("message-input");
 const sendButtonEl = document.getElementById("send-button");
 const statusEl = document.getElementById("status");
 const sessionId = crypto.randomUUID();
-const fileInput = document.getElementById("ile");
+const fileInput = document.getElementById("file-file");
 const uploadBtn = document.getElementById("upload-btn");
 const fileForm = document.getElementById("file-form");
 
@@ -69,7 +69,8 @@ uploadBtn.addEventListener("click", async (e) => {
   if (ext === "pdf") {
     url = "/pdf/extract";
   } else {
-    url = `/training/upload-labeled-csv`;
+    url = "/training/upload-labeled-csv";
+    
   }
 
   try {
