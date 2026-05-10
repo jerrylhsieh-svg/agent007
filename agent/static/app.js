@@ -35,6 +35,10 @@ function setUploading(isLoading) {
   uploadBtn.textContent = isLoading ? "Uploading..." : "Upload file";
 }
 
+function getFileExtension(filename) {
+  return filename.split(".").pop().toLowerCase();
+}
+
 async function checkHealth() {
   try {
     const res = await fetch("/health");
@@ -47,11 +51,6 @@ async function checkHealth() {
   }
 }
 
-fileInput.addEventListener("change", () => {
-  const file = fileInput.files[0];
-  fileNameEl.textContent = file ? file.name : "";
-});
-
 uploadBtn.addEventListener("click", async (e) => {
   e.preventDefault();
 
@@ -60,6 +59,8 @@ uploadBtn.addEventListener("click", async (e) => {
     addMessage("assistant", "Please choose a file first.");
     return;
   }
+
+  addMessage("assistant", "Processing the file");
 
   const formData = new FormData();
   formData.append("file", file);
