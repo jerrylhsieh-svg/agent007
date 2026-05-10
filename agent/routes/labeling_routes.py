@@ -1,8 +1,7 @@
-from multiprocessing.resource_tracker import getfd
-
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from sqlalchemy.orm import Session
 
+from agent.db.session import get_db_session
 from agent.services.constants_and_dependencies import labeling_store
 from agent.services.labeling.labeled_csv_upload_service import LabeledCsvUploadService
 
@@ -49,7 +48,7 @@ def get_labeling_result(job_id: str):
 @router.post("/training/upload-labeled-csv")
 async def upload_labeled_csv(
     file: UploadFile = File(...),
-    db: Session = Depends(getfd),
+    db: Session = Depends(get_db_session),
 ) -> dict[str, int | str]:
     if not file.filename or not file.filename.endswith(".csv"):
         raise HTTPException(status_code=400, detail="File must be a CSV")
