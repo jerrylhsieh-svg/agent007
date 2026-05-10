@@ -12,8 +12,6 @@ from agent.db.models.trained.TransactionTrained import TransactionTrained
 RecordType = Literal["transaction", "statement"]
 
 class TrainRecordRepository:
-    
-
 
     def __init__(self, db: Session, record_type: RecordType):
         self.db = db
