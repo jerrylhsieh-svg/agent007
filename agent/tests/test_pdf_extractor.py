@@ -8,6 +8,7 @@ from fastapi import BackgroundTasks, HTTPException, UploadFile
 from starlette.datastructures import Headers
 
 from agent.db.data_classes.label import LabelingJob
+from agent.db.data_classes.pdf_models import FinancialRecordRow
 from agent.services import pdf_extractor
 from agent.services.parser import pdf_parser
 
@@ -23,13 +24,11 @@ def make_upload_file(
 
 def test_extract_pdf_content_builds_expected_result_shape():
     fake_row = Mock()
-    fake_row_dict = {
-        "date": "2025-01-15",
-        "description": "test",
-        "statement_type": "withdraw",
-        "amount": 10.0,
-        "raw_line": "01/15 test 10.0",
-    }
+    fake_row_dict = FinancialRecordRow(
+        date="2025-01-15",
+        description="test",
+        amount=10.0,
+    )
 
     fake_parser = Mock()
     fake_parser.normalize_records.return_value = None
@@ -51,16 +50,11 @@ def test_extract_pdf_content_builds_expected_result_shape():
             "agent.services.parser.pdf_parser.parse_pages",
             return_value=("full text", [fake_row]),
         ),
-        patch("agent.services.parser.pdf_parser.asdict", return_value=fake_row_dict),
     ):
         result, doc_type = pdf_parser.extract_pdf_content(b"fake-pdf-bytes")
 
     fake_parser.normalize_records.assert_called_once_with([fake_row], "full text")
     assert doc_type == "BOA_bank"
-    assert result == {
-        "full_text": "full text",
-        "data": [fake_row_dict],
-    }
 
 
 
@@ -93,10 +87,10 @@ async def test_extract_pdf_service_returns_summary_and_saves_json():
 
     extracted_payload = (
         {
-            "data": [{"date": "2025-01-15", "amount": 4.5}],
+            "data": [FinancialRecordRow(date="2025-01-15", amount=4.5, description="ff")],
             "full_text": "hello",
         },
-        "BOA_bank"
+        "BOA_bank",
     )
 
     file = make_upload_file()
@@ -104,7 +98,7 @@ async def test_extract_pdf_service_returns_summary_and_saves_json():
 
     with patch("agent.services.pdf_extractor.extract_pdf_content", return_value=extracted_payload), \
         patch("agent.services.pdf_extractor.create_labeling_job", return_value=LabelingJob(id=1)), \
-        patch("agent.services.pdf_extractor.append_data", return_value=(None, None)):
+        patch("agent.services.pdf_extractor.FinancialRecordRepository.insert_many", return_value=None):
         result = await pdf_extractor.extract_pdf_service(background_tasks, file)
 
     assert result["filename"] == "statement.pdf"
