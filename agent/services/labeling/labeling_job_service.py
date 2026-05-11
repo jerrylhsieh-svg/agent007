@@ -12,7 +12,6 @@ from agent.repo.financial_record_repository import FinancialRecordRepository
 from agent.repo.unlabeled_geoup_repository import UnlabeledGroupRepository
 from agent.repo.unlabeled_record_repository import UnlabeledRecordRepository
 from agent.services.constants_and_dependencies import labeling_store
-from agent.services.google_sheets import add_labels
 import logging
 
 logger = logging.getLogger(__name__)
@@ -52,7 +51,7 @@ def run_transaction_labeling_job(job_id: str, transactions: list[FinancialRecord
             transaction.label = prediction["merchant_type"]
             repo.update_record(transaction)
 
-        labeled_results.append(transaction)
+        labeled_results.append(asdict(transaction))
 
         job.processed_records += 1
         job.result = labeled_results
