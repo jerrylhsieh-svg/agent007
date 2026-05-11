@@ -4,12 +4,11 @@ from collections import Counter
 from typing import Any
 
 from agent.services.analyzer.base_financial_analyzer import BaseFinancialAnalyzer
-from agent.services.constants_and_dependencies import GSHEET_TRANSACTIONS_TAB
 from agent.services.helper import thirty_days_avg
 
 
 class CreditCardTransactionAnalyzer(BaseFinancialAnalyzer):
-    worksheet_name = GSHEET_TRANSACTIONS_TAB
+    file_type = "transaction"
 
     def summarize(self) -> dict[str, Any]:
         working = self.df

@@ -36,7 +36,7 @@ class FinancialRecordRepository:
         self.db.add_all(db_records)
         self.db.commit()
 
-    def get_records(self) -> list[FinancialRecordRow] | None:
+    def get_records(self) -> list[FinancialRecordRow]:
         stmt = select(self.record_class).order_by(self.record_class.date)
         rows = self.db.scalars(stmt).all()
 

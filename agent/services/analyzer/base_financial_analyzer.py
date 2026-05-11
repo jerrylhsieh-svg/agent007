@@ -1,25 +1,29 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from dataclasses import asdict
 from functools import cached_property
 from typing import Any
 
+from fastapi import Depends
 import pandas as pd
 
+from agent.db.session import get_db_session
+from agent.repo.financial_record_repository import FinancialRecordRepository
 from agent.services.chat.call_model import call_model
-from agent.services.google_sheets import read_transactions_df
-from agent.services.constants_and_dependencies import GSHEET_NAME
 
 
 class BaseFinancialAnalyzer(ABC):
-    worksheet_name: str
+    file_type: str
+
+    def __init__(self):
+        self.repo = FinancialRecordRepository(Depends(get_db_session), self.file_type)
+        
 
     @cached_property
     def raw_df(self) -> pd.DataFrame:
-        return read_transactions_df(
-            spreadsheet_name=GSHEET_NAME,
-            worksheet_name=self.worksheet_name,
-        )
+        return pd.DataFrame([asdict(record) for record in self.repo.get_records()])
+
 
     @cached_property
     def df(self) -> pd.DataFrame:

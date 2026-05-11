@@ -1,14 +1,48 @@
 import pandas as pd
 import pytest
+from dataclasses import dataclass
 
 from agent.services.analyzer.base_financial_analyzer import BaseFinancialAnalyzer
 
 
+@dataclass
+class FakeFinancialRecordRow:
+    id: str
+    date: pd.Timestamp | None
+    description: str
+    amount: object
+    label: str | None = None
+
+
+class FakeFinancialRecordRepository:
+    calls: list[str] = []
+    records: list[FakeFinancialRecordRow] = []
+
+    def __init__(self, db, file_type):
+        self.db = db
+        self.file_type = file_type
+
+    def get_records(self) -> list[FakeFinancialRecordRow]:
+        FakeFinancialRecordRepository.calls.append(self.file_type)
+        return FakeFinancialRecordRepository.records
+
+
 class DummyAnalyzer(BaseFinancialAnalyzer):
-    worksheet_name = "test_sheet"
+    file_type = "test_file"
 
     def summarize(self):
         return {"ok": True}
+
+
+@pytest.fixture(autouse=True)
+def patch_financial_record_repository(monkeypatch):
+    FakeFinancialRecordRepository.calls = []
+    FakeFinancialRecordRepository.records = []
+
+    monkeypatch.setattr(
+        "agent.services.analyzer.base_financial_analyzer.FinancialRecordRepository",
+        FakeFinancialRecordRepository,
+    )
 
 
 def test_base_class_cannot_be_instantiated():
@@ -16,17 +50,16 @@ def test_base_class_cannot_be_instantiated():
         BaseFinancialAnalyzer()
 
 
-def test_raw_df_reads_from_google_sheets_once(monkeypatch):
-    calls = []
-
-    def fake_read_transactions_df(*, spreadsheet_name, worksheet_name):
-        calls.append((spreadsheet_name, worksheet_name))
-        return pd.DataFrame({"amount": [1], "date": [pd.Timestamp("2025-01-01")]})
-
-    monkeypatch.setattr(
-        "agent.services.analyzer.base_financial_analyzer.read_transactions_df",
-        fake_read_transactions_df,
-    )
+def test_raw_df_reads_from_db_once():
+    FakeFinancialRecordRepository.records = [
+        FakeFinancialRecordRow(
+            id="1",
+            date=pd.Timestamp("2025-01-01"),
+            description="Coffee",
+            amount=1,
+            label="Food",
+        )
+    ]
 
     analyzer = DummyAnalyzer()
 
@@ -35,22 +68,35 @@ def test_raw_df_reads_from_google_sheets_once(monkeypatch):
 
     assert not df1.empty
     assert df1 is df2
-    assert len(calls) == 1
-    assert calls[0][1] == "test_sheet"
+    assert len(FakeFinancialRecordRepository.calls) == 1
+    assert FakeFinancialRecordRepository.calls[0] == "test_file"
+    assert list(df1["amount"]) == [1]
 
 
-def test_df_normalizes_raw_df_once(monkeypatch):
-    raw = pd.DataFrame(
-        {
-            "amount": ["10.5", "bad", "20"],
-            "date": [pd.Timestamp("2025-01-01")] * 3,
-        }
-    )
-
-    monkeypatch.setattr(
-        "agent.services.analyzer.base_financial_analyzer.read_transactions_df",
-        lambda **kwargs: raw,
-    )
+def test_df_normalizes_raw_df_once():
+    FakeFinancialRecordRepository.records = [
+        FakeFinancialRecordRow(
+            id="1",
+            date=pd.Timestamp("2025-01-01"),
+            description="Good row",
+            amount="10.5",
+            label="Food",
+        ),
+        FakeFinancialRecordRow(
+            id="2",
+            date=pd.Timestamp("2025-01-01"),
+            description="Bad row",
+            amount="bad",
+            label="Food",
+        ),
+        FakeFinancialRecordRow(
+            id="3",
+            date=pd.Timestamp("2025-01-01"),
+            description="Another good row",
+            amount="20",
+            label="Food",
+        ),
+    ]
 
     analyzer = DummyAnalyzer()
 
@@ -94,11 +140,8 @@ def test_coerce_common_types_raises_when_amount_column_missing():
         analyzer._coerce_common_types(df)
 
 
-def test_total_days_returns_1_when_df_empty(monkeypatch):
-    monkeypatch.setattr(
-        "agent.services.analyzer.base_financial_analyzer.read_transactions_df",
-        lambda **kwargs: pd.DataFrame(),
-    )
+def test_total_days_returns_1_when_df_empty():
+    FakeFinancialRecordRepository.records = []
 
     analyzer = DummyAnalyzer()
 
@@ -106,74 +149,96 @@ def test_total_days_returns_1_when_df_empty(monkeypatch):
 
 
 def test_total_days_returns_1_when_date_column_missing(monkeypatch):
+    analyzer = DummyAnalyzer()
+
     monkeypatch.setattr(
-        "agent.services.analyzer.base_financial_analyzer.read_transactions_df",
-        lambda **kwargs: pd.DataFrame({"amount": [1, 2]}),
+        analyzer,
+        "raw_df",
+        pd.DataFrame({"amount": [1, 2]}),
     )
+
+    assert analyzer.total_days == 1
+
+
+def test_total_days_returns_1_when_dates_are_same():
+    FakeFinancialRecordRepository.records = [
+        FakeFinancialRecordRow(
+            id="1",
+            date=pd.Timestamp("2025-01-10"),
+            description="A",
+            amount=1,
+            label=None,
+        ),
+        FakeFinancialRecordRow(
+            id="2",
+            date=pd.Timestamp("2025-01-10"),
+            description="B",
+            amount=2,
+            label=None,
+        ),
+    ]
 
     analyzer = DummyAnalyzer()
 
     assert analyzer.total_days == 1
 
 
-def test_total_days_returns_1_when_dates_are_same(monkeypatch):
-    monkeypatch.setattr(
-        "agent.services.analyzer.base_financial_analyzer.read_transactions_df",
-        lambda **kwargs: pd.DataFrame(
-            {
-                "amount": [1, 2],
-                "date": [pd.Timestamp("2025-01-10"), pd.Timestamp("2025-01-10")],
-            }
+def test_total_days_returns_date_difference_when_greater_than_one():
+    FakeFinancialRecordRepository.records = [
+        FakeFinancialRecordRow(
+            id="1",
+            date=pd.Timestamp("2025-01-01"),
+            description="A",
+            amount=1,
+            label=None,
         ),
-    )
-
-    analyzer = DummyAnalyzer()
-
-    assert analyzer.total_days == 1
-
-
-def test_total_days_returns_date_difference_when_greater_than_one(monkeypatch):
-    monkeypatch.setattr(
-        "agent.services.analyzer.base_financial_analyzer.read_transactions_df",
-        lambda **kwargs: pd.DataFrame(
-            {
-                "amount": [1, 2],
-                "date": [pd.Timestamp("2025-01-01"), pd.Timestamp("2025-01-10")],
-            }
+        FakeFinancialRecordRow(
+            id="2",
+            date=pd.Timestamp("2025-01-10"),
+            description="B",
+            amount=2,
+            label=None,
         ),
-    )
+    ]
 
     analyzer = DummyAnalyzer()
 
     assert analyzer.total_days == 9
 
 
-def test_total_days_returns_1_when_min_or_max_date_is_na(monkeypatch):
-    monkeypatch.setattr(
-        "agent.services.analyzer.base_financial_analyzer.read_transactions_df",
-        lambda **kwargs: pd.DataFrame(
-            {
-                "amount": [1],
-                "date": [pd.NaT],
-            }
-        ),
-    )
+def test_total_days_returns_1_when_min_or_max_date_is_na():
+    FakeFinancialRecordRepository.records = [
+        FakeFinancialRecordRow(
+            id="1",
+            date=pd.NaT,
+            description="A",
+            amount=1,
+            label=None,
+        )
+    ]
 
     analyzer = DummyAnalyzer()
 
     assert analyzer.total_days == 1
 
 
-def test_get_date_range_uses_self_df_by_default(monkeypatch):
-    monkeypatch.setattr(
-        "agent.services.analyzer.base_financial_analyzer.read_transactions_df",
-        lambda **kwargs: pd.DataFrame(
-            {
-                "amount": [1, 2],
-                "date": [pd.Timestamp("2025-02-01"), pd.Timestamp("2025-02-05")],
-            }
+def test_get_date_range_uses_self_df_by_default():
+    FakeFinancialRecordRepository.records = [
+        FakeFinancialRecordRow(
+            id="1",
+            date=pd.Timestamp("2025-02-01"),
+            description="A",
+            amount=1,
+            label=None,
         ),
-    )
+        FakeFinancialRecordRow(
+            id="2",
+            date=pd.Timestamp("2025-02-05"),
+            description="B",
+            amount=2,
+            label=None,
+        ),
+    ]
 
     analyzer = DummyAnalyzer()
 
@@ -183,16 +248,16 @@ def test_get_date_range_uses_self_df_by_default(monkeypatch):
     }
 
 
-def test_get_date_range_accepts_override_df(monkeypatch):
-    monkeypatch.setattr(
-        "agent.services.analyzer.base_financial_analyzer.read_transactions_df",
-        lambda **kwargs: pd.DataFrame(
-            {
-                "amount": [1],
-                "date": [pd.Timestamp("2025-01-01")],
-            }
-        ),
-    )
+def test_get_date_range_accepts_override_df():
+    FakeFinancialRecordRepository.records = [
+        FakeFinancialRecordRow(
+            id="1",
+            date=pd.Timestamp("2025-01-01"),
+            description="A",
+            amount=1,
+            label=None,
+        )
+    ]
 
     analyzer = DummyAnalyzer()
     override = pd.DataFrame(
@@ -208,11 +273,8 @@ def test_get_date_range_accepts_override_df(monkeypatch):
     }
 
 
-def test_get_date_range_returns_none_for_empty_or_missing_date(monkeypatch):
-    monkeypatch.setattr(
-        "agent.services.analyzer.base_financial_analyzer.read_transactions_df",
-        lambda **kwargs: pd.DataFrame(),
-    )
+def test_get_date_range_returns_none_for_empty_or_missing_date():
+    FakeFinancialRecordRepository.records = []
 
     analyzer = DummyAnalyzer()
 
@@ -223,16 +285,16 @@ def test_get_date_range_returns_none_for_empty_or_missing_date(monkeypatch):
     }
 
 
-def test_get_date_range_returns_none_when_dates_are_nat(monkeypatch):
-    monkeypatch.setattr(
-        "agent.services.analyzer.base_financial_analyzer.read_transactions_df",
-        lambda **kwargs: pd.DataFrame(
-            {
-                "amount": [1],
-                "date": [pd.NaT],
-            }
-        ),
-    )
+def test_get_date_range_returns_none_when_dates_are_nat():
+    FakeFinancialRecordRepository.records = [
+        FakeFinancialRecordRow(
+            id="1",
+            date=pd.NaT,
+            description="A",
+            amount=1,
+            label=None,
+        )
+    ]
 
     analyzer = DummyAnalyzer()
 
