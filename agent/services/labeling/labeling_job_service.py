@@ -3,10 +3,12 @@ from dataclasses import asdict
 
 from fastapi import Depends
 
+from agent.db.data_classes.pdf_models import FinancialRecordRow
 from agent.db.session import get_db_session
 from agent.learning_models.labeler import Labeler
 from agent.learning_models.constants import UNKNOWN_LABEL
 from agent.db.data_classes.label import UnlabeledRecord
+from agent.repo.financial_record_repository import FinancialRecordRepository
 from agent.repo.unlabeled_geoup_repository import UnlabeledGroupRepository
 from agent.repo.unlabeled_record_repository import UnlabeledRecordRepository
 from agent.services.constants_and_dependencies import labeling_store
@@ -18,7 +20,7 @@ logger = logging.getLogger(__name__)
 def create_labeling_job(data):
     return labeling_store.create_job(len(data))
 
-def run_transaction_labeling_job(job_id: str, transactions: list[dict], merchant_label_service: Labeler) -> None:
+def run_transaction_labeling_job(job_id: str, transactions: list[FinancialRecordRow], merchant_label_service: Labeler) -> None:
     job = labeling_store.get_job(job_id)
 
     if job is None:
@@ -26,38 +28,31 @@ def run_transaction_labeling_job(job_id: str, transactions: list[dict], merchant
     
     job.status = "running"
     labeling_store.update_job(job)
+    repo = FinancialRecordRepository(Depends(get_db_session), merchant_label_service.file_type)
 
     labeled_results: list[dict] = []
-    labeled, unlabeled = [], []
-    for txn in transactions:
-        prediction = asdict(merchant_label_service.predict_one(txn["description"]))
-
-        labeled_txn = {
-            **txn,
-            "label": prediction["merchant_type"],
-            "confidence": prediction["confidence"],
-            "source": prediction["source"],
-            "normalized_description": prediction["normalized_description"],
-            "predicted_label": prediction["predicted_label"]
-        }
+    unlabeled = []
+    for transaction in transactions:
+        prediction = asdict(merchant_label_service.predict_one(transaction.description))
 
         if prediction["merchant_type"] == UNKNOWN_LABEL:
             unlabeled.append(UnlabeledRecord(
-                id=labeled_txn["id"], 
-                description=labeled_txn["description"],
-                normalized_description=labeled_txn["normalized_description"],
-                predicted_label=labeled_txn["predicted_label"],
-                confidence=labeled_txn["confidence"],
+                id=transaction.id, 
+                description=transaction.description,
+                normalized_description=prediction["normalized_description"],
+                predicted_label=prediction["predicted_label"],
+                confidence=prediction["confidence"],
                 priority_score=0.0,
                 similar_count=1,
-                total_amount_impact=labeled_txn["amount"],
+                total_amount_impact=transaction.amount,
                 record_type=merchant_label_service.file_type,
                 )
             )
         else:
-            labeled.append((labeled_txn["id"], labeled_txn["label"]))
+            transaction.label = prediction["merchant_type"]
+            repo.update_record(transaction)
 
-        labeled_results.append(labeled_txn)
+        labeled_results.append(transaction)
 
         job.processed_records += 1
         job.result = labeled_results
@@ -65,8 +60,6 @@ def run_transaction_labeling_job(job_id: str, transactions: list[dict], merchant
 
     job.status = "completed"
     labeling_store.update_job(job)
-
-    add_labels(merchant_label_service.get_worksheet(), labeled)
 
     unlabel_repo = UnlabeledRecordRepository(Depends(get_db_session), merchant_label_service.file_type)
     all_unlabeled = unlabeled +  unlabel_repo.get_records()

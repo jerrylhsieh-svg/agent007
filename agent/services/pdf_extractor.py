@@ -38,7 +38,7 @@ async def extract_pdf_service(background_tasks: BackgroundTasks, file: UploadFil
     background_tasks.add_task(
         run_transaction_labeling_job,
         job.id,
-        [asdict(row) for row in extracted["data"]],
+        extracted["data"],
         labeler,
     )
 
