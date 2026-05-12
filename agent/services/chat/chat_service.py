@@ -42,15 +42,15 @@ def get_reply(req: ChatRequest, db:Session) -> str:
     for triggers, handler, extra_kwargs in ROUTES:
         if contains_any_trigger(req.message, triggers):
             kwargs = {
-            "question": req.message,
-            "history": req.history,
-            **extra_kwargs,
-        }
+                "question": req.message,
+                "history": req.history,
+                **extra_kwargs,
+            }
 
-        if handler in {repredict_records, train_model}:
-            kwargs["db"] = db
+            if handler in {repredict_records, train_model}:
+                kwargs["db"] = db
 
-        return handler(**kwargs)
+            return handler(**kwargs)
 
 
     return call_model(req.message, req.history)

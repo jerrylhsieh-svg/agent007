@@ -119,13 +119,3 @@ Model training succeeded for {file_type}. Artifact is saved to {ARTIFACT_PATH}
 Here is the report:
 {classification_report(y_test, predictions)}
 """
-
-
-if __name__ == "__main__":
-    import argparse
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--file-type", required=True, help="file type")
-    args = parser.parse_args()
-
-    train(args.file_type)
