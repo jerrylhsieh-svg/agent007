@@ -8,3 +8,5 @@ secrets/
 .DS*
 data/
 artifacts/
+.vscode*
+.venv*
