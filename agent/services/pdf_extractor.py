@@ -39,7 +39,6 @@ async def extract_pdf_service(background_tasks: BackgroundTasks, file: UploadFil
         job.id,
         extracted["data"],
         labeler,
-        db,
     )
 
     return {

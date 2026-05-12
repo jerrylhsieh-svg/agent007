@@ -1,10 +1,9 @@
 from collections import defaultdict
 from dataclasses import asdict
 
-from sqlalchemy.orm import Session
-
 
 from agent.db.data_classes.pdf_models import FinancialRecordRow
+from agent.db.session import SessionLocal
 from agent.learning_models.labeler import Labeler
 from agent.learning_models.constants import UNKNOWN_LABEL
 from agent.db.data_classes.label import UnlabeledRecord
@@ -23,8 +22,8 @@ def run_transaction_labeling_job(
         job_id: str, 
         transactions: list[FinancialRecordRow], 
         merchant_label_service: Labeler, 
-        db: Session,
     ) -> None:
+    db = SessionLocal()
     job = labeling_store.get_job(job_id)
 
     if job is None:

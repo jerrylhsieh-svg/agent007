@@ -7,7 +7,7 @@ def normalize(text: str) -> str:
 
 def contains_any_trigger(message: str, triggers: Iterable[str]) -> bool:
     msg = normalize(message)
-    return any(trigger in msg for trigger in triggers)
+    return any(trigger == msg for trigger in triggers)
 
 def should_start_file_flow(message: str) -> bool:
     msg = normalize(message)
