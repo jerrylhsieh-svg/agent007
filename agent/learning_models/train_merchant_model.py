@@ -11,6 +11,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import classification_report
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
+from sqlalchemy.orm import Session
 
 from agent.db.session import get_db_session
 from agent.learning_models.constants import BASE_DIR, TRAINING_CONFIG
@@ -69,10 +70,10 @@ def get_and_clean(df: pd.DataFrame, file_type: str, config: dict[str, Any]) -> p
 
     return df
 
-def train(file_type: Literal["transaction", "statement"]) -> str:
+def train(file_type: Literal["transaction", "statement"], db:Session) -> str:
     ARTIFACT_PATH = BASE_DIR / file_type / "artifacts" / "merchant_classifier.joblib"
     config = TRAINING_CONFIG[file_type]
-    train_repo = TrainRecordRepository(Depends(get_db_session), file_type)
+    train_repo = TrainRecordRepository(db, file_type)
     df = train_repo.to_df()
     cleaned_df = get_and_clean(df, file_type, config)
 

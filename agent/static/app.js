@@ -60,8 +60,6 @@ uploadBtn.addEventListener("click", async (e) => {
     return;
   }
 
-  addMessage("assistant", "Processing the file");
-
   const formData = new FormData();
   formData.append("file", file);
 

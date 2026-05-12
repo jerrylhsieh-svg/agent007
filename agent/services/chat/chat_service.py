@@ -1,5 +1,7 @@
 from typing import Any, Callable, Iterable
 
+from sqlalchemy.orm import Session
+
 from agent.db.data_classes.chat import ChatRequest
 from agent.services.analyzer.bank_statement_analyzer import generate_bank_statement_summary, generate_bank_withdraw_summary
 from agent.services.analyzer.transaction_analyzer import generate_credit_card_summary
@@ -29,7 +31,7 @@ FLOW_ROUTES: list[Flow_Route] = [
     (IS_LABEL_TRIGGERS, handle_label_flow, label_sessions, {}),
 ]
 
-def get_reply(req: ChatRequest) -> str:
+def get_reply(req: ChatRequest, db:Session) -> str:
     for flow_triggers, flow_handler, session, flow_extra_kwargs in FLOW_ROUTES:
         if not contains_any_trigger(req.message, flow_triggers, **flow_extra_kwargs,) and req.session_id not in session:
             continue
@@ -39,10 +41,16 @@ def get_reply(req: ChatRequest) -> str:
 
     for triggers, handler, extra_kwargs in ROUTES:
         if contains_any_trigger(req.message, triggers):
-            return handler(
-                question=req.message,
-                history=req.history,
-                **extra_kwargs,
-            )
+            kwargs = {
+            "question": req.message,
+            "history": req.history,
+            **extra_kwargs,
+        }
+
+        if handler in {repredict_records, train_model}:
+            kwargs["db"] = db
+
+        return handler(**kwargs)
+
 
     return call_model(req.message, req.history)
