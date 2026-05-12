@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from sqlalchemy.orm import Session
+
 from agent.services.analyzer.base_financial_analyzer import BaseFinancialAnalyzer
 from agent.services.helper import thirty_days_avg
 
@@ -107,10 +109,11 @@ Use only the provided data. Be concrete and numeric.
 
 
 def generate_bank_statement_summary(
+    db: Session,
     question: str = "Generate a bank statement report.",
     history: list[dict] | None = None,
 ) -> str:
-    analyzer = BankStatementAnalyzer()
+    analyzer = BankStatementAnalyzer(db)
     summary = analyzer.summarize()
 
     if summary["row_count"] == 0:
@@ -121,10 +124,11 @@ def generate_bank_statement_summary(
 
 
 def generate_bank_withdraw_summary(
+    db: Session,
     question: str = "Generate a bank statement report.",
     history: list[dict] | None = None,
 ) -> str:
-    analyzer = BankStatementAnalyzer()
+    analyzer = BankStatementAnalyzer(db)
     withdraw = analyzer.summarize_withdraw()
 
     if withdraw["row_count"] == 0:

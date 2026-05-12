@@ -1,21 +1,21 @@
 from typing import Literal
 
-from fastapi import Depends
+from sqlalchemy.orm import Session
 
 from agent.learning_models.labeler import Labeler
 from agent.repo.financial_record_repository import FinancialRecordRepository
-from agent.db.session import get_db_session
 from agent.services.chat.call_model import call_model
 
 
 def repredict_records(
     question: str,
     file_type: Literal["transaction", "statement"],
+    db: Session,
     history: list[dict] | None = None,
 ) -> str:
     
     predictor = Labeler(file_type=file_type)
-    repo = FinancialRecordRepository(Depends(get_db_session), file_type)
+    repo = FinancialRecordRepository(db, file_type)
 
     records = repo.get_records()
 

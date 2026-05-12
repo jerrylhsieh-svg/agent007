@@ -1,10 +1,8 @@
 from __future__ import annotations
-from dataclasses import asdict
 
-from fastapi import BackgroundTasks, Depends, HTTPException, UploadFile
+from fastapi import BackgroundTasks, HTTPException, UploadFile
 from sqlalchemy.orm import Session
 
-from agent.db.session import get_db_session
 from agent.learning_models.labeler import Labeler
 from agent.repo.financial_record_repository import FinancialRecordRepository
 from agent.services.labeling.labeling_job_service import create_labeling_job, run_transaction_labeling_job
@@ -41,6 +39,7 @@ async def extract_pdf_service(background_tasks: BackgroundTasks, file: UploadFil
         job.id,
         extracted["data"],
         labeler,
+        db,
     )
 
     return {

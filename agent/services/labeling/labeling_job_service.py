@@ -1,10 +1,10 @@
 from collections import defaultdict
 from dataclasses import asdict
 
-from fastapi import Depends
+from sqlalchemy.orm import Session
+
 
 from agent.db.data_classes.pdf_models import FinancialRecordRow
-from agent.db.session import get_db_session
 from agent.learning_models.labeler import Labeler
 from agent.learning_models.constants import UNKNOWN_LABEL
 from agent.db.data_classes.label import UnlabeledRecord
@@ -19,7 +19,12 @@ logger = logging.getLogger(__name__)
 def create_labeling_job(data):
     return labeling_store.create_job(len(data))
 
-def run_transaction_labeling_job(job_id: str, transactions: list[FinancialRecordRow], merchant_label_service: Labeler) -> None:
+def run_transaction_labeling_job(
+        job_id: str, 
+        transactions: list[FinancialRecordRow], 
+        merchant_label_service: Labeler, 
+        db: Session,
+    ) -> None:
     job = labeling_store.get_job(job_id)
 
     if job is None:
@@ -27,7 +32,7 @@ def run_transaction_labeling_job(job_id: str, transactions: list[FinancialRecord
     
     job.status = "running"
     labeling_store.update_job(job)
-    repo = FinancialRecordRepository(Depends(get_db_session), merchant_label_service.file_type)
+    repo = FinancialRecordRepository(db, merchant_label_service.file_type)
 
     labeled_results: list[dict] = []
     unlabeled = []
@@ -60,10 +65,10 @@ def run_transaction_labeling_job(job_id: str, transactions: list[FinancialRecord
     job.status = "completed"
     labeling_store.update_job(job)
 
-    unlabel_repo = UnlabeledRecordRepository(Depends(get_db_session), merchant_label_service.file_type)
+    unlabel_repo = UnlabeledRecordRepository(db, merchant_label_service.file_type)
     all_unlabeled = unlabeled +  unlabel_repo.get_records()
     unlabel_repo.insert_many(unlabeled)
-    unlabel_group_repo = UnlabeledGroupRepository(Depends(get_db_session), merchant_label_service.file_type)
+    unlabel_group_repo = UnlabeledGroupRepository(db, merchant_label_service.file_type)
     all_unlabeled = rerank(all_unlabeled)
     unlabel_group_repo.upsert_many(all_unlabeled)
 

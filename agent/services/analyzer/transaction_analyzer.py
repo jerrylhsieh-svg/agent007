@@ -3,6 +3,8 @@ from __future__ import annotations
 from collections import Counter
 from typing import Any
 
+from sqlalchemy.orm import Session
+
 from agent.services.analyzer.base_financial_analyzer import BaseFinancialAnalyzer
 from agent.services.helper import thirty_days_avg
 
@@ -48,9 +50,10 @@ Be concrete and numeric where possible.
 
 def generate_credit_card_summary(
     question: str,
+    db: Session,
     history: list[dict] | None = None,
 ) -> str:
-    analyzer = CreditCardTransactionAnalyzer()
+    analyzer = CreditCardTransactionAnalyzer(db)
     summary = analyzer.summarize()
 
     if summary["row_count"] == 0:

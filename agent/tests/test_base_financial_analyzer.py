@@ -1,3 +1,5 @@
+from unittest.mock import Mock
+
 import pandas as pd
 import pytest
 from dataclasses import dataclass
@@ -28,7 +30,7 @@ class FakeFinancialRecordRepository:
 
 
 class DummyAnalyzer(BaseFinancialAnalyzer):
-    file_type = "test_file"
+    file_type = "statement"
 
     def summarize(self):
         return {"ok": True}
@@ -60,8 +62,8 @@ def test_raw_df_reads_from_db_once():
             label="Food",
         )
     ]
-
-    analyzer = DummyAnalyzer()
+    db = Mock()
+    analyzer = DummyAnalyzer(db)
 
     df1 = analyzer.raw_df
     df2 = analyzer.raw_df
@@ -69,7 +71,7 @@ def test_raw_df_reads_from_db_once():
     assert not df1.empty
     assert df1 is df2
     assert len(FakeFinancialRecordRepository.calls) == 1
-    assert FakeFinancialRecordRepository.calls[0] == "test_file"
+    assert FakeFinancialRecordRepository.calls[0] == "statement"
     assert list(df1["amount"]) == [1]
 
 
@@ -98,7 +100,8 @@ def test_df_normalizes_raw_df_once():
         ),
     ]
 
-    analyzer = DummyAnalyzer()
+    db = Mock()
+    analyzer = DummyAnalyzer(db)
 
     df1 = analyzer.df
     df2 = analyzer.df
@@ -108,7 +111,8 @@ def test_df_normalizes_raw_df_once():
 
 
 def test_normalize_df_returns_copy_for_empty_df():
-    analyzer = DummyAnalyzer()
+    db = Mock()
+    analyzer = DummyAnalyzer(db)
     original = pd.DataFrame()
 
     result = analyzer.normalize_df(original)
@@ -118,7 +122,8 @@ def test_normalize_df_returns_copy_for_empty_df():
 
 
 def test_coerce_common_types_converts_amount_and_drops_invalid_rows():
-    analyzer = DummyAnalyzer()
+    db = Mock()
+    analyzer = DummyAnalyzer(db)
     df = pd.DataFrame(
         {
             "amount": ["12.34", "bad", None, "5"],
@@ -133,7 +138,8 @@ def test_coerce_common_types_converts_amount_and_drops_invalid_rows():
 
 
 def test_coerce_common_types_raises_when_amount_column_missing():
-    analyzer = DummyAnalyzer()
+    db = Mock()
+    analyzer = DummyAnalyzer(db)
     df = pd.DataFrame({"date": [pd.Timestamp("2025-01-01")]})
 
     with pytest.raises(KeyError):
@@ -143,13 +149,15 @@ def test_coerce_common_types_raises_when_amount_column_missing():
 def test_total_days_returns_1_when_df_empty():
     FakeFinancialRecordRepository.records = []
 
-    analyzer = DummyAnalyzer()
+    db = Mock()
+    analyzer = DummyAnalyzer(db)
 
     assert analyzer.total_days == 1
 
 
 def test_total_days_returns_1_when_date_column_missing(monkeypatch):
-    analyzer = DummyAnalyzer()
+    db = Mock()
+    analyzer = DummyAnalyzer(db)
 
     monkeypatch.setattr(
         analyzer,
@@ -178,7 +186,8 @@ def test_total_days_returns_1_when_dates_are_same():
         ),
     ]
 
-    analyzer = DummyAnalyzer()
+    db = Mock()
+    analyzer = DummyAnalyzer(db)
 
     assert analyzer.total_days == 1
 
@@ -201,7 +210,8 @@ def test_total_days_returns_date_difference_when_greater_than_one():
         ),
     ]
 
-    analyzer = DummyAnalyzer()
+    db = Mock()
+    analyzer = DummyAnalyzer(db)
 
     assert analyzer.total_days == 9
 
@@ -217,7 +227,8 @@ def test_total_days_returns_1_when_min_or_max_date_is_na():
         )
     ]
 
-    analyzer = DummyAnalyzer()
+    db = Mock()
+    analyzer = DummyAnalyzer(db)
 
     assert analyzer.total_days == 1
 
@@ -240,7 +251,8 @@ def test_get_date_range_uses_self_df_by_default():
         ),
     ]
 
-    analyzer = DummyAnalyzer()
+    db = Mock()
+    analyzer = DummyAnalyzer(db)
 
     assert analyzer.get_date_range() == {
         "start": "2025-02-01",
@@ -259,7 +271,8 @@ def test_get_date_range_accepts_override_df():
         )
     ]
 
-    analyzer = DummyAnalyzer()
+    db = Mock()
+    analyzer = DummyAnalyzer(db)
     override = pd.DataFrame(
         {
             "amount": [1, 2],
@@ -276,7 +289,8 @@ def test_get_date_range_accepts_override_df():
 def test_get_date_range_returns_none_for_empty_or_missing_date():
     FakeFinancialRecordRepository.records = []
 
-    analyzer = DummyAnalyzer()
+    db = Mock()
+    analyzer = DummyAnalyzer(db)
 
     assert analyzer.get_date_range() == {"start": None, "end": None}
     assert analyzer.get_date_range(pd.DataFrame({"amount": [1]})) == {
@@ -296,7 +310,8 @@ def test_get_date_range_returns_none_when_dates_are_nat():
         )
     ]
 
-    analyzer = DummyAnalyzer()
+    db = Mock()
+    analyzer = DummyAnalyzer(db)
 
     assert analyzer.get_date_range() == {"start": None, "end": None}
 
@@ -314,7 +329,8 @@ def test_llm_answer_appends_context_and_calls_model(monkeypatch):
         fake_call_model,
     )
 
-    analyzer = DummyAnalyzer()
+    db = Mock()
+    analyzer = DummyAnalyzer(db)
     history = [{"role": "user", "content": "previous"}]
 
     result = analyzer.llm_answer(
@@ -343,7 +359,8 @@ def test_llm_answer_handles_none_history(monkeypatch):
         fake_call_model,
     )
 
-    analyzer = DummyAnalyzer()
+    db = Mock()
+    analyzer = DummyAnalyzer(db)
 
     result = analyzer.llm_answer(
         question="Q",

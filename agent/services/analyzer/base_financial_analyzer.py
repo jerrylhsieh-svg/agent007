@@ -3,21 +3,20 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import asdict
 from functools import cached_property
-from typing import Any
+from typing import Any, Literal
 
-from fastapi import Depends
 import pandas as pd
+from sqlalchemy.orm import Session
 
-from agent.db.session import get_db_session
 from agent.repo.financial_record_repository import FinancialRecordRepository
 from agent.services.chat.call_model import call_model
 
 
 class BaseFinancialAnalyzer(ABC):
-    file_type: str
+    file_type: Literal['transaction', 'statement']
 
-    def __init__(self):
-        self.repo = FinancialRecordRepository(Depends(get_db_session), self.file_type)
+    def __init__(self, db: Session):
+        self.repo = FinancialRecordRepository(db, self.file_type)
         
 
     @cached_property

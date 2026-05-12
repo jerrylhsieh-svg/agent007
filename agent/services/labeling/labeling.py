@@ -1,7 +1,6 @@
-from fastapi import Depends
+from sqlalchemy.orm import Session
 
 from agent.db.data_classes.label import TrainRecord
-from agent.db.session import get_db_session
 from agent.repo.train_record_repository import TrainRecordRepository
 from agent.repo.unlabeled_geoup_repository import UnlabeledGroupRepository
 from agent.services.constants_and_dependencies import ALLOWED_STATEMENT_LABELS, ALLOWED_TRANSACTION_LABELS, GSHEET_LABEL_STATEMENT_GROUP_TAB, GSHEET_LABEL_STATEMENT_TRAIN_TAB, GSHEET_LABEL_TRANSACTION_GROUP_TAB, GSHEET_LABEL_TRANSACTION_TRAIN_TAB
@@ -11,7 +10,7 @@ from agent.services.labeling.label_suggester import LabelSuggester
 label_sessions: dict[str, dict] = {}
 
 
-def handle_label_flow(session_id: str, message: str):
+def handle_label_flow(session_id: str, message: str, db: Session):
     state = label_sessions.get(session_id)
     suggester = LabelSuggester()
     
@@ -42,7 +41,7 @@ def handle_label_flow(session_id: str, message: str):
                 "reply": f"Not able to process file_type: {file_type}"
             }
         
-        unlabel_repo = UnlabeledGroupRepository(Depends(get_db_session), file_type)
+        unlabel_repo = UnlabeledGroupRepository(db, file_type)
         first_record = unlabel_repo.yield_record_by_score()
         state["step"] = "awaiting_approval"
         state["file_type"] = file_type

@@ -3,7 +3,6 @@ import re
 from typing import Any, Literal
 
 
-from fastapi import Depends
 import joblib
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -13,7 +12,6 @@ from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sqlalchemy.orm import Session
 
-from agent.db.session import get_db_session
 from agent.learning_models.constants import BASE_DIR, TRAINING_CONFIG
 from agent.repo.train_record_repository import TrainRecordRepository
 

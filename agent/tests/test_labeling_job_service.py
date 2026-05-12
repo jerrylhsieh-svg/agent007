@@ -172,10 +172,11 @@ def test_run_transaction_labeling_job_raises_when_job_not_found(monkeypatch):
     monkeypatch.setattr(service, "labeling_store", fake_store)
 
     labeler = FakeLabeler([])
-
+    
     with pytest.raises(ValueError, match="Labeling job not found"):
         service.run_transaction_labeling_job(
             job_id="missing-job",
             transactions=[],
             merchant_label_service=labeler,
+            db=Mock(),
         )

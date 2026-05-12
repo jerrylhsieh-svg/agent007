@@ -35,7 +35,8 @@ def get_reply(req: ChatRequest, db:Session) -> str:
     for flow_triggers, flow_handler, session, flow_extra_kwargs in FLOW_ROUTES:
         if not contains_any_trigger(req.message, flow_triggers, **flow_extra_kwargs,) and req.session_id not in session:
             continue
-        result =  flow_handler(req.session_id, req.message)
+        kwargs_flow = {'db': db}
+        result =  flow_handler(req.session_id, req.message, **kwargs_flow)
         if result.get("handled", False):
             return result.get("reply", "Failed to get response")
 
@@ -44,11 +45,9 @@ def get_reply(req: ChatRequest, db:Session) -> str:
             kwargs = {
                 "question": req.message,
                 "history": req.history,
+                'db': db,
                 **extra_kwargs,
             }
-
-            if handler in {repredict_records, train_model}:
-                kwargs["db"] = db
 
             return handler(**kwargs)
 
