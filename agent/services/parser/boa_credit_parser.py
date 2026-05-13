@@ -43,11 +43,11 @@ class BOACreditPdfParser(BasePdfParser):
             return self._parse_date_description_amount(date, rest)
 
         if self.schema.name == "transaction_posting_description_ref_account_amount_total":
-            return self._parse_boa_credit(rest)
+            return self._parse_boa_credit(date, rest)
 
         return None
     
-    def _parse_boa_credit(self, rest: str):
+    def _parse_boa_credit(self, date: str, rest: str):
         parts = rest.split()
         if not (
             is_account_number(parts[-2])
@@ -56,7 +56,7 @@ class BOACreditPdfParser(BasePdfParser):
             return None
 
         return FinancialRecordRow(
-            date=parts[0],
-            description=" ".join(parts[2:-3]),
+            date=date,
+            description=" ".join(parts[1:-3]),
             amount=parse_amount(parts[-1]),
         )
