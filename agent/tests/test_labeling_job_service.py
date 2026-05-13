@@ -178,5 +178,4 @@ def test_run_transaction_labeling_job_raises_when_job_not_found(monkeypatch):
             job_id="missing-job",
             transactions=[],
             merchant_label_service=labeler,
-            db=Mock(),
         )
