@@ -41,7 +41,7 @@ def get_and_clean(df: pd.DataFrame, file_type: str, config: dict[str, Any]) -> p
     required_columns = config["required_columns"]
     missing = required_columns - set(df.columns)
     if missing:
-        raise ValueError(f"Missing required CSV columns: {sorted(missing)}")
+        raise ValueError(f"Missing required columns: {sorted(missing)}")
 
     df = df.dropna(subset=list(required_columns)).copy()
 

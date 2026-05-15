@@ -39,7 +39,7 @@ class LabeledCsvUploadService:
             if "statement_type" in df.columns and pd.notna(row["statement_type"]):
                 statement_type = str(row["statement_type"]).strip().lower()
             
-            if len(statement_type) not in ("deposit", "withdraw"):
+            if len(statement_type) > 0 and statement_type not in ("deposit", "withdraw"):
                 raise ValueError("statement_type has to be either deposit or withdraw")
 
             trained_records.append(TrainRecord(
