@@ -1,3 +1,5 @@
+from typing import Any, Callable
+
 from agent.db.data_classes.chat import Intent
 from agent.services.analyzer.bank_statement_analyzer import generate_bank_statement_summary
 from agent.services.analyzer.transaction_analyzer import generate_credit_card_summary
@@ -6,8 +8,9 @@ from agent.services.labeling.labeling import handle_label_flow, label_sessions
 from agent.services.repredict_service import repredict_records
 from agent.services.train_models_service import train_model
 
+Handler = Callable[..., str]
 
-INTENT_HANDLERS = {
+INTENT_HANDLERS: dict[Intent, tuple[Handler, dict[str, Any]]] = {
     Intent.ANALYZE_CARD_TRANSACTIONS: (generate_credit_card_summary,{}),
     Intent.ANALYZE_BANK_STATEMENTS: (generate_bank_statement_summary,{}),
     Intent.TRAIN_CARD_MODEL: (train_model,{"file_type": "transaction"}),

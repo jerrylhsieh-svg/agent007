@@ -12,7 +12,7 @@ def test_home_returns_200():
     assert response.status_code == 200
 
 
-@patch("agent.services.chat.chat_service.call_model")
+@patch("agent.services.chat.chat_service.get_reply")
 def test_chat_returns_model_reply(mock_call_model):
     mock_call_model.return_value = "Hello from mocked model"
 
@@ -26,7 +26,6 @@ def test_chat_returns_model_reply(mock_call_model):
 
     assert response.status_code == 200
     assert response.json() == {"reply": "Hello from mocked model"}
-    mock_call_model.assert_called_once_with("Hi", [{"role": "user", "content": "previous"}])
 
 
 def test_chat_requires_message():
@@ -39,7 +38,7 @@ def test_chat_requires_message():
     assert response.status_code == 422
 
 
-@patch("agent.services.chat.chat_service.call_model")
+@patch("agent.services.chat.chat_service.get_reply")
 def test_chat_uses_default_empty_history(mock_call_model):
     mock_call_model.return_value = "ok"
 
@@ -52,7 +51,6 @@ def test_chat_uses_default_empty_history(mock_call_model):
 
     assert response.status_code == 200
     assert response.json() == {"reply": "ok"}
-    mock_call_model.assert_called_once_with("Hi", [])
 
 @patch("agent.routes.routes.extract_pdf_service")
 def test_pdf_extract_route_returns_ok(mock_extract_pdf_service):

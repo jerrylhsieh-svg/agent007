@@ -22,7 +22,6 @@ class Intent(str, Enum):
     TRAIN_STATEMENT_MODEL = "train_statement_model"
     REPREDICT_CARD_RECORDS = "repredict_card_records"
     REPREDICT_STATEMENT_RECORDS = "repredict_statement_records"
-    SHOW_UNLABELED = "show_unlabeled"
     LABEL_RECORDS = "label_records"
     GENERAL_CHAT = "general_chat"
     UNKNOWN = "unknown"
