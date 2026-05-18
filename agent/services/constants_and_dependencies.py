@@ -1,3 +1,4 @@
+import os
 import re
 
 from agent.db.data_classes.label import InMemoryLabelingStore
@@ -221,3 +222,6 @@ MONTH_LOOKUP = {
     "dec": 12,
     "december": 12,
 }
+
+MODEL = os.getenv("MODEL", "qwen2.5:1.5b")
+OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://localhost:11434")

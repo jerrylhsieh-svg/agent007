@@ -1,8 +1,6 @@
-import os
 import requests
 
-MODEL = os.getenv("MODEL", "qwen2.5:1.5b")
-OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://localhost:11434")
+from agent.services.constants_and_dependencies import MODEL, OLLAMA_HOST
 
 def call_model(message: str, history: list[dict]) -> str:
     messages = [
