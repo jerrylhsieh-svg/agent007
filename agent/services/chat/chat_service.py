@@ -19,13 +19,6 @@ def get_reply(req: ChatRequest, db:Session) -> str:
         message=req.message,
         history=req.history,
     )
-
-    if decision.intent == Intent.UNKNOWN or decision.confidence < 0.55:
-        return (
-            "I’m not fully sure what action you want me to take. "
-            "Do you want me to analyze transactions, train the model, "
-            "re-predict labels, or show unlabeled records?"
-        )
     
     handler, extra_kwargs = INTENT_HANDLERS[decision.intent]
 
@@ -37,5 +30,7 @@ def get_reply(req: ChatRequest, db:Session) -> str:
 
     if decision.intent in DB_REQUIRED_INTENTS:
         kwargs["db"] = db
-
-    return handler(**kwargs)
+    if decision.intent == Intent.UNKNOWN or decision.confidence < 0.55:
+        return INTENT_HANDLERS[ Intent.UNKNOWN][0](**kwargs)
+    else:
+        return handler(**kwargs)

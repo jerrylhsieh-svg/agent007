@@ -19,4 +19,5 @@ INTENT_HANDLERS: dict[Intent, tuple[Handler, dict[str, Any]]] = {
     Intent.REPREDICT_CARD_RECORDS: (repredict_records, {"file_type": "transaction"}),
     Intent.LABEL_RECORDS: (handle_label_flow, {}),
     Intent.GENERAL_CHAT: (call_model, {"label_sessions": label_sessions}),
+    Intent.UNKNOWN: (call_model, {"label_sessions": label_sessions}),
 }

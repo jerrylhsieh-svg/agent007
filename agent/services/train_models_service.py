@@ -6,9 +6,9 @@ from agent.learning_models.train_merchant_model import train
 from agent.services.chat.call_model import call_model
 
 
-def train_model(question: str, file_type: Literal["transaction", "statement"], history: list[dict] | None, db:Session):
+def train_model(message: str, file_type: Literal["transaction", "statement"], history: list[dict] | None, db:Session):
     context = train(file_type, db)
-    question += f"""
+    message += f"""
 The model training completed successfully.
 
 Training result:
@@ -22,4 +22,4 @@ Keep the response concise. Include the exact phrase they can reply with:
 Also mention that human-confirmed labels should not be overwritten.
 """
 
-    return call_model(question, history or [])
+    return call_model(message, history or [])
