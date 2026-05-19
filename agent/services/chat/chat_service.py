@@ -30,7 +30,7 @@ def get_reply(req: ChatRequest, db:Session) -> str:
     handler, extra_kwargs = INTENT_HANDLERS[decision.intent]
 
     kwargs = {
-        "question": req.message,
+        "message": req.message,
         "history": req.history,
         **extra_kwargs,
     }

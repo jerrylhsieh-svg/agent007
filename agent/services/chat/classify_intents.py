@@ -175,7 +175,7 @@ Classify the user's intent.
                 "temperature": 0,
             },
         },
-        timeout=30,
+        timeout=300,
     )
     response.raise_for_status()
 
