@@ -4,7 +4,7 @@ from enum import Enum
 
 class ChatRequest(BaseModel):
     message: str = Field(..., min_length=1, description="User input message")
-    history: list[dict] = []
+    history: list[dict] = Field(default_factory=list)
     session_id: str
 
 
@@ -13,7 +13,7 @@ class ChatResponse(BaseModel):
 
 class TransactionAnalysisRequest(BaseModel):
     question: str
-    history: list[dict] = []
+    history: list[dict] = Field(default_factory=list)
 
 class Intent(str, Enum):
     ANALYZE_CARD_TRANSACTIONS = "analyze_card_transactions"
