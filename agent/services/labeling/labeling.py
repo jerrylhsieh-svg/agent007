@@ -18,10 +18,8 @@ def handle_label_flow(session_id: str, message: str, db: Session, **kwargus):
     if state is None:
         label_sessions[session_id] = {"step": "awaiting_file_type"}
         
-        return {
-            "handled": True,
-            "reply": "Which file type you want to help with the labeling, transaction or statement?"
-        }
+        return "Which file type you want to help with the labeling, transaction or statement?"
+        
 
     step = state["step"]
 
@@ -30,16 +28,11 @@ def handle_label_flow(session_id: str, message: str, db: Session, **kwargus):
         tried = state.get("file_type_retry", 0)
         if file_type not in {"transaction", "statement"} and tried < 1:
             tried+=1 
-            return {
-                "handled": True,
-                "reply": """Please give me a valid file type. Answer "transaction" or "statement" only."""
-            }
+            return """Please give me a valid file type. Answer "transaction" or "statement" only."""
+            
         elif file_type not in {"transaction", "statement"}:
             label_sessions.pop(session_id, None)
-            return {
-                "handled": True,
-                "reply": f"Not able to process file_type: {file_type}"
-            }
+            return f"Not able to process file_type: {file_type}"
         
         unlabel_repo = UnlabeledGroupRepository(db, file_type)
         first_record = unlabel_repo.yield_record_by_score()
@@ -48,21 +41,15 @@ def handle_label_flow(session_id: str, message: str, db: Session, **kwargus):
         state["unlabel_record"] = first_record
         state["unlabel_repo"] = unlabel_repo
         if first_record is None:
-            return  {
-                "handled": True,
-                "reply": f"No recrod found for {file_type} that has not been labeled"
-            }
+            return  f"No recrod found for {file_type} that has not been labeled"
         
         label_suggested = suggester.suggest_one_label(first_record)
         state["label_suggestsed"] = label_suggested
 
-        return {
-            "handled": True,
-            "reply": f"""The record's description is {first_record.description} and machine learning model suggested {first_record.predicted_label}.
+        return f"""The record's description is {first_record.description} and machine learning model suggested {first_record.predicted_label}.
             I suggest the label should be {label_suggested.suggested_label} and reason is {label_suggested.reason}. Do you approve?
             Reply `approve` or `not approve` only.
 """
-        }
 
     if step == "awaiting_approval":
         tried = state.get("approval_retry", 0)
@@ -70,22 +57,13 @@ def handle_label_flow(session_id: str, message: str, db: Session, **kwargus):
 
         if approval not in {'approve', 'not approve'} and tried < 1:
             tried += 1
-            return {
-                "handled": True,
-                "reply": """Please give me a valid respone. Answer "approve" only for approval else it will not proceed."""
-            }
+            return """Please give me a valid respone. Answer "approve" only for approval else it will not proceed."""
         elif approval != 'approve' and tried > 0:
             label_sessions.pop(session_id, None)
-            return {
-                "handled": False,
-                "reply": "Unable to proceed due to no clear approval",
-            }
+            return "Unable to proceed due to no clear approval",
         if approval == "not approve":
             state["step"] = "manual_input"
-            return {
-                "handled": True,
-                "reply": f"What label do you think it is? And be aware that label is limit to {ALLOWED_TRANSACTION_LABELS if state["file_type"] == "transaction" else ALLOWED_STATEMENT_LABELS}"
-            }
+            return f"What label do you think it is? And be aware that label is limit to {ALLOWED_TRANSACTION_LABELS if state["file_type"] == "transaction" else ALLOWED_STATEMENT_LABELS}"
         
         return _add_to_train_data(state["label_suggestsed"].suggested_label, state, session_id, db)
     
@@ -94,22 +72,16 @@ def handle_label_flow(session_id: str, message: str, db: Session, **kwargus):
         tried = tried = state.get("input_retry", 0)
         if input not in ALLOWED_TRANSACTION_LABELS if state["file_type"] == "transaction" else ALLOWED_STATEMENT_LABELS and tried < 1:
             tried+=1
-            return {
-                "handled": True,
-                "reply": f"Label should is to {ALLOWED_TRANSACTION_LABELS if state["file_type"] == "transaction" else ALLOWED_STATEMENT_LABELS}"
-            }
+            return f"Label should is to {ALLOWED_TRANSACTION_LABELS if state["file_type"] == "transaction" else ALLOWED_STATEMENT_LABELS}"
         elif input not in ALLOWED_TRANSACTION_LABELS if state["file_type"] == "transaction" else ALLOWED_STATEMENT_LABELS:
             label_sessions.pop(session_id, None)
-            return {
-                "handled": True,
-                "reply": f"Not able to add label: {input}. Label is limit to {ALLOWED_TRANSACTION_LABELS if state["file_type"] == "transaction" else ALLOWED_STATEMENT_LABELS}"
-            }
+            return f"Not able to add label: {input}. Label is limit to {ALLOWED_TRANSACTION_LABELS if state["file_type"] == "transaction" else ALLOWED_STATEMENT_LABELS}"
         
         return _add_to_train_data(input, state, session_id, db)
         
     
     label_sessions.pop(session_id, None)
-    return {"handled": False}
+    return "Failed to get response"
 
 def _add_to_train_data(suggested_label, state, session_id, db):
     train_repo = TrainRecordRepository(db, state["file_type"])
