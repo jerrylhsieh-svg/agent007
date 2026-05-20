@@ -33,5 +33,8 @@ def get_reply(req: ChatRequest, db:Session) -> str:
         kwargs["db"] = db
     if decision.intent == Intent.UNKNOWN or decision.confidence < 0.55:
         return INTENT_HANDLERS[ Intent.UNKNOWN][0](**kwargs)
+    elif decision.intent == Intent.LABEL_RECORDS:
+        result =  handler(**kwargs)
+        return result.get("reply", "Failed to get response")
     else:
         return handler(**kwargs)
