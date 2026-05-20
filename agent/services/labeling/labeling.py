@@ -10,7 +10,7 @@ from agent.services.labeling.label_suggester import LabelSuggester
 label_sessions: dict[str, dict] = {}
 
 
-def handle_label_flow(session_id: str, message: str, db: Session):
+def handle_label_flow(session_id: str, message: str, db: Session, **kwargus):
     state = label_sessions.get(session_id)
     suggester = LabelSuggester()
     

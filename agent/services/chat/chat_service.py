@@ -25,6 +25,7 @@ def get_reply(req: ChatRequest, db:Session) -> str:
     kwargs = {
         "message": req.message,
         "history": req.history,
+        "session_id": req.session_id,
         **extra_kwargs,
     }
 
