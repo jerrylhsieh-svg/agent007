@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from agent.db.data_classes.chat import ChatRequest, Intent
 from agent.services.chat.classify_intents import classify_intent
 from agent.services.chat.intent_handler import INTENT_HANDLERS
+from agent.services.labeling import label_sessions
 
 DB_REQUIRED_INTENTS = {
     Intent.ANALYZE_CARD_TRANSACTIONS,
@@ -15,12 +16,16 @@ DB_REQUIRED_INTENTS = {
 }
 
 def get_reply(req: ChatRequest, db:Session) -> str:
-    decision = classify_intent(
-        message=req.message,
-        history=req.history,
-    )
-    
-    handler, extra_kwargs = INTENT_HANDLERS[decision.intent]
+    if req.session_id in label_sessions:
+        intent = Intent.LABEL_RECORDS
+    else:
+        decision = classify_intent(
+            message=req.message,
+            history=req.history,
+        )
+        intent = decision.intent
+        
+    handler, extra_kwargs = INTENT_HANDLERS[intent]
 
     kwargs = {
         "message": req.message,
