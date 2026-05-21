@@ -18,12 +18,14 @@ DB_REQUIRED_INTENTS = {
 def get_reply(req: ChatRequest, db:Session) -> str:
     if req.session_id in label_sessions:
         intent = Intent.LABEL_RECORDS
+        confidence = 1
     else:
         decision = classify_intent(
             message=req.message,
             history=req.history,
         )
         intent = decision.intent
+        confidence = decision.confidence
         
     handler, extra_kwargs = INTENT_HANDLERS[intent]
 
@@ -36,7 +38,7 @@ def get_reply(req: ChatRequest, db:Session) -> str:
 
     if intent in DB_REQUIRED_INTENTS:
         kwargs["db"] = db
-    if intent == Intent.UNKNOWN or decision.confidence < 0.55:
+    if intent == Intent.UNKNOWN or confidence < 0.55:
         return INTENT_HANDLERS[ Intent.UNKNOWN][0](**kwargs)
     else:
         return handler(**kwargs)
