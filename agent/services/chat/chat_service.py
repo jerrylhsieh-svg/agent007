@@ -34,9 +34,9 @@ def get_reply(req: ChatRequest, db:Session) -> str:
         **extra_kwargs,
     }
 
-    if decision.intent in DB_REQUIRED_INTENTS:
+    if intent in DB_REQUIRED_INTENTS:
         kwargs["db"] = db
-    if decision.intent == Intent.UNKNOWN or decision.confidence < 0.55:
+    if intent == Intent.UNKNOWN or decision.confidence < 0.55:
         return INTENT_HANDLERS[ Intent.UNKNOWN][0](**kwargs)
     else:
         return handler(**kwargs)
