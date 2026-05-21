@@ -49,7 +49,7 @@ Be concrete and numeric where possible.
 
 
 def generate_credit_card_summary(
-    question: str,
+    message: str,
     db: Session,
     history: list[dict] | None = None,
 ) -> str:
@@ -60,4 +60,4 @@ def generate_credit_card_summary(
         return "I couldn't find any transaction rows in the database."
 
     context = analyzer.build_summary_context(summary)
-    return analyzer.llm_answer(question=question, history=history, context=context)
+    return analyzer.llm_answer(question=message, history=history, context=context)
