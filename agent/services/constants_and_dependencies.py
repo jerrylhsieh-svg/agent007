@@ -225,3 +225,5 @@ MONTH_LOOKUP = {
 
 MODEL = os.getenv("MODEL", "qwen2.5:1.5b")
 OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://localhost:11434")
+
+LOW_CONFIDENCE_THRESHOLD = 0.55

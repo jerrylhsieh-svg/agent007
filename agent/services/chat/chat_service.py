@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from agent.db.data_classes.chat import ChatRequest, Intent
 from agent.services.chat.classify_intents import classify_intent
 from agent.services.chat.intent_handler import INTENT_HANDLERS
+from agent.services.constants_and_dependencies import LOW_CONFIDENCE_THRESHOLD
 from agent.services.labeling.labeling import label_sessions
 
 DB_REQUIRED_INTENTS = {
@@ -26,6 +27,9 @@ def get_reply(req: ChatRequest, db:Session) -> str:
         )
         intent = decision.intent
         confidence = decision.confidence
+    
+    if intent == Intent.UNKNOWN or confidence < LOW_CONFIDENCE_THRESHOLD:
+        intent = Intent.UNKNOWN
         
     handler, extra_kwargs = INTENT_HANDLERS[intent]
 
@@ -38,7 +42,5 @@ def get_reply(req: ChatRequest, db:Session) -> str:
 
     if intent in DB_REQUIRED_INTENTS:
         kwargs["db"] = db
-    if intent == Intent.UNKNOWN or confidence < 0.55:
-        return INTENT_HANDLERS[ Intent.UNKNOWN][0](**kwargs)
-    else:
-        return handler(**kwargs)
+
+    return handler(**kwargs)
