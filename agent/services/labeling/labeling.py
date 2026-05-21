@@ -94,7 +94,4 @@ def _add_to_train_data(suggested_label, state, session_id, db):
     state["unlabel_repo"].delete_record(state["unlabel_record"].id)
 
     label_sessions.pop(session_id, None)
-    return {
-        "handled": True,
-        "reply": f"train_record:\n description: {train_record.description},\n label: {train_record.label}\n, statement_type: {train_record.statement_type}\n has been added to train data."
-    }
+    return f"train_record:\n description: {train_record.description},\n label: {train_record.label}\n, statement_type: {train_record.statement_type}\n has been added to train data."
