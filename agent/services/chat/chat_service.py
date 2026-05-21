@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from agent.db.data_classes.chat import ChatRequest, Intent
 from agent.services.chat.classify_intents import classify_intent
 from agent.services.chat.intent_handler import INTENT_HANDLERS
-from agent.services.labeling import label_sessions
+from agent.services.labeling.labeling import label_sessions
 
 DB_REQUIRED_INTENTS = {
     Intent.ANALYZE_CARD_TRANSACTIONS,
