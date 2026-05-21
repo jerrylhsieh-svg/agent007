@@ -110,7 +110,7 @@ Use only the provided data. Be concrete and numeric.
 
 def generate_bank_statement_summary(
     db: Session,
-    question: str = "Generate a bank statement report.",
+    message: str = "Generate a bank statement report.",
     history: list[dict] | None = None,
 ) -> str:
     analyzer = BankStatementAnalyzer(db)
@@ -120,12 +120,12 @@ def generate_bank_statement_summary(
         return "I couldn't find any bank statement rows in Google Sheets yet."
 
     context = analyzer.build_summary_context(summary)
-    return analyzer.llm_answer(question=question, history=history, context=context)
+    return analyzer.llm_answer(question=message, history=history, context=context)
 
 
 def generate_bank_withdraw_summary(
     db: Session,
-    question: str = "Generate a bank statement report.",
+    message: str = "Generate a bank statement report.",
     history: list[dict] | None = None,
 ) -> str:
     analyzer = BankStatementAnalyzer(db)
@@ -135,4 +135,4 @@ def generate_bank_withdraw_summary(
         return "I couldn't find any bank statement rows in Google Sheets yet."
 
     context = analyzer.build_withdraw_context(withdraw)
-    return analyzer.llm_answer(question=question, history=history, context=context)
+    return analyzer.llm_answer(question=message, history=history, context=context)

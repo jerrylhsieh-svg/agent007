@@ -8,7 +8,7 @@ from agent.services.chat.call_model import call_model
 
 
 def repredict_records(
-    question: str,
+    message: str,
     file_type: Literal["transaction", "statement"],
     db: Session,
     history: list[dict] | None = None,
@@ -44,4 +44,4 @@ def repredict_records(
 
     history = history or []
     history.append({"role": "assistant", "content": context})
-    return call_model(question, history)
+    return call_model(message, history)
