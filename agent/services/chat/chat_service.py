@@ -19,7 +19,7 @@ DB_REQUIRED_INTENTS = {
 def get_reply(req: ChatRequest, db:Session) -> str:
     if req.session_id in label_sessions:
         intent = Intent.LABEL_RECORDS
-        confidence = 1
+        confidence = 1.0
     else:
         decision = classify_intent(
             message=req.message,
