@@ -44,7 +44,7 @@ def handle_label_flow(session_id: str, message: str, db: Session, **kwargus):
             return  f"No recrod found for {file_type} that has not been labeled"
         
         label_suggested = suggester.suggest_one_label(first_record)
-        state["label_suggestsed"] = label_suggested
+        state["label_suggested"] = label_suggested
 
         return f"""The record's description is {first_record.description} and machine learning model suggested {first_record.predicted_label}.
             I suggest the label should be {label_suggested.suggested_label} and reason is {label_suggested.reason}. Do you approve?
@@ -55,28 +55,39 @@ def handle_label_flow(session_id: str, message: str, db: Session, **kwargus):
         tried = state.get("approval_retry", 0)
         approval = message.strip()
 
+        retry_message = ""
         if approval not in {'approve', 'not approve'} and tried < 1:
-            tried += 1
-            return """Please give me a valid respone. Answer "approve" only for approval else it will not proceed."""
+            retry_message =  """Please give me a valid respone. Answer "approve" only for approval else it will not proceed."""
+        elif approval == "not approve" and tried < 1:
+            state["step"] = "manual_input"
+            retry_message =  f"What label do you think it is? And be aware that label is limit to {ALLOWED_TRANSACTION_LABELS if state['file_type'] == "transaction" else ALLOWED_STATEMENT_LABELS}"
         elif approval != 'approve' and tried > 0:
             label_sessions.pop(session_id, None)
-            return "Unable to proceed due to no clear approval",
-        if approval == "not approve":
-            state["step"] = "manual_input"
-            return f"What label do you think it is? And be aware that label is limit to {ALLOWED_TRANSACTION_LABELS if state["file_type"] == "transaction" else ALLOWED_STATEMENT_LABELS}"
+            retry_message =  "Unable to proceed due to no clear approval"
+        tried += 1
+        state["approval_retry"] = tried
+
+        if len(retry_message) > 0:
+            return retry_message
         
         return _add_to_train_data(state["label_suggestsed"].suggested_label, state, session_id, db)
     
     if step == "manual_input":
         input = message.strip()
-        tried = tried = state.get("input_retry", 0)
-        if input not in ALLOWED_TRANSACTION_LABELS if state["file_type"] == "transaction" else ALLOWED_STATEMENT_LABELS and tried < 1:
-            tried+=1
-            return f"Label should is to {ALLOWED_TRANSACTION_LABELS if state["file_type"] == "transaction" else ALLOWED_STATEMENT_LABELS}"
-        elif input not in ALLOWED_TRANSACTION_LABELS if state["file_type"] == "transaction" else ALLOWED_STATEMENT_LABELS:
+        tried = state.get("input_retry", 0)
+        retry_message = ""
+        allowed_labels = ALLOWED_TRANSACTION_LABELS if state["file_type"] == "transaction" else ALLOWED_STATEMENT_LABELS
+        if input not in allowed_labels and tried < 1:
+            retry_message = f"Label should is to {ALLOWED_TRANSACTION_LABELS if state["file_type"] == "transaction" else ALLOWED_STATEMENT_LABELS}"
+        elif input not in allowed_labels:
             label_sessions.pop(session_id, None)
-            return f"Not able to add label: {input}. Label is limit to {ALLOWED_TRANSACTION_LABELS if state["file_type"] == "transaction" else ALLOWED_STATEMENT_LABELS}"
-        
+            retry_message = f"Not able to add label: {input}. Label is limit to {ALLOWED_TRANSACTION_LABELS if state["file_type"] == "transaction" else ALLOWED_STATEMENT_LABELS}"
+        tried+=1
+        state["input_retry"] = tried
+
+        if len(retry_message) > 0:
+            return retry_message
+
         return _add_to_train_data(input, state, session_id, db)
         
     
