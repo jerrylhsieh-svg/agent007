@@ -2,12 +2,12 @@ from agent.db.data_classes.pdf_models import LineSchema
 from agent.services.parser.base_pdf_parser import BasePdfParser
 
 
-class BiltCreditPdfParser(BasePdfParser):
+class GenericPdfParser(BasePdfParser):
 
     schema = LineSchema(
         name="date_description_amount",
         min_parts=3,
-        end_markers=["Total new charges in this period"],
+        end_markers=[],
         credit=True,
     )
 

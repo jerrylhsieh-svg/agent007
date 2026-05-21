@@ -12,35 +12,21 @@ from agent.services.parser.parser_utilities import (
 
 TRANSACTION_SCHEMA = LineSchema(
     name="date_description_amount",
-    columns=["date", "description", "amount"],
     min_parts=3,
-    start_markers=[],
     end_markers=["Total"],
     credit=False,
 )
 
 BANK_SCHEMA = LineSchema(
     name="date_description_amount",
-    columns=["date", "description", "amount"],
     min_parts=3,
-    start_markers=[],
     end_markers=["Total deposits"],
     credit=False,
 )
 
 BOA_CREDIT_SCHEMA = LineSchema(
     name="transaction_posting_description_ref_account_amount_total",
-    columns=[
-        "transaction_date",
-        "posting_date",
-        "description",
-        "reference_number",
-        "account_number",
-        "amount",
-        "total",
-    ],
     min_parts=6,
-    start_markers=[],
     end_markers=[],
     credit=True,
 )

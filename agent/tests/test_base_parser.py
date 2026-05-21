@@ -6,9 +6,7 @@ from agent.services.parser.base_pdf_parser import BasePdfParser
 
 TEST_SCHEMA = LineSchema(
     name="date_description_amount",
-    columns=["date", "description", "amount"],
     min_parts=3,
-    start_markers=[],
     end_markers=[],
     credit=True,
 )

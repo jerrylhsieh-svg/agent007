@@ -13,9 +13,7 @@ class FinancialRecordRow:
 @dataclass(frozen=True)
 class LineSchema:
     name: str
-    columns: list[str]
     min_parts: int
-    start_markers: list[str]
     end_markers: list[str]
     credit: bool = False
     statement_type_markers: dict[str, Literal['deposit', 'withdraw'] | None] | None = None

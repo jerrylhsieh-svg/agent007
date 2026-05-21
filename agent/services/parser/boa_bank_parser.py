@@ -3,12 +3,11 @@ from agent.services.parser.base_pdf_parser import BasePdfParser
 
 
 class BOABankPdfParser(BasePdfParser):
+    doc_type = "BOA_bank"
 
     schema = LineSchema(
         name="date_description_amount",
-        columns=["date", "description", "amount"],
         min_parts=3,
-        start_markers=[],
         end_markers=[
             "Total deposits and other additions",
             "Total withdrawals and other subtractions",

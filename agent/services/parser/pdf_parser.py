@@ -6,6 +6,13 @@ import pdfplumber
 from agent.services.parser.bilt_credit_parser import BiltCreditPdfParser
 from agent.services.parser.boa_bank_parser import BOABankPdfParser
 from agent.services.parser.boa_credit_parser import BOACreditPdfParser
+from agent.services.parser.generic_parser import GenericPdfParser
+
+PARSER_REGISTRY: dict[str, Any] = {
+    BOACreditPdfParser.doc_type: BOACreditPdfParser,
+    BOABankPdfParser.doc_type: BOABankPdfParser,
+    BiltCreditPdfParser.doc_type: BiltCreditPdfParser,
+}
 
 def determine_pdf_type(line: str, pdf_info: dict[str, Any]) -> None:
     if pdf_info["bank"] is None:
@@ -40,20 +47,18 @@ def detect_pdf_info(pdf: pdfplumber.PDF) -> str:
                 suffix = "credit" if pdf_info["credit"] else "bank"
                 return f"{pdf_info["bank"]}_{suffix}"
 
-    raise ValueError("pdf info not found")
+    return "unknown"
 
 
-def build_parser(doc_tpye: str) -> BOACreditPdfParser | BOABankPdfParser | BiltCreditPdfParser:
+def build_parser(doc_type: str) -> BOACreditPdfParser | BOABankPdfParser | BiltCreditPdfParser | GenericPdfParser:
+    parser_cls = PARSER_REGISTRY.get(doc_type, GenericPdfParser)
 
-    if doc_tpye == "BOA_credit": return BOACreditPdfParser()
-    elif doc_tpye == "BOA_bank": return BOABankPdfParser()
-    elif doc_tpye == "Bilt_credit": return BiltCreditPdfParser()
-    else: raise ValueError(f"doc_tpye {doc_tpye} not found")
+    return parser_cls()
 
 
 def parse_pages(
     pdf: pdfplumber.PDF,
-    pdf_parser: BOACreditPdfParser | BOABankPdfParser | BiltCreditPdfParser,
+    pdf_parser: BOACreditPdfParser | BOABankPdfParser | BiltCreditPdfParser |GenericPdfParser,
 ) -> tuple[str, list[Any]]:
     full_text_parts: list[str] = []
     data: list[Any] = []

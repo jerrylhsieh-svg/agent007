@@ -4,20 +4,11 @@ from agent.services.parser.parser_utilities import is_account_number, parse_amou
 
 
 class BOACreditPdfParser(BasePdfParser):
+    doc_type = "BOA_credit"
 
     schema = LineSchema(
         name="transaction_posting_description_ref_account_amount_total",
-        columns=[
-            "transaction_date",
-            "posting_date",
-            "description",
-            "reference_number",
-            "account_number",
-            "amount",
-            "total",
-        ],
         min_parts=6,
-        start_markers=[],
         end_markers=["TOTAL PURCHASES AND ADJUSTMENTS FOR THIS PERIOD"],
         credit=True,
     )

@@ -8,11 +8,18 @@ from agent.services.parser.parser_utilities import extract_statement_years, is_d
 
 class BasePdfParser(ABC):
     schema: LineSchema
+    doc_type: str = "unknown"
+    max_continuation_lines: int = 1
 
     def __init__(self):
         self.current: FinancialRecordRow | None = None
+        self.continuation_count = 0
         self.statement_type: Literal["deposit", "withdraw"] | None = None
         self.credit = False
+
+    @classmethod
+    def can_parse(cls, doc_type: str) -> bool:
+        return cls.doc_type == doc_type
 
     def build_base_result(self) -> dict[str, Any]:
         return {
@@ -57,6 +64,7 @@ class BasePdfParser(ABC):
             if self._is_end_line(line):
                 self._flush_current(data)
                 self.current = None
+                self.continuation_count = 0
                 continue
 
             self._update_statement_type(line)
@@ -66,8 +74,16 @@ class BasePdfParser(ABC):
             if parsed:
                 self._flush_current(data)
                 self.current = parsed
-            elif self.current is not None:
+                self.continuation_count = 0
+
+            elif self.current is not None and self.continuation_count < self.max_continuation_lines:
                 self.current.description += f" {line}"
+                self.continuation_count += 1
+
+            elif self.current is not None:
+                self._flush_current(data)
+                self.current = None
+                self.continuation_count = 0
 
         return data
     
@@ -88,6 +104,9 @@ class BasePdfParser(ABC):
         data.append(self.current)
 
     def _is_end_line(self, line: str) -> bool:
+        if not self.schema.end_markers:
+            return False
+
         return any(line.startswith(marker) for marker in self.schema.end_markers)
 
     def _update_statement_type(self, line: str) -> None:

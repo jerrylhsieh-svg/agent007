@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from sqlalchemy.orm import Session
 
 from agent.db.session import get_db_session
-from agent.services.constants_and_dependencies import labeling_store
+from agent.db.data_classes.label import labeling_store
 from agent.services.labeling.labeled_csv_upload_service import LabeledCsvUploadService
 
 

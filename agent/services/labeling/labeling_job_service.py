@@ -10,7 +10,7 @@ from agent.db.data_classes.label import UnlabeledRecord
 from agent.repo.financial_record_repository import FinancialRecordRepository
 from agent.repo.unlabeled_geoup_repository import UnlabeledGroupRepository
 from agent.repo.unlabeled_record_repository import UnlabeledRecordRepository
-from agent.services.constants_and_dependencies import labeling_store
+from agent.db.data_classes.label import labeling_store
 import logging
 
 logger = logging.getLogger(__name__)

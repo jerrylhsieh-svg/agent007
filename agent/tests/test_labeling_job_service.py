@@ -1,11 +1,8 @@
 from dataclasses import dataclass
 from types import SimpleNamespace
-from unittest.mock import Mock
 
 import pytest
 
-from agent.db.models.unlabeled import UnlabeledStatementRecord
-from agent.db.models.unlabeled.UnlabeledTransactionRecord import UnlabeledTransactionRecord
 import agent.services.labeling.labeling_job_service as service
 from agent.learning_models.constants import UNKNOWN_LABEL
 from agent.db.data_classes.label import UnlabeledRecord

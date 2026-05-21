@@ -66,3 +66,5 @@ class InMemoryLabelingStore:
     def update_job(self, job: LabelingJob) -> None:
         with self._lock:
             self._jobs[job.id] = job
+
+labeling_store = InMemoryLabelingStore()
