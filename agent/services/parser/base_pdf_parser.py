@@ -135,8 +135,9 @@ class BasePdfParser(ABC):
             return None
         
         parsed_date = self._extract_date_prefix(line)
+        parsed_amount = self._extract_amount(line)
 
-        if parsed_date is None:
+        if parsed_date is None or not parsed_amount:
             return None
 
         date, rest = parsed_date
@@ -159,3 +160,11 @@ class BasePdfParser(ABC):
                 return candidate, rest
 
         return None
+    
+    def _extract_amount(self, line: str) -> bool:
+        tokens = line.split()
+        try:
+            parse_amount(tokens[-1])
+        except:
+            return False
+        return True
