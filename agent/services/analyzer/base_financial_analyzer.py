@@ -26,16 +26,17 @@ class BaseFinancialAnalyzer(ABC):
 
     @cached_property
     def df(self) -> pd.DataFrame:
-        return self.normalize_df(self.raw_df)
+        df = self.normalize_df(self.raw_df)
+        df["date"] = pd.to_datetime(df["date"], errors="coerce")
+        return df
 
     @cached_property
     def total_days(self) -> int:
         if self.df.empty or "date" not in self.df.columns:
             return 1
         
-        dates = pd.to_datetime(self.df["date"], errors="coerce")
-        min_date = dates.min()
-        max_date = dates.max()
+        min_date = self.df["date"].min()
+        max_date = self.df["date"].max()
 
         if pd.isna(min_date) or pd.isna(max_date):
             return 1
@@ -68,7 +69,8 @@ class BaseFinancialAnalyzer(ABC):
         if working.empty or "date" not in working.columns:
             return {"start": None, "end": None}
 
-        dates = pd.to_datetime(working["date"], errors="coerce")
+        dates = working["date"] if df is None else pd.to_datetime(working["date"], errors="coerce")
+
         min_date = dates.min()
         max_date = dates.max()
 
