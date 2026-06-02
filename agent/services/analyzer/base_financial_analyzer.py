@@ -32,9 +32,10 @@ class BaseFinancialAnalyzer(ABC):
     def total_days(self) -> int:
         if self.df.empty or "date" not in self.df.columns:
             return 1
-
-        min_date = self.df["date"].min()
-        max_date = self.df["date"].max()
+        
+        dates = pd.to_datetime(self.df["date"], errors="coerce")
+        min_date = dates.min()
+        max_date = dates.max()
 
         if pd.isna(min_date) or pd.isna(max_date):
             return 1
