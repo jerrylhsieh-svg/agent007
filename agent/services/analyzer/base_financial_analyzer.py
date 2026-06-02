@@ -27,7 +27,8 @@ class BaseFinancialAnalyzer(ABC):
     @cached_property
     def df(self) -> pd.DataFrame:
         df = self.normalize_df(self.raw_df)
-        df["date"] = pd.to_datetime(df["date"], errors="coerce")
+        if not df.empty and "date" in df.columns:
+            df["date"] = pd.to_datetime(df["date"], errors="coerce")
         return df
 
     @cached_property
