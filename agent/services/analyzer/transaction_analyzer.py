@@ -52,6 +52,7 @@ def generate_credit_card_summary(
     message: str,
     db: Session,
     history: list[dict] | None = None,
+    **extra_kwargs,
 ) -> str:
     analyzer = CreditCardTransactionAnalyzer(db)
     summary = analyzer.summarize()
