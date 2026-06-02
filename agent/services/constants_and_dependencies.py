@@ -82,8 +82,6 @@ ALLOWED_STATEMENT_LABELS = [
     "Income"
 ]
 
-labeling_store = InMemoryLabelingStore()
-
 SAVE_TRIGGERS = {
     "help me write a file",
     "write a file",
