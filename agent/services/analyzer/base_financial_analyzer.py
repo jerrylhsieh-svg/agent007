@@ -67,8 +67,9 @@ class BaseFinancialAnalyzer(ABC):
         if working.empty or "date" not in working.columns:
             return {"start": None, "end": None}
 
-        min_date = working["date"].min()
-        max_date = working["date"].max()
+        dates = pd.to_datetime(working["date"], errors="coerce")
+        min_date = dates.min()
+        max_date = dates.max()
 
         return {
             "start": None if pd.isna(min_date) else str(min_date.date()),
