@@ -16,6 +16,7 @@ class TransactionAnalysisRequest(BaseModel):
     history: list[dict] = Field(default_factory=list)
 
 class Intent(str, Enum):
+    QUERY_TRANSACTIONS = "query_transactions"
     ANALYZE_CARD_TRANSACTIONS = "analyze_card_transactions"
     ANALYZE_BANK_STATEMENTS = "analyze_bank_statements"
     TRAIN_CARD_MODEL = "train_card_model"
