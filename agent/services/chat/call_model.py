@@ -2,7 +2,7 @@ import requests
 
 from agent.services.constants_and_dependencies import MODEL, OLLAMA_HOST
 
-def call_model(message: str, history: list[dict], **kwargs) -> str:
+def call_model(message: str, history: list[dict] = [], **kwargs) -> str:
     messages = [
         {
             "role": "system",
