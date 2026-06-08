@@ -1,7 +1,7 @@
 from agent.services.chat.call_model import call_model
 
 
-def generate_sql_from_question(question: str, schema: str) -> str:
+def generate_sql_from_question(message: str, schema: str) -> str:
     prompt = f"""
 You are a SQL generator for a personal finance app.
 
@@ -18,6 +18,6 @@ Schema:
 {schema}
 
 User question:
-{question}
+{message}
 """
     return call_model(prompt)
