@@ -18,7 +18,7 @@ class QueryGenerator():
     
     @cached_property
     def table_name(self) -> str:
-        name = self.identify_table().strip().strip("`")
+        name = self.identify_tables(self.message).strip().strip("`")
         if name not in self.table_list:
             raise ValueError(f"Invalid table selected by model: {name}")
         return name

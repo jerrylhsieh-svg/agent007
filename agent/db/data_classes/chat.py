@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field
-from enum import Enum
+
+from agent.db.data_classes.intents import Intents
 
 
 class ChatRequest(BaseModel):
@@ -15,20 +16,8 @@ class TransactionAnalysisRequest(BaseModel):
     question: str
     history: list[dict] = Field(default_factory=list)
 
-class Intent(str, Enum):
-    QUERY_TRANSACTIONS = "query_transactions"
-    ANALYZE_CARD_TRANSACTIONS = "analyze_card_transactions"
-    ANALYZE_BANK_STATEMENTS = "analyze_bank_statements"
-    TRAIN_CARD_MODEL = "train_card_model"
-    TRAIN_STATEMENT_MODEL = "train_statement_model"
-    REPREDICT_CARD_RECORDS = "repredict_card_records"
-    REPREDICT_STATEMENT_RECORDS = "repredict_statement_records"
-    LABEL_RECORDS = "label_records"
-    GENERAL_CHAT = "general_chat"
-    UNKNOWN = "unknown"
-
 class RouteDecision(BaseModel):
-    intent: Intent
+    intent: Intents
     confidence: float = Field(ge=0, le=1)
     reason: str
     needs_db: bool = False
