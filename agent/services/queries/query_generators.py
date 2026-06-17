@@ -1,5 +1,6 @@
 from functools import cached_property
 import json
+from typing import Any
 
 from sqlalchemy.orm import Session
 
@@ -55,7 +56,7 @@ Allowed table:
 {self.table_name}
 
 Allowed fields:
-{self.table_schema.keys()}
+{[c['column_name'] for c in self.table_schema]}
 
 Rules:
 - Use "amount" for transaction amount.
@@ -97,7 +98,7 @@ User question:
     
     def validate_plan_against_schema(self, plan: dict) -> QueryPlan:
 
-        columns = set(self.table_schema.keys())
+        columns = set(c['column_name'] for c in self.table_schema)
         existing_plan = QueryPlan(table=plan["table"])
 
         for field in plan["select_fields"]:
@@ -124,7 +125,7 @@ User question:
         if existing_plan.metrics is None and existing_plan.select_fields is None:
             raise ValueError("No column been selected")
 
-        allowed_order_fields = columns | {metric.alias for metric in plan.metrics}
+        allowed_order_fields = columns | {metric.alias for metric in plan["metrics"]}
 
         for order in plan["order_by"]:
             if order.field not in allowed_order_fields:
@@ -132,13 +133,12 @@ User question:
         existing_plan.order_by = plan["order_by"]
 
         if plan["limit"] is not None and (plan["limit"] < 1 or plan["limit"] > 50):
-            raise ValueError(f"Invalid limit: {plan.limit}")
+            raise ValueError(f"Invalid limit: {plan['limit']}")
         existing_plan.limit = plan["limit"]
 
         return existing_plan
     
-    def build_sql(self, plan: QueryPlan) -> tuple[str, dict]:
-        params = {}
+    def build_sql(self, plan: QueryPlan) -> str:
 
         select_parts = []
 
@@ -167,10 +167,8 @@ User question:
 
             if filter_.op == "contains":
                 where_parts.append(f"{filter_.field} ILIKE :{param_name}")
-                params[param_name] = f"%{filter_.value}%"
             else:
                 where_parts.append(f"{filter_.field} {filter_.op} :{param_name}")
-                params[param_name] = filter_.value
 
         if where_parts:
             sql_parts.append("WHERE " + " AND ".join(where_parts))
@@ -186,11 +184,9 @@ User question:
             sql_parts.append("ORDER BY " + ", ".join(order_parts))
 
         if plan.limit is not None and not plan.metrics:
-            safe_limit = min(plan.limit, 50)
             sql_parts.append("LIMIT :limit")
-            params["limit"] = safe_limit
 
-        return " ".join(sql_parts), params
+        return " ".join(sql_parts)
 
 def handle_query_transactions(message: str, db: Session, **kwargs) -> str:
     generator = QueryGenerator(message=message, db=db)
