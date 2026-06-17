@@ -20,7 +20,7 @@ class Metric(BaseModel):
 
 
 class QueryPlan(BaseModel):
-    table: Literal["transactions"]
+    table: str
 
     select_fields: list[str] = Field(default_factory=list)
     metrics: list[Metric] = Field(default_factory=list)
