@@ -4,7 +4,7 @@ from typing import Any
 
 from sqlalchemy.orm import Session
 
-from agent.db.models.query_generator.query_plan import QueryPlan
+from agent.db.models.query_generator.query_plan import Filter, Metric, OrderBy, QueryPlan
 from agent.services.chat.call_model import call_model
 from agent.services.queries.get_tables_information import get_table_names, get_table_schema
 
@@ -109,9 +109,9 @@ User question:
         existing_plan.select_fields = plan["select_fields"]
 
         for filter in plan["filters"]:
-            if filter not in columns:
-                raise ValueError(f"Column not in the table: {filter}")
-        existing_plan.filters = plan["filters"]
+            if filter['field'] not in columns:
+                raise ValueError(f"Column not in the table: {filter['field']}")
+        existing_plan.filters = Filter(field=plan["filters"]['field'], op=plan["filters"]['op'], value=plan["filters"]['value'])
 
         for group_by in plan["group_by"]:
             if group_by not in columns:
@@ -122,7 +122,7 @@ User question:
         for metric in plan["metrics"]:
             if metric["field"] is not None and metric.field not in columns:
                 raise ValueError(f"Column not in the table: {metric['field']}")
-        existing_plan.metrics =  plan["metrics"]
+        existing_plan.metrics =  Metric(function=plan["metrics"]['function'], field=plan["metrics"]['field'], alias=plan["metrics"]['alias'])
 
         if existing_plan.metrics is None and existing_plan.select_fields is None:
             raise ValueError("No column been selected")
@@ -132,7 +132,7 @@ User question:
         for order in plan["order_by"]:
             if order["field"] not in allowed_order_fields:
                 raise ValueError(f"Column not allowed in ORDER BY: {order['field']}")
-        existing_plan.order_by = plan["order_by"]
+        existing_plan.order_by = OrderBy(field=plan["order_by"]["field"], direction=plan["order_by"]["direction"])
 
         if plan["limit"] is not None and (plan["limit"] < 1 or plan["limit"] > 50):
             raise ValueError(f"Invalid limit: {plan['limit']}")
