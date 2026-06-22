@@ -39,7 +39,7 @@ Return only valid JSON. Do not return SQL.
 The JSON must match this shape:
 
 {{
-  "table": "transactions",
+  "table": "transaction_records",
   "select_fields": ["transaction_date", "merchant", "category", "amount"],
   "metrics": [],
   "filters": [
