@@ -30,7 +30,7 @@ class QueryGenerator():
     def table_schema(self) -> list[dict]:
         return get_table_schema(self.db, self.table_name)
 
-    def generate_query_plan(self) -> dict:
+    def generate_query_plan(self, retry_msg="") -> dict:
         prompt = f"""
 You are a query planner for a personal finance app.
 
@@ -51,6 +51,8 @@ The JSON must match this shape:
   ],
   "limit": 50
 }}
+
+{retry_msg if retry_msg else ""}
 
 Allowed table:
 {self.table_name}
@@ -103,7 +105,7 @@ User question:
 
         for field in plan["select_fields"]:
             if field not in columns:
-                raise ValueError(f"Column not in the table: {field}")
+                raise ValueError(f"Column not in the table: {field}.\n Columns include in the table {self.table_name} are {self.table_schema}")
         existing_plan.select_fields = plan["select_fields"]
 
         for filter in plan["filters"]:
@@ -111,15 +113,15 @@ User question:
                 raise ValueError(f"Column not in the table: {filter}")
         existing_plan.filters = plan["filters"]
 
-        for field in plan["group_by"]:
-            if field not in columns:
-                raise ValueError(f"Column not in the table: {field}")
+        for group_by in plan["group_by"]:
+            if group_by not in columns:
+                raise ValueError(f"Column not in the table: {group_by}")
         existing_plan.group_by = plan["group_by"]
 
 
         for metric in plan["metrics"]:
-            if metric.field is not None and metric.field not in columns:
-                raise ValueError(f"Column not in the table: {metric.field}")
+            if metric["field"] is not None and metric.field not in columns:
+                raise ValueError(f"Column not in the table: {metric['field']}")
         existing_plan.metrics =  plan["metrics"]
 
         if existing_plan.metrics is None and existing_plan.select_fields is None:
@@ -128,8 +130,8 @@ User question:
         allowed_order_fields = columns | {metric.alias for metric in plan["metrics"]}
 
         for order in plan["order_by"]:
-            if order.field not in allowed_order_fields:
-                raise ValueError(f"Column not allowed in ORDER BY: {order.field}")
+            if order["field"] not in allowed_order_fields:
+                raise ValueError(f"Column not allowed in ORDER BY: {order['field']}")
         existing_plan.order_by = plan["order_by"]
 
         if plan["limit"] is not None and (plan["limit"] < 1 or plan["limit"] > 50):
@@ -191,7 +193,12 @@ User question:
 def handle_query_transactions(message: str, db: Session, **kwargs) -> str:
     generator = QueryGenerator(message=message, db=db)
     query_detail = generator.generate_query_plan()
-    plan = generator.validate_plan_against_schema(query_detail)
+    try:
+        plan = generator.validate_plan_against_schema(query_detail)
+    except Exception as e:
+        print(e)
+        query_detail = generator.generate_query_plan(e)
+        plan = generator.validate_plan_against_schema(query_detail)
     sql = generator.build_sql(plan)
 
     return sql
