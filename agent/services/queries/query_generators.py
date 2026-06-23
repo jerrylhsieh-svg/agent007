@@ -210,9 +210,6 @@ def handle_query_transactions(message: str, db: Session, **kwargs) -> str:
         except ValueError as e:
             last_error = e
 
-        except Exception:
-            raise
-
     raise ValueError(
         f"Failed to generate a valid query plan after {max_attempts} attempts. "
         f"Last error: {last_error}"
