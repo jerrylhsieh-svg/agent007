@@ -1,6 +1,5 @@
 from functools import cached_property
 import json
-from typing import Any
 
 from sqlalchemy.orm import Session
 
@@ -190,7 +189,7 @@ User question:
 
         return " ".join(sql_parts)
 
-def handle_query_transactions(message: str, db: Session, **kwargs) -> str:
+def generating_query(message: str, db: Session, **kwargs) -> str:
     generator = QueryGenerator(message=message, db=db)
 
     max_attempts = 2
