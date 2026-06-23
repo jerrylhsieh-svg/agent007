@@ -192,13 +192,28 @@ User question:
 
 def handle_query_transactions(message: str, db: Session, **kwargs) -> str:
     generator = QueryGenerator(message=message, db=db)
-    query_detail = generator.generate_query_plan()
-    try:
-        plan = generator.validate_plan_against_schema(query_detail)
-    except Exception as e:
-        print(e)
-        query_detail = generator.generate_query_plan(e)
-        plan = generator.validate_plan_against_schema(query_detail)
-    sql = generator.build_sql(plan)
 
-    return sql
+    max_attempts = 2
+    last_error = ""
+
+    for _ in range(max_attempts):
+        try:
+            query_detail = generator.generate_query_plan(
+                retry_msg=str(last_error) if last_error else ""
+            )
+
+            plan = generator.validate_plan_against_schema(query_detail)
+            sql = generator.build_sql(plan)
+
+            return sql
+
+        except ValueError as e:
+            last_error = e
+
+        except Exception:
+            raise
+
+    raise ValueError(
+        f"Failed to generate a valid query plan after {max_attempts} attempts. "
+        f"Last error: {last_error}"
+    )
