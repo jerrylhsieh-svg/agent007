@@ -40,7 +40,7 @@ The JSON must match this shape:
 
 {{
   "table": "transaction_records",
-  "select_fields": ["transaction_date", "merchant", "category", "amount"],
+  "select_fields": ["date", "amount"],
   "metrics": [],
   "filters": [
     {{"field": "category", "op": "=", "value": "Food"}}
@@ -186,7 +186,7 @@ User question:
             sql_parts.append("ORDER BY " + ", ".join(order_parts))
 
         if plan.limit is not None and not plan.metrics:
-            sql_parts.append("LIMIT :limit")
+            sql_parts.append(f"LIMIT {plan.limit}")
 
         return " ".join(sql_parts)
 
