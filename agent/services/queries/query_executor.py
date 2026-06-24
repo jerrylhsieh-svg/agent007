@@ -23,12 +23,12 @@ class QueryExecutor():
                 tried += 1
                 return "Please give me a valid answer. 'Yes' or 'No'"
             elif answer == "Yes":
-                result = db.execute(text(self.query_session[session_id]['sql']))
+                result = db.execute(text(state['sql']))
                 rows = result.mappings().all()
 
                 self.query_session.pop(session_id, None)
 
-                return f"Executed query:{self.query_session[session_id]['sql']}\nQuery result: {rows}"
+                return f"Executed query:{state['sql']}\nQuery result: {rows}"
             else:
                 self.query_session.pop(session_id, None)
                 return "Did not receive an approval"
