@@ -28,7 +28,7 @@ class QueryExecutor():
 
                 self.query_session.pop(session_id, None)
 
-                return f"Executed query:{state['sql']}\nQuery result: {rows}"
+                return f"Query result: {rows}"
             else:
                 self.query_session.pop(session_id, None)
                 return "Did not receive an approval"
