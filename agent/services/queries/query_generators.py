@@ -207,7 +207,7 @@ def generating_query(message: str, db: Session, **kwargs) -> str:
             return sql
 
         except ValueError as e:
-            last_error = e
+            last_error = str(e)
 
     raise ValueError(
         f"Failed to generate a valid query plan after {max_attempts} attempts. "
