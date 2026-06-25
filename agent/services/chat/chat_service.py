@@ -6,11 +6,15 @@ from agent.services.chat.classify_intents import classify_intent
 from agent.services.chat.intent_handler import INTENT_HANDLERS
 from agent.services.constants_and_dependencies import LOW_CONFIDENCE_THRESHOLD
 from agent.services.labeling.labeling import label_sessions
+from agent.services.chat.intent_handler import query_executor
 
 
 def get_reply(req: ChatRequest, db:Session) -> str:
     if req.session_id in label_sessions:
         intent = Intents.LABEL_RECORDS
+        confidence = 1.0
+    elif req.session_id in query_executor.query_session:
+        intent = Intents.QUERY_TRANSACTIONS
         confidence = 1.0
     else:
         decision = classify_intent(
