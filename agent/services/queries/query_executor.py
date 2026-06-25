@@ -34,4 +34,4 @@ class QueryExecutor():
                 return "Did not receive an approval"
                 
 
-        
+query_executor = QueryExecutor()       

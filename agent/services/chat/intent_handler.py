@@ -5,13 +5,11 @@ from agent.services.analyzer.bank_statement_analyzer import generate_bank_statem
 from agent.services.analyzer.transaction_analyzer import generate_credit_card_summary
 from agent.services.chat.call_model import call_model
 from agent.services.labeling.labeling import handle_label_flow, label_sessions
-from agent.services.queries.query_executor import QueryExecutor
+from agent.services.queries.query_executor import query_executor
 from agent.services.repredict_service import repredict_records
 from agent.services.train_models_service import train_model
 
 Handler = Callable[..., str]
-
-query_executor = QueryExecutor()
 
 INTENT_HANDLERS: dict[Intents, tuple[Handler, dict[str, Any]]] = {
     Intents.ANALYZE_CARD_TRANSACTIONS: (generate_credit_card_summary,{}),

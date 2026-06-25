@@ -1,10 +1,13 @@
 from enum import Enum
+from agent.services.queries.query_executor import query_executor
+from agent.services.labeling.labeling import label_sessions
 
 
 class Intents(str, Enum):
     description: str
     needs_db: bool
     examples: list[str]
+    session_id_storage: dict
 
     QUERY_TRANSACTIONS = (
         "query_transactions",
@@ -16,6 +19,7 @@ class Intents(str, Enum):
             "Which merchant did I spend the most on?",
             "Show my recent transactions.",
         ],
+        query_executor.query_session,
     )
 
     ANALYZE_CARD_TRANSACTIONS = (
@@ -89,6 +93,7 @@ class Intents(str, Enum):
             "Correct this category.",
             "Save this label.",
         ],
+        label_sessions,
     )
 
     GENERAL_CHAT = (
@@ -119,10 +124,12 @@ class Intents(str, Enum):
         description: str,
         needs_db: bool,
         examples: list[str],
+        session_id_storage: dict = {},
     ):
         obj = str.__new__(cls, value)
         obj._value_ = value
         obj.description = description
         obj.needs_db = needs_db
         obj.examples = examples
+        obj.session_id_storage = session_id_storage
         return obj
