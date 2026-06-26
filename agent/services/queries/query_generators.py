@@ -38,11 +38,11 @@ Return only valid JSON. Do not return SQL.
 The JSON must match this shape:
 
 {{
-  "table": "transaction_records",
+  "table": "transactions",
   "select_fields": ["date", "amount"],
   "metrics": [],
   "filters": [
-    {{"field": "category", "op": "=", "value": "Food"}}
+    {{"field": "label", "op": "=", "value": "Food"}}
   ],
   "group_by": [],
   "order_by": [
@@ -63,7 +63,7 @@ Rules:
 - Use "amount" for transaction amount.
 - For spending summaries, use metric function "sum" with field "amount" and alias "total_amount".
 - If the user asks for largest spending, order by "amount" desc.
-- If the user asks for spending by category, group_by should include "category" and metrics should include SUM(amount).
+- If the user asks for spending by label, group_by should include "label" and metrics should include SUM(amount).
 - Use limit 50 unless the user asks for aggregation only.
 - If the request cannot be answered with the allowed fields, return:
   {{"table": "transactions", "select_fields": [], "metrics": [], "filters": [], "group_by": [], "order_by": [], "limit": 50}}
