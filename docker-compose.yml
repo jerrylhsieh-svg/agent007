@@ -12,8 +12,6 @@ services:
       dockerfile: agent/Dockerfile
     env_file:
       - agent/.env
-    volumes:
-      - ${GCP_SERVICE_ACCOUNT_PATH}:/run/secrets/gcp-service-account.json:ro
     depends_on:
       - ollama
     environment:
