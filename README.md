@@ -34,7 +34,6 @@ Create `agent/.env`:
 ```env
 OLLAMA_HOST=http://ollama:11434
 MODEL=qwen2.5:1.5b
-GOOGLE_APPLICATION_CREDENTIALS_FILE=/run/secrets/gcp-service-account.json
 ```
 
 ## Local deployment
