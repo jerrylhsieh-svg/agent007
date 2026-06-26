@@ -29,7 +29,7 @@ class QueryGenerator():
     def table_schema(self) -> list[dict]:
         return get_table_schema(self.db, self.table_name)
 
-    def generate_query_plan(self, retry_msg="") -> dict:
+    def generate_query_plan(self, retry_msg="", history=[]) -> dict:
         prompt = f"""
 You are a query planner for a personal finance app.
 
@@ -189,7 +189,7 @@ User question:
 
         return " ".join(sql_parts)
 
-def generating_query(message: str, db: Session, **kwargs) -> str:
+def generating_query(message: str, db: Session, history: list[dict], **kwargs) -> str:
     generator = QueryGenerator(message=message, db=db)
 
     max_attempts = 2
@@ -198,7 +198,8 @@ def generating_query(message: str, db: Session, **kwargs) -> str:
     for _ in range(max_attempts):
         try:
             query_detail = generator.generate_query_plan(
-                retry_msg=str(last_error) if last_error else ""
+                retry_msg=str(last_error) if last_error else "",
+                history=history
             )
 
             plan = generator.validate_plan_against_schema(query_detail)

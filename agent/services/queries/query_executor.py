@@ -7,10 +7,10 @@ class QueryExecutor():
 
     query_session: dict[str, dict] = {}
 
-    def executing(self, message, db, session_id, **kwargs):
+    def executing(self, message, db, session_id, history, **kwargs):
         state = self.query_session.get(session_id)
         if state is None:
-            sql = generating_query(message, db)
+            sql = generating_query(message, db, history)
             self.query_session[session_id] = {"step": "awaiting_approval", "sql": sql, "retry": 0,}
             return f"Executing the following query:\n{sql}\nDo you approve? Please answer 'Yes' or 'No'"
         
