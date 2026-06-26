@@ -51,7 +51,11 @@ The JSON must match this shape:
   "limit": 50
 }}
 
-{retry_msg if retry_msg else ""}
+previous error messages if there is any:
+{retry_msg if retry_msg else "No previous error message"}
+
+chat history if there is any:
+{history if len(history)>0 else "No history message"}
 
 Allowed table:
 {self.table_name}
