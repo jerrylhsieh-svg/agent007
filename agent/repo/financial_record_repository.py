@@ -3,8 +3,8 @@ from typing import Literal
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from agent.db.models.financial_records.BankStatementRecord import BankStatementRecord
-from agent.db.models.financial_records.TransactionRecord import TransactionRecord
+from agent.db.models.financial_records.BankStatements import BankStatements
+from agent.db.models.financial_records.Transactions import Transactions
 from agent.db.data_classes.pdf_models import FinancialRecordRow
 
 
@@ -16,9 +16,9 @@ class FinancialRecordRepository:
         self.db = db
         self.record_type = record_type
         if record_type == "statement":
-            self.record_class = BankStatementRecord  
+            self.record_class = BankStatements
         else: 
-            self.record_class = TransactionRecord
+            self.record_class = Transactions
 
 
     def insert_many(self, records: list[FinancialRecordRow]) -> None:

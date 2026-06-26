@@ -1,5 +1,5 @@
-from agent.db.models.financial_records.TransactionRecord import TransactionRecord
-from agent.db.models.financial_records.BankStatementRecord import BankStatementRecord
+from agent.db.models.financial_records.Transactions import Transactions
+from agent.db.models.financial_records.BankStatements import BankStatements
 from agent.db.models.unlabeled.UnlabeledStatementGroup import UnlabeledStatementGroup
 from agent.db.models.unlabeled.UnlabeledTransactionGroup import UnlabeledTransactionGroup
 from agent.db.models.unlabeled.UnlabeledStatementRecord import UnlabeledStatementnRecord

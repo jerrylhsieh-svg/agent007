@@ -6,8 +6,8 @@ from agent.db.session import Base
 
 
 
-class BankStatementRecord(Base):
-    __tablename__ = "bank_statement_records"
+class BankStatements(Base):
+    __tablename__ = "bank_statements"
 
     id: Mapped[str] = mapped_column(String(12), primary_key=True, default=generate_id)
     date: Mapped[str | None] = mapped_column(String(20), nullable=True)
