@@ -20,7 +20,7 @@ class QueryExecutor():
             answer = message.strip()
             tried = state.get("retry", 0)
             if (not answer or answer not in ("Yes", "No")) and tried < 1:
-                tried += 1
+                state["retry"] += 1
                 return "Please give me a valid answer. 'Yes' or 'No'"
             elif answer == "Yes":
                 try:
