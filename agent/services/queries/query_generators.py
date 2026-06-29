@@ -78,6 +78,8 @@ User question:
 
         raw = call_model(prompt)
         print("RAW QUERY PLAN RESPONSE:", repr(raw))
+        print("Retry message:", retry_msg)
+        print("History:", history)
         return json.loads(raw)
 
 
