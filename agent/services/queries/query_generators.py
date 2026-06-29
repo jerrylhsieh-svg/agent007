@@ -76,7 +76,9 @@ User question:
 {self.message}
 """
 
-        return json.loads(call_model(prompt))
+        raw = call_model(prompt)
+        print("RAW QUERY PLAN RESPONSE:", repr(raw))
+        return json.loads(raw)
 
 
     def identify_tables(self, message: str) -> str:
