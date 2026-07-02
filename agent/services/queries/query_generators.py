@@ -33,7 +33,13 @@ class QueryGenerator():
         prompt = f"""
 You are a query planner for a personal finance app.
 
-Return only valid JSON. Do not return SQL.
+Return a raw JSON object only.
+Do not wrap the JSON in markdown.
+Do not use ```json fences.
+Do not include backticks.
+Do not include explanations.
+The first character of your response must be {'{'} and the last character must be {'}'}.
+Do not return SQL.
 
 The JSON must match this shape:
 
