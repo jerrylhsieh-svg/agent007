@@ -63,6 +63,11 @@ previous error messages if there is any:
 chat history if there is any:
 {history if len(history)>0 else "No history message"}
 
+Failure correction rules:
+- If chat history contains a failed SQL query, identify why it failed.
+- Do not generate a plan that would produce the same failed SQL shape.
+
+
 Allowed table:
 {self.table_name}
 
