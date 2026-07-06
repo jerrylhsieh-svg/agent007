@@ -1,6 +1,7 @@
 from functools import cached_property
 import json
 
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from agent.db.models.query_generator.query_plan import Filter, Metric, OrderBy, QueryPlan
@@ -208,6 +209,12 @@ User question:
 
         return " ".join(sql_parts)
 
+def dry_run_query(db: Session, query: str) -> None:
+    try:
+        db.execute(text(f"EXPLAIN {query}"))
+    except Exception as e:
+        raise ValueError(f"Dry run failed for query: {query}.\n The reason it failed: {e}.")
+
 def generating_query(message: str, db: Session, history: list[dict], **kwargs) -> str:
     generator = QueryGenerator(message=message, db=db)
 
@@ -223,6 +230,7 @@ def generating_query(message: str, db: Session, history: list[dict], **kwargs) -
 
             plan = generator.validate_plan_against_schema(query_detail)
             sql = generator.build_sql(plan)
+            dry_run_query(db, sql)
 
             return sql
 
