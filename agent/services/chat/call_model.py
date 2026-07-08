@@ -32,3 +32,6 @@ def call_model(message: str, history: list[dict] = [], **kwargs) -> str:
     r.raise_for_status()
     data = r.json()
     return data["message"]["content"]
+
+def internal_call_model(message: str, **kwargs) -> str:
+    pass
