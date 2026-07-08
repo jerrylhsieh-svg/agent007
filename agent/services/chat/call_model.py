@@ -18,8 +18,6 @@ def call_model(message: str, history: list[dict] = [], **kwargs) -> str:
 
     messages.append({"role": "user", "content": message})
 
-    print(messages)
-
     r = requests.post(
         f"{OLLAMA_HOST}/api/chat",
         json={
@@ -34,4 +32,15 @@ def call_model(message: str, history: list[dict] = [], **kwargs) -> str:
     return data["message"]["content"]
 
 def internal_call_model(message: str, **kwargs) -> str:
-    pass
+    r = requests.post(
+        f"{OLLAMA_HOST}/api/chat",
+        json={
+            "model": MODEL,
+            "messages": message,
+            "stream": False
+        },
+        timeout=600
+    )
+    r.raise_for_status()
+    data = r.json()
+    return data["message"]["content"]
