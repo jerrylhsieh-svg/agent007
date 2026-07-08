@@ -18,6 +18,8 @@ def call_model(message: str, history: list[dict] = [], **kwargs) -> str:
 
     messages.append({"role": "user", "content": message})
 
+    print(messages)
+
     r = requests.post(
         f"{OLLAMA_HOST}/api/chat",
         json={
