@@ -20,7 +20,7 @@ def call_model_history(message: str, history: list[dict] = [], **kwargs) -> str:
 
     return call_model_base(messages)
 
-def call_model_base(message: str, **kwargs) -> str:
+def call_model_base(message: str|list, **kwargs) -> str:
     r = requests.post(
         f"{OLLAMA_HOST}/api/chat",
         json={
