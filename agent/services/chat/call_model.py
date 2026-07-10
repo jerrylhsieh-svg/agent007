@@ -30,6 +30,7 @@ def call_model_base(message: str|list, **kwargs) -> str:
         ]
     else:
         messages = message
+        
     r = requests.post(
         f"{OLLAMA_HOST}/api/chat",
         json={
