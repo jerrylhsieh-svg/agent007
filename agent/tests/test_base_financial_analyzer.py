@@ -325,7 +325,7 @@ def test_llm_answer_appends_context_and_calls_model(monkeypatch):
         return "model response"
 
     monkeypatch.setattr(
-        "agent.services.analyzer.base_financial_analyzer.call_model",
+        "agent.services.analyzer.base_financial_analyzer.call_model_history",
         fake_call_model,
     )
 
@@ -355,7 +355,7 @@ def test_llm_answer_handles_none_history(monkeypatch):
         return "ok"
 
     monkeypatch.setattr(
-        "agent.services.analyzer.base_financial_analyzer.call_model",
+        "agent.services.analyzer.base_financial_analyzer.call_model_history",
         fake_call_model,
     )
 
