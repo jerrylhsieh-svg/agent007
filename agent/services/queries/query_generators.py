@@ -5,7 +5,7 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from agent.db.models.query_generator.query_plan import Filter, Metric, OrderBy, QueryPlan
-from agent.services.chat.call_model import call_model, internal_call_model
+from agent.services.chat.call_model import call_model_base
 from agent.services.queries.get_tables_information import get_table_names, get_table_schema
 
 
@@ -85,7 +85,7 @@ User question:
 {self.message}
 """
 
-        raw = internal_call_model(prompt)
+        raw = call_model_base(prompt)
         print("RAW QUERY PLAN RESPONSE:", repr(raw))
         print("Retry message:", retry_msg)
         print("History:", history)
@@ -112,7 +112,7 @@ User question:
     User question:
     {message}
     """
-        return call_model(prompt)
+        return call_model_base(prompt)
     
     def validate_plan_against_schema(self, plan: dict) -> QueryPlan:
 

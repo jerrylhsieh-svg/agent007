@@ -2,7 +2,7 @@ import requests
 
 from agent.services.constants_and_dependencies import MODEL, OLLAMA_HOST
 
-def call_model(message: str, history: list[dict] = [], **kwargs) -> str:
+def call_model_history(message: str, history: list[dict] = [], **kwargs) -> str:
     messages = [
         {
             "role": "system",
@@ -18,20 +18,9 @@ def call_model(message: str, history: list[dict] = [], **kwargs) -> str:
 
     messages.append({"role": "user", "content": message})
 
-    r = requests.post(
-        f"{OLLAMA_HOST}/api/chat",
-        json={
-            "model": MODEL,
-            "messages": messages,
-            "stream": False
-        },
-        timeout=600
-    )
-    r.raise_for_status()
-    data = r.json()
-    return data["message"]["content"]
+    return call_model_base(messages)
 
-def internal_call_model(message: str, **kwargs) -> str:
+def call_model_base(message: str, **kwargs) -> str:
     r = requests.post(
         f"{OLLAMA_HOST}/api/chat",
         json={
