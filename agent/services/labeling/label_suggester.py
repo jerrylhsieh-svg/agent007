@@ -2,7 +2,7 @@ import json
 import re
 
 from agent.db.data_classes.label import LabelSuggested, UnlabeledRecord
-from agent.services.chat.call_model import call_model
+from agent.services.chat.call_model import call_model_base
 from agent.services.constants_and_dependencies import ALLOWED_TRANSACTION_LABELS
 from agent.services.helper import safe_float
 
@@ -24,7 +24,7 @@ class LabelSuggester:
             confidence=unlabel_reocrd.confidence,
         )
 
-        raw_response = call_model(prompt, [])
+        raw_response = call_model_base(prompt)
         data = self._parse_json(raw_response)
 
         label = str(data.get("suggested_label", "needs_manual_review")).strip()

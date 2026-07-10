@@ -3,7 +3,7 @@ from typing import Literal
 from sqlalchemy.orm import Session
 
 from agent.learning_models.train_merchant_model import train
-from agent.services.chat.call_model import call_model
+from agent.services.chat.call_model import call_model_base
 
 
 def train_model(message: str, file_type: Literal["transaction", "statement"], history: list[dict] | None, db:Session):
@@ -22,4 +22,4 @@ Keep the response concise. Include the exact phrase they can reply with:
 Also mention that human-confirmed labels should not be overwritten.
 """
 
-    return call_model(message, history or [])
+    return call_model_base(message)

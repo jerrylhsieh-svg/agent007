@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from agent.learning_models.labeler import Labeler
 from agent.repo.financial_record_repository import FinancialRecordRepository
-from agent.services.chat.call_model import call_model
+from agent.services.chat.call_model import call_model_history
 
 
 def repredict_records(
@@ -44,4 +44,4 @@ def repredict_records(
 
     history = history or []
     history.append({"role": "assistant", "content": context})
-    return call_model(message, history)
+    return call_model_history(message, history)

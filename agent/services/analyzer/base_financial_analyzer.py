@@ -9,7 +9,7 @@ import pandas as pd
 from sqlalchemy.orm import Session
 
 from agent.repo.financial_record_repository import FinancialRecordRepository
-from agent.services.chat.call_model import call_model
+from agent.services.chat.call_model import call_model_history
 
 
 class BaseFinancialAnalyzer(ABC):
@@ -89,7 +89,7 @@ class BaseFinancialAnalyzer(ABC):
     ) -> str:
         augmented_history = list(history or [])
         augmented_history.append({"role": "assistant", "content": context})
-        return call_model(question, augmented_history)
+        return call_model_history(question, augmented_history)
 
     @abstractmethod
     def summarize(self) -> dict[str, Any]:

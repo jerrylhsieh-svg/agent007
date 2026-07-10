@@ -1,5 +1,5 @@
 from unittest.mock import Mock, patch
-from agent.services.chat.call_model import call_model
+from agent.services.chat.call_model import call_model_history
 
 
 @patch("agent.services.chat.call_model.requests.post")
@@ -16,7 +16,7 @@ def test_call_model_builds_expected_payload(mock_post):
         {"role": "assistant", "content": "hi there"},
     ]
 
-    result = call_model("how are you?", history)
+    result = call_model_history("how are you?", history)
 
     assert result == "Test reply"
 
@@ -50,7 +50,7 @@ def test_call_model_filters_invalid_history_items(mock_post):
         {"role": "user", "content": "also kept"},
     ]
 
-    call_model("latest question", history)
+    call_model_history("latest question", history)
 
     _, kwargs = mock_post.call_args
     assert kwargs["json"]["messages"] == [
@@ -71,7 +71,7 @@ def test_call_model_raises_on_http_error(mock_post):
     mock_post.return_value = mock_response
 
     try:
-        call_model("hi", [])
+        call_model_history("hi", [])
         assert False, "Expected exception was not raised"
     except Exception as e:
         assert str(e) == "boom"
