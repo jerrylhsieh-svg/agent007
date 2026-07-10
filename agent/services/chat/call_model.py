@@ -21,11 +21,20 @@ def call_model_history(message: str, history: list[dict] = [], **kwargs) -> str:
     return call_model_base(messages)
 
 def call_model_base(message: str|list, **kwargs) -> str:
+    if isinstance(message, str):
+        messages = [
+            {
+                "role": "user",
+                "content": message,
+            }
+        ]
+    else:
+        messages = message
     r = requests.post(
         f"{OLLAMA_HOST}/api/chat",
         json={
             "model": MODEL,
-            "messages": message,
+            "messages": messages,
             "stream": False
         },
         timeout=600
