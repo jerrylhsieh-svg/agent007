@@ -7,6 +7,7 @@ const sessionId = crypto.randomUUID();
 const fileInput = document.getElementById("file-file");
 const uploadBtn = document.getElementById("upload-btn");
 const fileForm = document.getElementById("file-form");
+const retrainBtn = document.getElementById("retrain-btn");
 
 const history = [];
 
@@ -141,6 +142,30 @@ formEl.addEventListener("submit", async (e) => {
     setLoading(false);
     inputEl.focus();
   }
+});
+
+retrainBtn.addEventListener("click", async () => {
+
+    retrainBtn.disabled = true;
+    retrainBtn.textContent = "Starting...";
+
+    const response = await fetch("/training/retrain", {
+        method: "POST"
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        throw new Error(data.detail || "Unable to start training");
+    }
+
+    addMessage(
+        "assistant",
+        `Model retraining started. Run: ${data.dag_run_id}`
+    );
+
+    retrainBtn.disabled = false;
+    retrainBtn.textContent = "Retrain Model";
 });
 
 checkHealth();
