@@ -212,6 +212,9 @@ def dry_run_query(db: Session, query: str) -> None:
     except Exception as e:
         raise ValueError(f"Dry run failed for query: {query}.\n The reason it failed: {e}.")
 
+def parse_dry_run_error():
+    pass
+
 def generating_query(message: str, db: Session, history: list[dict], **kwargs) -> str:
     generator = QueryGenerator(message=message, db=db)
 
