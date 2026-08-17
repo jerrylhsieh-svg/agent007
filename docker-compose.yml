@@ -21,8 +21,6 @@ x-airflow-common:
   depends_on:
     airflow-postgres:
       condition: service_healthy
-    postgres:
-      condition: service_healthy
 
 services:
   ollama:
