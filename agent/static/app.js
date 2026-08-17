@@ -149,7 +149,7 @@ retrainBtn.addEventListener("click", async () => {
     retrainBtn.disabled = true;
     retrainBtn.textContent = "Starting...";
 
-    const response = await fetch("/training/retrain", {
+    const response = await fetch("/retrain", {
         method: "POST"
     });
 
