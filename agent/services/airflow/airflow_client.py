@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 import os
 import requests
 
@@ -41,10 +42,14 @@ class AirflowClient:
                 "Authorization": f"Bearer {token}",
             },
             json={
+                "logical_date": datetime.now(timezone.utc).isoformat(),
                 "conf": conf or {},
             },
             timeout=10,
         )
+
+        print(response.status_code)
+        print(response.text)
 
         response.raise_for_status()
 
