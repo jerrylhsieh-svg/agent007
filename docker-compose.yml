@@ -71,7 +71,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "pg_isready -U airflow -d airflow"
+          "pg_isready -U ${AIRFLOW_USER} -d airflow"
         ]
       interval: 5s
       timeout: 5s
