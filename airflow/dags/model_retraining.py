@@ -1,7 +1,6 @@
 from datetime import datetime
 
 from airflow.sdk import dag, task
-
 from agent.db.session import SessionLocal
 from agent.learning_models.train_merchant_model import train
 
@@ -20,6 +19,8 @@ def model_retraining():
 
         try:
             return train("transaction", db)
+        except Exception as e:
+            print(f"Train failed due to {e}")
         finally:
             db.close()
 
@@ -29,6 +30,8 @@ def model_retraining():
 
         try:
             return train("statement", db)
+        except Exception as e:
+            print(f"Train failed due to {e}")
         finally:
             db.close()
 
