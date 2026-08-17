@@ -11,8 +11,8 @@ class AirflowClient:
             "http://airflow-apiserver:8080",
         )
 
-        self.username = os.environ["AIRFLOW_USERNAME"]
-        self.password = os.environ["AIRFLOW_PASSWORD"]
+        self.username = os.getenv("AIRFLOW_USERNAME")
+        self.password = os.getenv("AIRFLOW_PASSWORD")
 
     def _get_token(self) -> str:
         response = requests.post(
