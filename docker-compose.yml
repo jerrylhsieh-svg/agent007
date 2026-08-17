@@ -45,6 +45,8 @@ services:
       AIRFLOW_URL: http://airflow-api-server:8080
     ports:
       - "8000:8000"
+    volumes:
+      - model_artifacts:/models
   
   postgres:
     image: postgres:16
