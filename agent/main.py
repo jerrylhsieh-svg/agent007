@@ -9,6 +9,7 @@ from agent.db.session import SessionLocal
 from agent.learning_models.train_merchant_model import train
 from agent.routes.routes import router
 from agent.routes.labeling_routes import router as labeling_router
+from agent.routes.training_routes import router as training_router
 import logging
 
 logger = logging.getLogger(__name__)
@@ -39,3 +40,4 @@ app.state.templates = templates
 
 app.include_router(router)
 app.include_router(labeling_router)
+app.include_router(training_router)

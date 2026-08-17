@@ -43,6 +43,8 @@ services:
       OLLAMA_HOST: http://ollama:11434
       MODEL: qwen2.5:1.5b
       AIRFLOW_URL: http://airflow-api-server:8080
+      AIRFLOW_USERNAME: ${AIRFLOW_ADMIN_USERNAME}
+      AIRFLOW_PASSWORD: ${AIRFLOW_ADMIN_PASSWORD}
     ports:
       - "8000:8000"
     volumes:

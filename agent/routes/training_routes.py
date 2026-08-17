@@ -2,12 +2,12 @@ from fastapi import APIRouter
 
 from agent.services.airflow.airflow_client import AirflowClient
 
-router = APIRouter(prefix="/training")
+router = APIRouter()
 
 airflow = AirflowClient()
 
 
-@router.post("/retrain")
+@router.post("/training/retrain")
 def retrain_models():
     dag_run = airflow.trigger_dag(
         dag_id="model_retraining",
